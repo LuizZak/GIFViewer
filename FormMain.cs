@@ -18,6 +18,7 @@ using GIF_Viewer.Views;
 /// @version 1.6.0b     Fixed crash related to .gif files with very fast frame intervals.
 /// @                   Swapped the old timeline trackbar with a new more responsive timeline control.
 /// @                   Now the value stepper for the minimum frame interval is disabled when the checkbox is also off.
+/// @                   Now you can seek the .gif timeline using the arrow keys when the animation panel is focused (clicked on).
 /// 
 /// @version 1.4.7b     Now the program will fail silently when trying to load the .gif files in the folder. Still on the hunt for runtime exceptions.
 /// @                   Added an error form that has a copiable field for copying information about errors.
@@ -774,14 +775,14 @@ namespace GIF_Viewer
                 {
                     if (tlc_timeline.CurrentFrame > 0)
                     {
-                        tlc_timeline.CurrentFrame -= 1;
+                        tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame - 1);
                     }
                 }
                 else if (e.KeyData == Keys.Right)
                 {
                     if (tlc_timeline.CurrentFrame < tlc_timeline.Maximum)
                     {
-                        tlc_timeline.CurrentFrame += 1;
+                        tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame + 1);
                     }
                 }
             }
@@ -842,9 +843,9 @@ namespace GIF_Viewer
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="newFrame">The new frame selected on the timeline control</param>
-        private void tlc_timeline_FrameChanged(object sender, int newFrame)
+        private void tlc_timeline_FrameChanged(object sender, FrameChangedEventArgs newFrame)
         {
-            CurrentGif.currentFrame = newFrame;
+            CurrentGif.currentFrame = newFrame.NewFrame;
             lblFrame.Text = "Frame: " + (CurrentGif.currentFrame + 1) + "/" + CurrentGif.Frames;
 
             AnimationTimer.Stop();

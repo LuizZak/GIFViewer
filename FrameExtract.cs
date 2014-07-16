@@ -331,6 +331,33 @@ namespace GIF_Viewer
         }
 
         /// <summary>
+        /// Event fired everytime the user presses a keyboard key while the window is focused
+        /// </summary>
+        /// <param name="sender">Object that fired this event</param>
+        /// <param name="e">The arguments for this event</param>
+        private void FrameExtract_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (CurrentGif.Loaded && CurrentGif.GetFrameCount() > 0)
+            {
+                // Seek GIF timeline
+                if (e.KeyData == Keys.Left)
+                {
+                    if (tlc_timeline.CurrentFrame > 0)
+                    {
+                        tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame - 1);
+                    }
+                }
+                else if (e.KeyData == Keys.Right)
+                {
+                    if (tlc_timeline.CurrentFrame < tlc_timeline.Maximum)
+                    {
+                        tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame + 1);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Event fired everytime the user clicks 'Extract Frames...' button
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
@@ -359,17 +386,17 @@ namespace GIF_Viewer
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="newRange">The new range of the timeline control</param>
-        private void tlc_timeline_RangeChangedEvent(object sender, Point newRange)
+        private void tlc_timeline_RangeChangedEvent(object sender, RangeChangedEventArgs newRange)
         {
             lastFrame = -1;
-            ChangeFrame(newRange.X - 1);
-            CurrentGif.currentFrame = newRange.X - 1;
+            ChangeFrame(newRange.NewRange.X - 1);
+            CurrentGif.currentFrame = newRange.NewRange.X - 1;
 
             AnimationTimer.Stop();
             AnimationTimer.Interval = 32;
             AnimationTimer.Start();
 
-            Range = newRange;
+            Range = newRange.NewRange;
         }
 
         /// <summary>

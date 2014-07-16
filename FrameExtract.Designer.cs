@@ -135,6 +135,7 @@
             this.Name = "FrameExtract";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Frame Extract";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FrameExtract_KeyDown);
             this.panel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.cpb_preview)).EndInit();
             this.ResumeLayout(false);
