@@ -472,11 +472,9 @@ namespace GifComponents.Components
         }
 
         /// <summary>
-        /// Returns the ammount of bytes that need to be skipped in order to skip a TablebasedImageData read totally
+        /// Skips a whole TableBasedImageData block on a given stream
         /// </summary>
         /// <param name="inputStream">The input stream</param>
-        /// <param name="pixelCount">The number of pixels in the image</param>
-        /// <returns>The ammount of bytes to skip</returns>
         public static void SkipOnStream(Stream inputStream)
         {
             long startStreamPosition = inputStream.Position;

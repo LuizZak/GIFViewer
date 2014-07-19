@@ -48,6 +48,7 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
@@ -71,8 +72,6 @@ namespace GifComponents
 	/// </remarks>
 	public class GifDecoder : GifComponent
 	{
-		#region declarations
-		
 		/// <summary>
 		/// The header of the GIF file.
 		/// </summary>
@@ -113,17 +112,27 @@ namespace GifComponents
 		/// </summary>
 		private Collection<GifFrame> _frames;
 
+        /// <summary>
+        /// A list of frames that should not be unloaded from memory because they are used as keyframes
+        /// </summary>
+        private List<GifFrame> _keyFrames;
+
+        /// <summary>
+        /// The frames that are currently loaded. This queue is used to unload frames after a long period
+        /// </summary>
+        private Queue<GifFrame> _loadedFrames;
+
+        /// <summary>
+        /// The maximum frame queue size
+        /// </summary>
+        private int _maxFrameQueueSize;
+
 		/// <summary>
 		/// Holds the <see cref="System.IO.Stream"/> from which the GIF is being
 		/// read.
 		/// </summary>
 		private Stream _stream;
 
-		#endregion
-		
-		#region constructors
-		
-		#region constructor( string )
 		/// <summary>
 		/// Reads a GIF file from specified file/URL source  
 		/// (URL assumed if name contains ":/" or "file:")
@@ -135,12 +144,8 @@ namespace GifComponents
 		/// The supplied filename is null.
 		/// </exception>
 		public GifDecoder( string fileName )
-			: this( fileName, false )
-		{
-		}
-		#endregion
+            : this( fileName, false ) { }
 		
-		#region constructor( string, bool )
 		/// <summary>
 		/// Reads a GIF file from specified file/URL source  
 		/// (URL assumed if name contains ":/" or "file:")
@@ -155,46 +160,9 @@ namespace GifComponents
 		/// <exception cref="ArgumentNullException">
 		/// The supplied filename is null.
 		/// </exception>
-		public GifDecoder( string fileName, bool xmlDebugging )
-			: base( xmlDebugging )
-		{
-			if( fileName == null )
-			{
-				throw new ArgumentNullException( "fileName" );
-			}
-			else
-			{
-				fileName = fileName.Trim().ToLower( CultureInfo.InvariantCulture );
-
-                Stream inputStream = new FileInfo(fileName).OpenRead();
-
-                _stream = new MemoryStream();
-                int bytesRead = 0;
-                long copyLength = inputStream.Length;
-                byte[] buffer;
-                buffer = new byte[copyLength];
-                if (copyLength > 0)
-                {
-                    // keep reading until we've read the entire block
-                    int count = 0;
-                    while (bytesRead < copyLength)
-                    {
-                        count = inputStream.Read(buffer, (int)bytesRead, (int)(copyLength - bytesRead));
-                        if (count == 0)
-                        {
-                            // then we've reached the end of the file
-                            break;
-                        }
-                        bytesRead += count;
-                    }
-                }
-                _stream.Write(buffer, 0, buffer.Length);
-                _stream.Position = 0;
-			}
-		}
-		#endregion
+        public GifDecoder(string fileName, bool xmlDebugging)
+            : this(new FileInfo(fileName).OpenRead(), xmlDebugging) { }
 		
-		#region constructor( stream )
 		/// <summary>
 		/// Reads a GIF file from the specified stream.
 		/// </summary>
@@ -203,9 +171,7 @@ namespace GifComponents
 		/// </param>
 		public GifDecoder( Stream inputStream )
 			: this( inputStream, false ) {}
-		#endregion
-		
-		#region constructor( stream, bool )
+
 		/// <summary>
 		/// Reads a GIF file from the specified stream.
 		/// </summary>
@@ -219,17 +185,16 @@ namespace GifComponents
 		public GifDecoder( Stream inputStream, bool xmlDebugging )
 			: base( xmlDebugging )
 		{
-			if( inputStream == null )
-			{
-				throw new ArgumentNullException( "inputStream" );
-			}
-			
-			if( inputStream.CanRead == false )
-			{
-				string message
-					= "The supplied stream cannot be read";
-				throw new ArgumentException( message, "inputStream" );
-			}
+            if (inputStream == null)
+            {
+                throw new ArgumentNullException("inputStream");
+            }
+
+            if (inputStream.CanRead == false)
+            {
+                string message = "The supplied stream cannot be read";
+                throw new ArgumentException(message, "inputStream");
+            }
 
             _stream = new MemoryStream();
             int bytesRead = 0;
@@ -238,14 +203,12 @@ namespace GifComponents
             buffer = new byte[copyLength];
             if (copyLength > 0)
             {
-                // keep reading until we've read the entire block
                 int count = 0;
                 while (bytesRead < copyLength)
                 {
                     count = inputStream.Read(buffer, (int)bytesRead, (int)(copyLength - bytesRead));
                     if (count == 0)
                     {
-                        // then we've reached the end of the file
                         break;
                     }
                     bytesRead += count;
@@ -254,9 +217,6 @@ namespace GifComponents
             _stream.Write(buffer, 0, buffer.Length);
             _stream.Position = 0;
 		}
-		#endregion
-		
-		#endregion
 		
 		#region Decode() method
 		/// <summary>
@@ -264,40 +224,34 @@ namespace GifComponents
 		/// </summary>
 		public void Decode()
 		{
+            _maxFrameQueueSize = 16;
+            _keyFrames = new List<GifFrame>();
+            _loadedFrames = new Queue<GifFrame>();
 			_frames = new Collection<GifFrame>();
 			_applicationExtensions = new Collection<ApplicationExtension>();
 			_gct = null;
-			
-			_header = new GifHeader( _stream, XmlDebugging );
-			WriteDebugXmlNode( _header.DebugXmlReader );
-			if( _header.ErrorState != ErrorState.Ok )
-			{
-				WriteDebugXmlFinish();
-				return;
-			}
 
-			_lsd = new LogicalScreenDescriptor( _stream, XmlDebugging );
-			WriteDebugXmlNode( _lsd.DebugXmlReader );
-			if( TestState( ErrorState.EndOfInputStream ) )
-			{
-				WriteDebugXmlFinish();
-				return;
-			}
-			
-			if( _lsd.HasGlobalColourTable )
-			{
-				_gct = new ColourTable( _stream, 
-				                        _lsd.GlobalColourTableSize, 
-				                        XmlDebugging );
-				WriteDebugXmlNode( _gct.DebugXmlReader );
-			}
-			
-			if( ConsolidatedState == ErrorState.Ok )
-			{
-				ReadContents( _stream );
-			}
-			//_stream.Close();
-			WriteDebugXmlFinish();
+            _header = new GifHeader(_stream, XmlDebugging);
+            if (_header.ErrorState != ErrorState.Ok)
+            {
+                return;
+            }
+
+            _lsd = new LogicalScreenDescriptor(_stream, XmlDebugging);
+            if (TestState(ErrorState.EndOfInputStream))
+            {
+                return;
+            }
+
+            if (_lsd.HasGlobalColourTable)
+            {
+                _gct = new ColourTable(_stream, _lsd.GlobalColourTableSize, XmlDebugging);
+            }
+
+            if (ConsolidatedState == ErrorState.Ok)
+            {
+                ReadContents(_stream);
+            }
 		}
 		#endregion
 		
@@ -403,9 +357,22 @@ namespace GifComponents
         {
             get
             {
-                _frames[index].Decode();
+                GifFrame frame = _frames[index];
 
-                return _frames[index];
+                if (!_loadedFrames.Contains(frame))
+                {
+                    // Unload a previous frame, is the queue is full
+                    while (_loadedFrames.Count >= _maxFrameQueueSize)
+                    {
+                        _loadedFrames.Dequeue().Unload();
+                    }
+
+                    _loadedFrames.Enqueue(frame);
+                }
+
+                frame.Decode();
+
+                return frame;
             }
         }
 		#endregion
@@ -438,7 +405,6 @@ namespace GifComponents
 			bool done = false;
 			GraphicControlExtension lastGce = null;
 			string message; // for error conditions
-            int c = 0;
 			while( !done/* && ConsolidatedState == ErrorState.Ok */)
 			{
 				int code = Read( inputStream );
@@ -616,6 +582,5 @@ namespace GifComponents
 		#endregion
 
 		#endregion
-
 	}
 }
