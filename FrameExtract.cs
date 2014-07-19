@@ -333,6 +333,16 @@ namespace GIF_Viewer
         }
 
         /// <summary>
+        /// Eveny fired when the form is being closed
+        /// </summary>
+        /// <param name="e">The arguments for this event</param>
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            AnimationTimer.Stop();
+            AnimationTimer.Dispose();
+        }
+
+        /// <summary>
         /// Event fired everytime the user presses a keyboard key while the window is focused
         /// </summary>
         /// <param name="sender">Object that fired this event</param>

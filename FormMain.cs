@@ -20,6 +20,7 @@ using GIF_Viewer.Views;
 /// @                   Now the value stepper for the minimum frame interval is disabled when the checkbox is also off.
 /// @                   Now you can seek the .gif timeline using the arrow keys when the animation panel is focused (clicked on).
 /// @                   Fixed half-pixel misalignment on images (only visible when zoomed in).
+/// @                   Fixed opening and closing the frame extract form doubling the animation's playback speed on the main form.
 /// 
 /// @version 1.4.7b     Now the program will fail silently when trying to load the .gif files in the folder. Still on the hunt for runtime exceptions.
 /// @                   Added an error form that has a copiable field for copying information about errors.
