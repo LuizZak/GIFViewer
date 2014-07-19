@@ -148,7 +148,6 @@
     <Compile Include="GifComponents\Enums\ErrorState.cs" />
     <Compile Include="GifComponents\FastBitmap.cs" />
     <Compile Include="GifComponents\GifDecoder.cs" />
-    <Compile Include="GifComponents\GifFrame.cs" />
     <Compile Include="GifComponents\Types\GifComponentStatus.cs" />
     <Compile Include="GifComponents\Types\PackedFields.cs" />
     <Compile Include="GIFFile.cs" />
