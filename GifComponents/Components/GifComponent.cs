@@ -129,7 +129,7 @@ namespace GifComponents.Components
 		{
 			_status = new GifComponentStatus( ErrorState.Ok, "" );
 		}
-		#endregion
+		#endregion 
 		
 		#region protected constructor( bool )
 		/// <summary>
@@ -461,9 +461,8 @@ namespace GifComponents.Components
 			{
 				throw new ArgumentNullException( "inputStream" );
 			}
-			int curByte = 0;
-			curByte = inputStream.ReadByte();
-			return curByte;
+
+            return inputStream.ReadByte();
 		}
 		#endregion
 
@@ -1020,15 +1019,6 @@ namespace GifComponents.Components
 		{
 			if( !_disposed )
 			{
-				if( disposing )
-				{
-					// dispose-only, i.e. non-finalizable logic
-					if( _debugXmlStream != null )
-					{
-						_debugXmlStream.Dispose();
-					}
-				}
-
 				// new shared cleanup logic
 				_disposed = true;
 			}
