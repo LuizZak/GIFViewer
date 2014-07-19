@@ -475,10 +475,9 @@ namespace GifComponents.Components
 
             // decode pixel data
             int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
-            /*TableBasedImageData tbid
-                = new TableBasedImageData(inputStream, pixelCount, XmlDebugging);*/
-            //inputStream.Position = inputStream.Position;
-            inputStream.Position += TableBasedImageData.GetSkipSize(inputStream, pixelCount);
+
+            //inputStream.Position += TableBasedImageData.SkipOnStream(inputStream, pixelCount);
+            TableBasedImageData.SkipOnStream(inputStream, pixelCount);
 
             // Skip any remaining blocks up to the next block terminator (in
             // case there is any surplus data before the next frame)
