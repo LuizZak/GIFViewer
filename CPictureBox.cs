@@ -36,6 +36,8 @@ namespace GIF_Viewer
             if (this.BackgroundImage == null || _Paint == false)
                 return;
 
+            pevent.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
+
             // Switch the drawing quality depending on the current settings:
             switch (Quality)
             {
