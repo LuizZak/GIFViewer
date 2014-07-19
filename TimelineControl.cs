@@ -33,6 +33,11 @@ namespace GIF_Viewer
         protected TimelineFrameDisplayType frameDisplayType;
 
         /// <summary>
+        /// Whether to display the frame under the mouse when it hovers over the control
+        /// </summary>
+        protected bool displayFrameUnderMouse;
+
+        /// <summary>
         /// Whether to disable selection of frames that are out of range
         /// </summary>
         protected bool disableFrameSelectionOutOfRange;
@@ -45,11 +50,11 @@ namespace GIF_Viewer
         /// <summary>
         /// The control's X scroll
         /// </summary>
-        protected float scrollX = 0;
+        protected double scrollX = 0;
         /// <summary>
         /// The control's Width scale modifier
         /// </summary>
-        protected float scrollScaleWidth = 1;
+        protected double scrollScaleWidth = 1;
 
         /// <summary>
         /// The knob currently being dragged
@@ -72,6 +77,10 @@ namespace GIF_Viewer
         /// Whether the user is hovering the mouse over the timeline
         /// </summary>
         protected bool mouseOverTimeline = false;
+        /// <summary>
+        /// Whether the mouse is currently inside the control
+        /// </summary>
+        protected bool mouseInsideControl = false;
         /// <summary>
         /// Point representing the range before the user started dragging the timeline
         /// </summary>
@@ -259,7 +268,7 @@ namespace GIF_Viewer
         [Category("Appearance")]
         [DefaultValue(0)]
         [Description("The control's X scroll")]
-        public float ScrollX
+        public double ScrollX
         {
             get { return scrollX; }
             set { if (scrollX != value) { scrollX = value; Invalidate(); } }
@@ -272,7 +281,7 @@ namespace GIF_Viewer
         [Category("Appearance")]
         [DefaultValue(1)]
         [Description("The control's Width scale modifier")]
-        public float ScrollScaleWidth
+        public double ScrollScaleWidth
         {
             get { return scrollScaleWidth; }
             set { if (scrollScaleWidth != value) { value = value < 0 ? 0.1f : value; scrollScaleWidth = value; Invalidate(); } }
@@ -302,6 +311,27 @@ namespace GIF_Viewer
         {
             get { return frameDisplayType; }
             set { if (frameDisplayType != value) { frameDisplayType = value; Invalidate(); } }
+        }
+
+        /// <summary>
+        /// Gets or sets whether to display the frame under the mouse when it hovers over the control
+        /// </summary>
+        [Browsable(true)]
+        [Category("Appearance")]
+        [DefaultValue(false)]
+        [Description("Whether to display the frame under the mouse when it hovers over the control")]
+        public bool DisplayFrameUnderMouse
+        {
+            get { return displayFrameUnderMouse; }
+            set
+            {
+                if (displayFrameUnderMouse != value)
+                {
+                    displayFrameUnderMouse = value;
+
+                    InvalidateUnderMouse();
+                }
+            }
         }
 
         /// <summary>
@@ -456,13 +486,13 @@ namespace GIF_Viewer
 
             if (maximum - minimum > 0)
             {
-                float mult = ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 2);
+                double mult = ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 2);
 
                 // Draw ticks:
                 for (float i = 0; i <= (maximum - minimum); i++)
                 {
                     // Calculate the X portion of the line:
-                    float x1 = (i / (maximum - minimum)) * mult + firstKnob.KnobThickness / 2 - ScrollX;
+                    float x1 = (float)(i / (maximum - minimum)) * (float)mult + firstKnob.KnobThickness / 2 - (float)ScrollX;
 
                     // Check to see if the newly calculated X portion is inside the clip rectangle:
                     if (e.ClipRectangle.X - 1 > x1)
@@ -512,15 +542,15 @@ namespace GIF_Viewer
                     int textY = timelineHeight + 12;
 
                     // Draw the first frame:
-                    e.Graphics.DrawString(minimum + "", this.Font, Brushes.DarkGray, -ScrollX, textY);
+                    e.Graphics.DrawString(minimum + "", this.Font, Brushes.DarkGray, -(float)ScrollX, textY);
 
                     // Draw the last frame:
-                    e.Graphics.DrawString("" + (maximum), font, Brushes.DarkGray, ((Width * ScrollScaleWidth) - firstKnob.KnobThickness / 2 - 1) - (maxSize) - ScrollX, textY);
+                    e.Graphics.DrawString("" + (maximum), font, Brushes.DarkGray, (float)((Width * ScrollScaleWidth) - firstKnob.KnobThickness / 2 - 1) - (maxSize) - (float)ScrollX, textY);
 
                     // Draw the middle frame (only if there is more than 1 frame):
                     if ((maximum - minimum) > 1)
                     {
-                        e.Graphics.DrawString("" + (maximum + minimum) / 2, font, Brushes.DarkGray, ((Width * ScrollScaleWidth) / 2) - medSize / 2 - ScrollX, textY);
+                        e.Graphics.DrawString("" + (maximum + minimum) / 2, font, Brushes.DarkGray, (float)((Width * ScrollScaleWidth) / 2) - medSize / 2 - (float)ScrollX, textY);
                     }
                 }
 
@@ -534,40 +564,15 @@ namespace GIF_Viewer
                 // Draw the frame playhead indicator:
                 if (currentFrame >= minimum)
                 {
-                    // Create the playhead translation point:
-                    Point playheadPos1 = Point.Empty;
+                    DrawFrameIndicator(e, currentFrame);
+                }
+            }
 
-                    // Set the playhead translation point:
-                    playheadPos1.X = (firstKnob.KnobThickness / 2) + (int)((float)(currentFrame - minimum) / Math.Max(1, maximum - minimum) * ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 1)) - (int)ScrollX;
-                    playheadPos1.Y = 0;
-
-                    if (frameDisplayType == TimelineFrameDisplayType.Tick)
-                    {
-                        // Create the playhead size point:
-                        Point playheadPos2 = new Point(playheadPos1.X, playheadPos1.Y);
-
-                        // Set the playhead size point:
-                        playheadPos2.Y = timelineHeight;
-
-                        // Draw the playhead:
-                        e.Graphics.DrawLine(new Pen(Color.White, 4), playheadPos1, playheadPos2);
-                    }
-                    else if (frameDisplayType == TimelineFrameDisplayType.FrameNumber)
-                    {
-                        string frameText = currentFrame + "";
-                        SizeF frameTextSize = e.Graphics.MeasureString(frameText, this.font);
-
-                        Brush brush = new SolidBrush(Color.White);
-
-                        e.Graphics.FillRectangle(brush, new RectangleF(playheadPos1.X - frameTextSize.Width / 2, playheadPos1.Y, frameTextSize.Width, timelineHeight + 1));
-
-                        brush.Dispose();
-
-                        e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
-                        e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
-
-                        e.Graphics.DrawString(currentFrame + "", this.font, Brushes.Black, playheadPos1.X - frameTextSize.Width / 2, playheadPos1.Y - 1);
-                    }
+            if (mouseInsideControl)
+            {
+                if (displayFrameUnderMouse)
+                {
+                    DrawFrameIndicator(e, currentFrameUnderMouse, 0.5f);
                 }
             }
 
@@ -615,8 +620,8 @@ namespace GIF_Viewer
                 if (knobsEnabled)
                 {
                     // Get the distance between the mouse and the knobs:
-                    float fx = Math.Abs(e.X - firstKnob.ScaledX - firstKnob.KnobThickness / 2);
-                    float sx = Math.Abs(e.X - secondKnob.ScaledX - secondKnob.KnobThickness / 2);
+                    double fx = Math.Abs(e.X - firstKnob.ScaledX - firstKnob.KnobThickness / 2);
+                    double sx = Math.Abs(e.X - secondKnob.ScaledX - secondKnob.KnobThickness / 2);
 
                     bool overY = (behaviorType == TimelineBehaviorType.RangeSelector || e.Y > timelineHeight + 2);
 
@@ -658,7 +663,7 @@ namespace GIF_Viewer
                 {
                     if (e.X > Math.Min(firstKnob.ScaledX, secondKnob.ScaledX) && e.X < Math.Max(firstKnob.ScaledX, secondKnob.ScaledX) && e.Y < timelineHeight)
                     {
-                        dragOffset.X = ((e.X + ScrollX - firstKnob.KnobThickness / 2) / ScrollScaleWidth) / ((float)(Width - firstKnob.KnobThickness / ScrollScaleWidth) / (maximum - minimum));
+                        dragOffset.X = (float)((e.X + ScrollX - firstKnob.KnobThickness / 2) / ScrollScaleWidth) / ((float)(Width - firstKnob.KnobThickness / ScrollScaleWidth) / (maximum - minimum));
                         drag = firstKnob;
                         draggingTimeline = true;
                         draggingTimelineRange = GetRange();
@@ -723,10 +728,16 @@ namespace GIF_Viewer
             // Whether to redraw the knobs:
             bool redrawKnobs = false;
 
+            // If the currnet behavior is set to display under mouse, invalidate the old (and new) mouse position
+            if (displayFrameUnderMouse)
+            {
+                UpdateFrameUnderMouseDisplay();
+            }
+
             // The user is dragging the timeline
             if (draggingTimeline)
             {
-                float eX = ((e.X + ScrollX - firstKnob.KnobThickness / 2) / ScrollScaleWidth) / ((float)(Width - firstKnob.KnobThickness / ScrollScaleWidth) / (maximum - minimum));
+                double eX = ((e.X + ScrollX - firstKnob.KnobThickness / 2) / ScrollScaleWidth) / ((Width - firstKnob.KnobThickness / ScrollScaleWidth) / (maximum - minimum));
                 int diff = (int)(eX - dragOffset.X);
 
                 // Clamp the movement delta
@@ -769,7 +780,7 @@ namespace GIF_Viewer
             // The user is dragging the view
             else if (draggingView)
             {
-                float lastScroll = ScrollX;
+                double lastScroll = ScrollX;
 
                 ScrollX = -(e.X - dragOffset.X);
 
@@ -789,10 +800,10 @@ namespace GIF_Viewer
             // The user is hovering the mouse over the control
             else if (drag != null)
             {
-                float eX = e.X + dragOffset.X + (int)ScrollX;
+                double eX = e.X + dragOffset.X + (int)ScrollX;
 
                 // Calculate new value:
-                float newValue = minimum + (float)Math.Round((float)(eX - drag.KnobThickness / 2) / ((Width * ScrollScaleWidth) - drag.KnobThickness - 1) * (maximum - minimum));
+                double newValue = minimum + Math.Round((eX - drag.KnobThickness / 2) / ((Width * ScrollScaleWidth) - drag.KnobThickness - 1) * (maximum - minimum));
 
                 // Whether to redraw:
                 bool redraw = false;
@@ -1000,12 +1011,39 @@ namespace GIF_Viewer
         /// OnMouseUp event called whenever the user leaves the mouse out of this control's bounds
         /// </summary>
         /// <param name="e">The MouseEventArgs for this event</param>
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+
+            if (!Enabled)
+                return;
+
+            this.mouseInsideControl = true;
+
+            // If the currnet behavior is set to display under mouse, invalidate the old (and new) mouse position
+            if (displayFrameUnderMouse)
+            {
+                UpdateFrameUnderMouseDisplay();
+            }
+        }
+        /// <summary>
+        /// OnMouseUp event called whenever the user leaves the mouse out of this control's bounds
+        /// </summary>
+        /// <param name="e">The MouseEventArgs for this event</param>
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
 
             if (!Enabled)
                 return;
+
+            this.mouseInsideControl = false;
+
+            // If the currnet behavior is set to display under mouse, invalidate the old (and new) mouse position
+            if (displayFrameUnderMouse)
+            {
+                UpdateFrameUnderMouseDisplay();
+            }
 
             // Redraw the knobs:
             if (firstKnob.MouseOver)
@@ -1038,20 +1076,20 @@ namespace GIF_Viewer
             if ((e.X > 0 && e.X < Width) &&
                 (e.Y > 0 && e.Y < Height))
             {
-                float oldX = (e.X * ((float)Width / (Width - firstKnob.KnobThickness)) - firstKnob.KnobThickness / 2) * ScrollScaleWidth;
+                double oldX = (e.X * ((double)Width / (Width - firstKnob.KnobThickness)) - (double)firstKnob.KnobThickness / 2) * ScrollScaleWidth;
 
-                ScrollScaleWidth += (float)e.Delta / 120 / 3;
+                ScrollScaleWidth += (double)e.Delta / 120 / 3;
 
-                if (ScrollScaleWidth < 1f / 3)
+                if (ScrollScaleWidth < 1 / 3)
                 {
-                    ScrollScaleWidth = 1f / 3;
+                    ScrollScaleWidth = 1 / 3;
                 }
-                else if (ScrollScaleWidth > 30f)
+                else if (ScrollScaleWidth > 30)
                 {
-                    ScrollScaleWidth = 30f;
+                    ScrollScaleWidth = 30;
                 }
 
-                float newX = (e.X * ((float)Width / (Width - firstKnob.KnobThickness)) - firstKnob.KnobThickness / 2) * ScrollScaleWidth;
+                double newX = (e.X * ((double)Width / (Width - firstKnob.KnobThickness)) - (double)firstKnob.KnobThickness / 2) * ScrollScaleWidth;
 
                 ScrollX += (newX - oldX);
 
@@ -1074,7 +1112,7 @@ namespace GIF_Viewer
             // Change the scroll position to match the new position
             if (lastWidth != 0)
             {
-                ScrollX /= ((float)lastWidth / Width);
+                ScrollX /= ((double)lastWidth / Width);
             }
 
             // Set the knobs to calculate new X properties:
@@ -1103,6 +1141,54 @@ namespace GIF_Viewer
         }
 
         /// <summary>
+        /// Draws the frame indicator on the given frame with the given paint args
+        /// </summary>
+        /// <param name="e">The paint args to draw the frame indicator on</param>
+        /// <param name="frame">The frame index to draw</param>
+        /// <param name="alpha">The alpha modifier to use during the drawing process</param>
+        private void DrawFrameIndicator(PaintEventArgs e, int frame, float alpha = 1)
+        {
+            // Create the playhead translation point:
+            Point playheadPos1 = Point.Empty;
+
+            Color backColor = Color.FromArgb((int)(255 * alpha), 255, 255, 255);
+            Color textColor = Color.FromArgb((int)(255 * alpha), 0, 0, 0);
+
+            // Set the playhead translation point:
+            playheadPos1.X = (firstKnob.KnobThickness / 2) + (int)((float)(frame - minimum) / Math.Max(1, maximum - minimum) * ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 1)) - (int)ScrollX;
+            playheadPos1.Y = 0;
+
+            if (frameDisplayType == TimelineFrameDisplayType.Tick)
+            {
+                // Create the playhead size point:
+                Point playheadPos2 = new Point(playheadPos1.X, playheadPos1.Y);
+
+                // Set the playhead size point:
+                playheadPos2.Y = timelineHeight;
+
+                // Draw the playhead:
+                e.Graphics.DrawLine(new Pen(backColor, 4), playheadPos1, playheadPos2);
+            }
+            else if (frameDisplayType == TimelineFrameDisplayType.FrameNumber)
+            {
+                string frameText = frame + "";
+                SizeF frameTextSize = e.Graphics.MeasureString(frameText, this.font);
+
+                Brush backBrush = new SolidBrush(backColor);
+                Brush textBrush = new SolidBrush(textColor);
+
+                e.Graphics.FillRectangle(backBrush, new RectangleF(playheadPos1.X - frameTextSize.Width / 2, playheadPos1.Y, frameTextSize.Width, timelineHeight + 1));
+                e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+                e.Graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+
+                e.Graphics.DrawString(frame + "", this.font, textBrush, playheadPos1.X - frameTextSize.Width / 2, playheadPos1.Y - 1);
+
+                backBrush.Dispose();
+                textBrush.Dispose();
+            }
+        }
+
+        /// <summary>
         /// Gets a Rectangle that represents the timeline display area
         /// </summary>
         /// <returns>A Rectangle that represents the timeline display area</returns>
@@ -1120,23 +1206,31 @@ namespace GIF_Viewer
         /// <returns>The frame under the mouse pointer</returns>
         protected int GetFrameUnderMouse(bool clipOnRange = true)
         {
-            float totalWidth = ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 2);
-            float mx = (this.PointToClient(MousePosition).X + ScrollX - firstKnob.KnobThickness / 2) / totalWidth;
+            double totalWidth = ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 2);
+            double mx = (this.PointToClient(MousePosition).X + ScrollX - firstKnob.KnobThickness / 2) / totalWidth;
 
             int f = Math.Max(minimum, Math.Min(maximum, minimum + (int)Math.Round(mx * (maximum - minimum))));
 
-            if (clipOnRange && behaviorType == TimelineBehaviorType.RangeSelector)
+            Point range = GetRange();
+
+            if ((clipOnRange && behaviorType == TimelineBehaviorType.RangeSelector) || (behaviorType == TimelineBehaviorType.TimelineWithRange && disableFrameSelectionOutOfRange))
             {
-                Point range = GetRange();
-                f = Math.Max(range.X, Math.Min(range.X + range.Y, f));
-            }
-            else if (behaviorType == TimelineBehaviorType.TimelineWithRange && disableFrameSelectionOutOfRange)
-            {
-                Point range = GetRange();
                 f = Math.Max(range.X, Math.Min(range.X + range.Y, f));
             }
 
             return f;
+        }
+
+        /// <summary>
+        /// Updates the display of the frame currently under the mouse
+        /// </summary>
+        protected void UpdateFrameUnderMouseDisplay()
+        {
+            InvalidateUnderMouse();
+
+            currentFrameUnderMouse = GetFrameUnderMouse(true);
+
+            InvalidateUnderMouse();
         }
 
         /// <summary>
@@ -1145,8 +1239,8 @@ namespace GIF_Viewer
         /// <returns>Whether the mouse is currently over the timeline</returns>
         protected bool IsMouseOnTimeline()
         {
-            float x = firstKnob.KnobThickness / 2 - ScrollX;
-            float w = ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 2);
+            double x = firstKnob.KnobThickness / 2 - ScrollX;
+            double w = ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 2);
 
             int mx = this.PointToClient(MousePosition).X;
             int my = this.PointToClient(MousePosition).Y;
@@ -1165,6 +1259,23 @@ namespace GIF_Viewer
             SizeF frameTextSize = g.MeasureString(frameText, this.font);
 
             Invalidate(new Rectangle((firstKnob.KnobThickness / 2) + (int)((float)(currentFrame - minimum) / Math.Max(1, maximum - minimum) * ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 1)) - (int)ScrollX - (int)frameTextSize.Width / 2 - 1, 0, (int)frameTextSize.Width + 2, timelineHeight + 1));
+
+            g.Dispose();
+        }
+
+        /// <summary>
+        /// Invalidates the region under the mouse. Utilized when the mouse is hovering over the control and DisplayFrameUnderMouse is set to true
+        /// </summary>
+        protected void InvalidateUnderMouse()
+        {
+            int frame = currentFrameUnderMouse;
+
+            Graphics g = this.CreateGraphics();
+
+            string frameText = frame + "";
+            SizeF frameTextSize = g.MeasureString(frameText, this.font);
+
+            Invalidate(new Rectangle((firstKnob.KnobThickness / 2) + (int)((float)(frame - minimum) / Math.Max(1, maximum - minimum) * ((Width * ScrollScaleWidth) - firstKnob.KnobThickness - 1)) - (int)ScrollX - (int)frameTextSize.Width / 2 - 1, 0, (int)frameTextSize.Width + 2, timelineHeight + 1));
 
             g.Dispose();
         }
@@ -1192,6 +1303,10 @@ namespace GIF_Viewer
         /// The current frame being displayed
         /// </summary>
         protected int currentFrame;
+        /// <summary>
+        /// The current frame under the mouse
+        /// </summary>
+        protected int currentFrameUnderMouse;
         /// <summary>
         /// The knob to draw the last
         /// </summary>
@@ -1303,11 +1418,11 @@ namespace GIF_Viewer
         /// <summary>
         /// This knob's X position
         /// </summary>
-        protected float x;
+        protected double x;
         /// <summary>
         /// This knob's X scale
         /// </summary>
-        protected float scaledX;
+        protected double scaledX;
         /// <summary>
         /// This knob's drawing offset
         /// </summary>
@@ -1343,7 +1458,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Gets or sets this knob's X position
         /// </summary>
-        public float X
+        public double X
         {
             get { return x; }
             set { this.x = X; }
@@ -1471,7 +1586,7 @@ namespace GIF_Viewer
         public void Update()
         {
             // Calculate the new position:
-            this.x = (KnobThickness / 2) + ((float)this.value / Math.Max(parent.Maximum - parent.Minimum, 1)) * (parent.Width - KnobThickness - 1);
+            this.x = (KnobThickness / 2) + ((double)this.value / Math.Max(parent.Maximum - parent.Minimum, 1)) * (parent.Width - KnobThickness - 1);
 
             this.scaledX = GetRealX();
         }
@@ -1480,9 +1595,9 @@ namespace GIF_Viewer
         /// Gets the real X component of this knob
         /// </summary>
         /// <returns>The real X component of this knob, adjusted for the parent TimelineControl's scale</returns>
-        public float GetRealX()
+        public double GetRealX()
         {
-            return ((float)(value - parent.Minimum) / Math.Max(parent.Maximum - parent.Minimum, 1)) * ((parent.Width * parent.ScrollScaleWidth) - KnobThickness - 1) - parent.ScrollX;
+            return ((double)(value - parent.Minimum) / Math.Max(parent.Maximum - parent.Minimum, 1)) * ((parent.Width * parent.ScrollScaleWidth) - KnobThickness - 1) - parent.ScrollX;
         }
 
         /// <summary>
