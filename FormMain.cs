@@ -519,21 +519,23 @@ namespace GIF_Viewer
         {
             try
             {
+                int newFrame = CurrentGif.CurrentFrame;
+
                 if (!tlc_timeline.DraggingFrame && CurrentGif.Playing)
                 {
                     // Change the current frame
-                    CurrentGif.CurrentFrame = (CurrentGif.CurrentFrame + 1) % CurrentGif.FrameCount;
+                    newFrame = (CurrentGif.CurrentFrame + 1) % CurrentGif.FrameCount;
                     changeTimelineFrame(CurrentGif.CurrentFrame);
                     UpdateFrameText();
                 }
 
-                if (CurrentGif.CurrentFrame != lastFrame)
+                if (newFrame != lastFrame)
                 {
-                    lastFrame = CurrentGif.CurrentFrame;
+                    lastFrame = newFrame;
                     // Redraw the GIF panel
                     pb_gif._Paint = false;
 
-                    CurrentGif.SetCurrentFrame(CurrentGif.CurrentFrame);
+                    CurrentGif.SetCurrentFrame(newFrame);
 
                     pb_gif._Paint = true;
 
