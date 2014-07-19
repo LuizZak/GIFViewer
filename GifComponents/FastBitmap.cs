@@ -54,6 +54,9 @@ namespace GifComponents
         /// </summary>
         private int* _pBase;
 
+        /// <summary>
+        /// The width of the stride, in pixel units (Int32)
+        /// </summary>
         private int _strideWidth;
 
         /// <summary>
@@ -85,7 +88,7 @@ namespace GifComponents
             // Get a pointer to the first pixel in the bitmap.
             _pBase = (int*)_bitmapData.Scan0;
 
-            // Calculate stride width, for 
+            // Calculate stride width
             _strideWidth = _bitmapData.Stride / 4;
         }
 
@@ -146,6 +149,7 @@ namespace GifComponents
 
                 if (!ignoreZeroes)
                 {
+                    // Unfold the loop
                     const int sizeBlock = 8;
                     int rem = count % sizeBlock;
 

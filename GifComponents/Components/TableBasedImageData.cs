@@ -109,9 +109,7 @@ namespace GifComponents.Components
         /// end-of-information code or error condition is encountered, any
         /// remaining pixel indices not already populated default to zero.
         /// </remarks>
-        public TableBasedImageData(Stream inputStream,
-                                    int pixelCount,
-                                    bool xmlDebugging)
+        public TableBasedImageData(Stream inputStream, int pixelCount, bool xmlDebugging)
             : base(xmlDebugging)
         {
             #region guard against silly image sizes

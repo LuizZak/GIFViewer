@@ -62,7 +62,6 @@ namespace GifComponents.Components
 		private GraphicControlExtension _extension;
 		private ImageDescriptor _imageDescriptor;
 		private Color _backgroundColour;
-		private TableBasedImageData _indexedPixels;
         private Stream inputStream;
         private LogicalScreenDescriptor logicalScreenDescriptor;
         private ColourTable globalColourTable;
@@ -369,22 +368,6 @@ namespace GifComponents.Components
 			get { return _imageDescriptor; }
 		}
 		#endregion
-
-		#region IndexedPixels property
-		/// <summary>
-		/// Gets the table-based image data containing the indices within the
-		/// active colour table of the colours of each of the pixels in the
-		/// frame.
-		/// </summary>
-		[Category( "Set by decoder" )]
-		[Description( "Gets the table-based image data containing the " + 
-		              "indices within the active colour table of the colours " + 
-		              "of each of the pixels in the frame." )]
-		public TableBasedImageData IndexedPixels
-		{
-			get { return _indexedPixels; }
-		}
-		#endregion
 		
 		#endregion
 		
@@ -542,9 +525,7 @@ namespace GifComponents.Components
 
             // decode pixel data
             int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
-            TableBasedImageData tbid
-                = new TableBasedImageData(inputStream, pixelCount, XmlDebugging);
-
+            TableBasedImageData tbid = new TableBasedImageData(inputStream, pixelCount, XmlDebugging);
             if (tbid.PixelIndexes.Length == 0)
             {
                 // TESTME: constructor - PixelIndexes.Length == 0
@@ -562,23 +543,16 @@ namespace GifComponents.Components
             // case there is any surplus data before the next frame)
             SkipBlocks(inputStream);
 
-            _indexedPixels = tbid;
-
             if (graphicControlExtension != null)
             {
                 _delay = graphicControlExtension.DelayTime;
             }
             _imageDescriptor = imageDescriptor;
             _backgroundColour = backgroundColour;
-            _image = CreateBitmap(tbid,
-                                    logicalScreenDescriptor,
-                                    imageDescriptor,
-                                    activeColourTable,
-                                    graphicControlExtension,
-                                    previousFrame,
-                                    previousFrameBut1);
+            _image = CreateBitmap(tbid, logicalScreenDescriptor, imageDescriptor, activeColourTable, graphicControlExtension, previousFrame, previousFrameBut1);
 
             RecurseCheckRequiresRedraw();
+
             isLoaded = true;
         }
 
