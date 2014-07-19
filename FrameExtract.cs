@@ -112,35 +112,37 @@ namespace GIF_Viewer
         {
             try
             {
+                int newFrame = CurrentGif.CurrentFrame;
+
                 if (playing)
                 {
                     if (Range.Y > 0)
                     {
-                        CurrentGif.CurrentFrame = (++CurrentGif.CurrentFrame) % (Range.X + Range.Y);
+                        newFrame = (++newFrame) % (Range.X + Range.Y);
 
-                        if (CurrentGif.CurrentFrame < Range.X - 1)
-                            CurrentGif.CurrentFrame = Range.X - 1;
+                        if (newFrame < Range.X - 1)
+                            newFrame = Range.X - 1;
 
-                        if (CurrentGif.CurrentFrame > CurrentGif.FrameCount)
-                            CurrentGif.CurrentFrame = CurrentGif.FrameCount;
+                        if (newFrame > CurrentGif.FrameCount)
+                            newFrame = CurrentGif.FrameCount;
                     }
                     else
                     {
-                        CurrentGif.CurrentFrame = Range.X - 1;
+                        newFrame = Range.X - 1;
                     }
                 }
 
-                if (CurrentGif.CurrentFrame != lastFrame)
+                if (newFrame != lastFrame)
                 {
                     // Change the frame
                     cpb_preview._Paint = false;
 
-                    CurrentGif.SetCurrentFrame(CurrentGif.CurrentFrame);
+                    CurrentGif.SetCurrentFrame(newFrame);
 
                     cpb_preview._Paint = true;
                     cpb_preview.Invalidate();
 
-                    ChangeFrame(CurrentGif.CurrentFrame);
+                    ChangeFrame(newFrame);
                 }
             }
             catch (Exception ex)
