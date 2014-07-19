@@ -122,6 +122,71 @@ namespace GifComponents
         }
 
         /// <summary>
+        /// Copies the contents of the given array of colors into this FastBitmap.
+        /// Throws an ArgumentException if the count of colors on the array mismatches the pixel count from this FastBitmap
+        /// </summary>
+        /// <param name="colors">The array of colors to copy</param>
+        /// <param name="ignoreZeroes">Whether to ignore zeroes when copying the data</param>
+        public void CopyFromArray(int[] colors, bool ignoreZeroes)
+        {
+            if (colors.Length != _imageWidth * _imageHeight)
+            {
+                throw new ArgumentException("The number of colors of the given array mismatch the pixel count of the bitmap", "colors");
+            }
+
+            // Simply copy the argb values array
+            int* s0t = _pBase;
+
+            fixed (int *source = colors)
+            {
+                int* s0s = source;
+                int bpp = 1; // Bytes per pixel
+
+                int count = _imageWidth * _imageHeight * bpp;
+
+                if (!ignoreZeroes)
+                {
+                    const int sizeBlock = 8;
+                    int rem = count % sizeBlock;
+
+                    count /= sizeBlock;
+
+                    while (count-- > 0)
+                    {
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                    }
+
+                    while (rem-- > 0)
+                    {
+                        *(s0t++) = *(s0s++);
+                    }
+                }
+                else
+                {
+                    while (count-- > 0)
+                    {
+                        if (*(s0s) == 0)
+                        {
+                            s0t++;
+                            s0s++;
+                            continue;
+                        }
+
+                        *(s0t++) = *(s0s++);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Unlocks the area of memory where the bitmap is held.
         /// Call this method when you have finished calling GetPixel and 
         /// SetPixel.

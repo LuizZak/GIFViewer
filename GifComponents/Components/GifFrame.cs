@@ -926,30 +926,32 @@ namespace GifComponents.Components
 		/// <param name="pixels">
 		/// An array of the colours of the pixels for the bitmap to be created.
 		/// </param>
-		private static Bitmap CreateBitmap( Bitmap baseImage, int[] pixels )
-		{
-			int count = 0;
-			FastBitmap fastBaseImage = new FastBitmap( baseImage );
-			fastBaseImage.LockImage();
+        private static Bitmap CreateBitmap(Bitmap baseImage, int[] pixels)
+        {
+            int count = 0;
+            FastBitmap fastBaseImage = new FastBitmap(baseImage);
+            fastBaseImage.LockImage();
             int w = baseImage.Width;
             int h = baseImage.Height;
-            for (int th = 0; th < h; th++)
-			{
+
+            fastBaseImage.CopyFromArray(pixels, true);
+
+            /*for (int th = 0; th < h; th++)
+            {
                 for (int tw = 0; tw < w; tw++)
-				{
+                {
                     int pixel = pixels[count];
                     if (pixel != 0)
-					{
-						// then it's not a transparent pixel
+                    {
+                        // then it's not a transparent pixel
                         fastBaseImage.SetPixel(tw, th, pixel);
-                        //fastBaseImage.SetPixel(tw, th, Color.White.ToArgb());
-					}
-					count++;
-				}
-			}
-			fastBaseImage.UnlockImage();
-			return baseImage;
-		}
+                    }
+                    count++;
+                }
+            }*/
+            fastBaseImage.UnlockImage();
+            return baseImage;
+        }
 		#endregion
         #endregion
     }
