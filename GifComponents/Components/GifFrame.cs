@@ -424,60 +424,18 @@ namespace GifComponents.Components
                 throw new ArgumentNullException("logicalScreenDescriptor");
             }
 
-            if (graphicControlExtension == null)
-            {
-                SetStatus(ErrorState.NoGraphicControlExtension, "");
-                // use a default GCE
-                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
-                                                   DisposalMethod.NotSpecified,
-                                                   false,
-                                                   false,
-                                                   100,
-                                                   0);
-            }
+            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream, XmlDebugging);
 
-            int transparentColourIndex = graphicControlExtension.TransparentColourIndex;
-
-            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream,
-                                                                   XmlDebugging);
-
-            Color backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
-            // TODO: use backgroundColourIndex from the logical screen descriptor?
-            ColourTable activeColourTable;
             if (imageDescriptor.HasLocalColourTable)
             {
-                _localColourTable
-                    = new ColourTable(inputStream,
-                                       imageDescriptor.LocalColourTableSize,
-                                       XmlDebugging);
-                activeColourTable = _localColourTable; // make local table active
-            }
-            else
-            {
-                if (globalColourTable == null)
-                {
-                    // We have neither local nor global colour table, so we
-                    // won't be able to decode this frame.
-                    Bitmap emptyBitmap = new Bitmap(logicalScreenDescriptor.LogicalScreenSize.Width,
-                                                     logicalScreenDescriptor.LogicalScreenSize.Height);
-                    _image = emptyBitmap;
-                    _delay = graphicControlExtension.DelayTime;
-                    SetStatus(ErrorState.FrameHasNoColourTable, "");
-                    return;
-                }
-                activeColourTable = globalColourTable; // make global table active
-                if (logicalScreenDescriptor.BackgroundColourIndex
-                   == transparentColourIndex)
-                {
-                    backgroundColour = Color.FromArgb(0);
-                }
+                ColourTable.SkipOnStream(inputStream, imageDescriptor.LocalColourTableSize);
             }
 
             // decode pixel data
             int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
 
             //inputStream.Position += TableBasedImageData.SkipOnStream(inputStream, pixelCount);
-            TableBasedImageData.SkipOnStream(inputStream, pixelCount);
+            TableBasedImageData.SkipOnStream(inputStream);
 
             // Skip any remaining blocks up to the next block terminator (in
             // case there is any surplus data before the next frame)
