@@ -74,6 +74,10 @@ namespace GIF_Viewer
         /// </summary>
         protected bool draggingTimeline = false;
         /// <summary>
+        /// Whether the user is hovering the mouse over the currently selected range
+        /// </summary>
+        protected bool mouseOverCurrentRange = false;
+        /// <summary>
         /// Whether the user is hovering the mouse over the timeline
         /// </summary>
         protected bool mouseOverTimeline = false;
@@ -392,6 +396,7 @@ namespace GIF_Viewer
             this.Maximum = 1;
             this.currentFrame = -1;
             this.disableFrameSelectionOutOfRange = true;
+            this.mouseOverTimeline = false;
 
             // Set the knobs' values:
             firstKnob.Value = this.minimum;
@@ -528,7 +533,7 @@ namespace GIF_Viewer
                     // Draw out the new area:
                     if (draggingTimeline && behaviorType == TimelineBehaviorType.RangeSelector)
                         e.Graphics.FillRectangle(lightBrush, timelineRect);
-                    else if (mouseOverTimeline && behaviorType == TimelineBehaviorType.RangeSelector)
+                    else if (mouseOverCurrentRange && behaviorType == TimelineBehaviorType.RangeSelector)
                         e.Graphics.FillRectangle(lightBrush, timelineRect);
                     else
                         e.Graphics.FillRectangle(baseBrush, timelineRect);
@@ -568,7 +573,7 @@ namespace GIF_Viewer
                 }
             }
 
-            if (mouseInsideControl)
+            if (mouseOverTimeline)
             {
                 if (displayFrameUnderMouse)
                 {
@@ -734,6 +739,9 @@ namespace GIF_Viewer
                 UpdateFrameUnderMouseDisplay();
             }
 
+            // Check whether the mouse is currently over the timeline
+            UpdateMouseOverTimeline();
+
             // The user is dragging the timeline
             if (draggingTimeline)
             {
@@ -881,11 +889,11 @@ namespace GIF_Viewer
                             // Set this knob to draw over the other knob:
                             drawLast = firstKnob;
 
-                            if (mouseOverTimeline)
+                            if (mouseOverCurrentRange)
                                 Invalidate();
 
                             // Reset the mouse over timeline flag
-                            mouseOverTimeline = false;
+                            mouseOverCurrentRange = false;
                         }
                         // If not, un-highlight it:
                         else if (firstKnob.MouseOver)
@@ -921,11 +929,11 @@ namespace GIF_Viewer
                             // Set this knob to draw over the other knob:
                             drawLast = secondKnob;
 
-                            if (mouseOverTimeline)
+                            if (mouseOverCurrentRange)
                                 Invalidate();
 
                             // Reset the mouse over timeline flag
-                            mouseOverTimeline = false;
+                            mouseOverCurrentRange = false;
                         }
                         // If not, un-highlight it:
                         else if (secondKnob.MouseOver)
@@ -947,16 +955,13 @@ namespace GIF_Viewer
                 {
                     if (e.X > Math.Min(firstKnob.ScaledX, secondKnob.ScaledX) && e.X < Math.Max(firstKnob.ScaledX, secondKnob.ScaledX) && e.Y < timelineHeight)
                     {
-                        mouseOverTimeline = true;
+                        mouseOverCurrentRange = true;
                         Invalidate();
                     }
-                    else
+                    else if (mouseOverCurrentRange)
                     {
-                        if (mouseOverTimeline)
-                        {
-                            mouseOverTimeline = false;
-                            Invalidate();
-                        }
+                        mouseOverCurrentRange = false;
+                        Invalidate();
                     }
                 }
             }
@@ -1020,6 +1025,9 @@ namespace GIF_Viewer
 
             this.mouseInsideControl = true;
 
+            // Check whether the mouse is currently over the timeline
+            UpdateMouseOverTimeline();
+
             // If the currnet behavior is set to display under mouse, invalidate the old (and new) mouse position
             if (displayFrameUnderMouse)
             {
@@ -1038,6 +1046,7 @@ namespace GIF_Viewer
                 return;
 
             this.mouseInsideControl = false;
+            this.mouseOverTimeline = false;
 
             // If the currnet behavior is set to display under mouse, invalidate the old (and new) mouse position
             if (displayFrameUnderMouse)
@@ -1055,9 +1064,9 @@ namespace GIF_Viewer
             firstKnob.MouseOver = false;
             secondKnob.MouseOver = false;
 
-            if (mouseOverTimeline)
+            if (mouseOverCurrentRange)
             {
-                mouseOverTimeline = false;
+                mouseOverCurrentRange = false;
                 Invalidate();
             }
         }
@@ -1219,6 +1228,14 @@ namespace GIF_Viewer
             }
 
             return f;
+        }
+
+        /// <summary>
+        /// Updates the mouseOverTimeline flag
+        /// </summary>
+        private void UpdateMouseOverTimeline()
+        {
+            mouseOverTimeline = IsMouseOnTimeline();
         }
 
         /// <summary>
