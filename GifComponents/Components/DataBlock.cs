@@ -50,7 +50,7 @@ namespace GifComponents.Components
         /// <returns>The ammount of bytes that were skipt</returns>
         public static long SkipStream(Stream inputStream)
         {
-            int blockSize = Read(inputStream);
+            int blockSize = inputStream.ReadByte();
 
             if (blockSize == -1)
             {
