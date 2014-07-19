@@ -435,14 +435,14 @@ namespace GIF_Viewer
             UpdateTitle();
 
             // Set up the seek trackBar
-            tlc_timeline.Maximum = CurrentGif.GetFrameCount() - 1;
+            tlc_timeline.Maximum = CurrentGif.GetFrameCount();
             tlc_timeline.CurrentFrame = 1;
 
             // Disable the play button, frame extract context menu item and trackbar when there is only 1 frame available
-            PlayBtn.Enabled = FrameExtract.Enabled = tlc_timeline.Enabled = (CurrentGif.Frames > 1);
+            PlayBtn.Enabled = FrameExtract.Enabled = tlc_timeline.Enabled = (CurrentGif.FrameCount > 1);
 
             // Setup the frame label
-            lblFrame.Text = "Frame: " + (CurrentGif.currentFrame + 1) + "/" + CurrentGif.Frames;
+            lblFrame.Text = "Frame: " + (CurrentGif.CurrentFrame + 1) + "/" + CurrentGif.FrameCount;
 
             // Refresh the pictureBox with the new animation
             pb_gif.BackgroundImage = CurrentGif.GIF;
@@ -461,7 +461,7 @@ namespace GIF_Viewer
             lblLoading.Visible = false;
 
             // Start the animation timer
-            if (CurrentGif.Frames > 1)
+            if (CurrentGif.FrameCount > 1)
             {
                 CurrentGif.Playing = true;
                 AnimationTimer.Interval = UseMinFrameInterval ? Math.Max(CurrentGif.GetIntervalForCurrentFrame(), MinFrameInterval) : CurrentGif.GetIntervalForCurrentFrame();
@@ -521,25 +521,25 @@ namespace GIF_Viewer
                 if (!tlc_timeline.DraggingFrame && CurrentGif.Playing)
                 {
                     // Change the current frame
-                    CurrentGif.currentFrame = (CurrentGif.currentFrame + 1) % CurrentGif.Frames;
-                    changeTimelineFrame(CurrentGif.currentFrame);
-                    changeText("Frame: " + (CurrentGif.currentFrame + 1));
+                    CurrentGif.CurrentFrame = (CurrentGif.CurrentFrame + 1) % CurrentGif.FrameCount;
+                    changeTimelineFrame(CurrentGif.CurrentFrame);
+                    UpdateFrameText();
                 }
 
-                if (CurrentGif.currentFrame != lastFrame)
+                if (CurrentGif.CurrentFrame != lastFrame)
                 {
-                    lastFrame = CurrentGif.currentFrame;
+                    lastFrame = CurrentGif.CurrentFrame;
                     // Redraw the GIF panel
                     pb_gif._Paint = false;
 
-                    CurrentGif.SetCurrentFrame(CurrentGif.currentFrame);
+                    CurrentGif.SetCurrentFrame(CurrentGif.CurrentFrame);
 
                     pb_gif._Paint = true;
 
                     pb_gif.Invalidate();
                 }
 
-                if (CurrentGif.currentFrame == (CurrentGif.Frames - 1) && CurrentGif.CanLoop == false)
+                if (CurrentGif.CurrentFrame == (CurrentGif.FrameCount - 1) && CurrentGif.CanLoop == false)
                 {
                     CurrentGif.Playing = false;
                 }
@@ -678,6 +678,14 @@ namespace GIF_Viewer
         }
 
         /// <summary>
+        /// Updates this form's current frame text
+        /// </summary>
+        void UpdateFrameText()
+        {
+            changeText("Frame: " + (CurrentGif.CurrentFrame + 1) + "/" + CurrentGif.FrameCount);
+        }
+
+        /// <summary>
         /// Event fired everytime the user presses the FrameExtract context menu option
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
@@ -689,7 +697,7 @@ namespace GIF_Viewer
                 return;
 
             // Skip if animation has only one frame:
-            if (CurrentGif.Frames <= 1)
+            if (CurrentGif.FrameCount <= 1)
             {
                 MessageBox.Show(this, "Animation must have atleast 2 frames to export.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 
@@ -845,8 +853,8 @@ namespace GIF_Viewer
         /// <param name="newFrame">The new frame selected on the timeline control</param>
         private void tlc_timeline_FrameChanged(object sender, FrameChangedEventArgs newFrame)
         {
-            CurrentGif.currentFrame = newFrame.NewFrame;
-            lblFrame.Text = "Frame: " + (CurrentGif.currentFrame + 1) + "/" + CurrentGif.Frames;
+            CurrentGif.CurrentFrame = newFrame.NewFrame - 1;
+            UpdateFrameText();
 
             AnimationTimer.Stop();
             AnimationTimer.Interval = 15;
@@ -861,7 +869,7 @@ namespace GIF_Viewer
         private void PlayBtn_Click(object sender, EventArgs e)
         {
             // Skip play toggling if the gif has only 1 frame
-            if (CurrentGif.Frames == 1)
+            if (CurrentGif.FrameCount == 1)
                 return;
 
             // Response for when the button is set to Stop the gif file
@@ -984,7 +992,7 @@ namespace GIF_Viewer
         /// <param name="newValue">The new ammount to set</param>
         public void changeTimelineFrame(int newValue)
         {
-            tlc_timeline.CurrentFrame = newValue;
+            tlc_timeline.CurrentFrame = newValue + 1;
         }
 
         /// <summary>

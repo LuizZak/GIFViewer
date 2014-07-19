@@ -29,21 +29,31 @@ namespace GIF_Viewer
         /// </summary>
         public bool Playing = false;
         /// <summary>
-        /// Ammount of frames on this gif
+        /// Gets the ammount of frames on this gif
         /// </summary>
-        public int Frames = 0;
+        public int FrameCount
+        {
+            get { return this.frameCount; }
+        }
         /// <summary>
-        /// The current frame being displayed
+        /// Gets or sets the current frame being displayed
         /// </summary>
-        public int currentFrame = 0;
+        public int CurrentFrame
+        {
+            get { return this.currentFrame; }
+            set { SetCurrentFrame(value); }
+        }
         /// <summary>
         /// Intervals (in ms) between each frame
         /// </summary>
         public int[] Intervals;
         /// <summary>
-        /// Current frame interval
+        /// Gets the current frame interval (in milliseconds)
         /// </summary>
-        public int Interval = 0;
+        public int CurrentInterval
+        {
+            get { return this.currentInterval; }
+        }
         /// <summary>
         /// Whether the GIF file should loop
         /// </summary>
@@ -57,6 +67,21 @@ namespace GIF_Viewer
         /// The Height of this GIF file
         /// </summary>
         public int Height;
+
+        /// <summary>
+        /// Current frame interval (in milliseconds)
+        /// </summary>
+        private int currentInterval;
+
+        /// <summary>
+        /// Ammount of frames on this gif
+        /// </summary>
+        private int frameCount;
+
+        /// <summary>
+        /// The current frame being displayed
+        /// </summary>
+        private int currentFrame;
 
         /// <summary>
         /// FrameDimension object for this GIF file
@@ -128,7 +153,7 @@ namespace GIF_Viewer
             }
 
             // Get the total frames
-            Frames = gif.GetFrameCount(frameDimension);
+            frameCount = gif.GetFrameCount(frameDimension);
 
             GIF = gif;
 
@@ -151,7 +176,7 @@ namespace GIF_Viewer
         /// <returns>The interval in ms for the current frame of this GIF</returns>
         public int GetIntervalForCurrentFrame()
         {
-            return GetIntervalForFrame(currentFrame);
+            return GetIntervalForFrame(CurrentFrame);
         }
 
         /// <summary>
@@ -161,6 +186,7 @@ namespace GIF_Viewer
         public void SetCurrentFrame(int currentFrame)
         {
             this.currentFrame = currentFrame;
+            this.currentInterval = Intervals[currentFrame];
             GIF.SelectActiveFrame(frameDimension, currentFrame);
         }
 

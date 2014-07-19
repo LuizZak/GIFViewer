@@ -116,31 +116,31 @@ namespace GIF_Viewer
                 {
                     if (Range.Y > 0)
                     {
-                        CurrentGif.currentFrame = (++CurrentGif.currentFrame) % (Range.X + Range.Y);
+                        CurrentGif.CurrentFrame = (++CurrentGif.CurrentFrame) % (Range.X + Range.Y);
 
-                        if (CurrentGif.currentFrame < Range.X - 1)
-                            CurrentGif.currentFrame = Range.X - 1;
+                        if (CurrentGif.CurrentFrame < Range.X - 1)
+                            CurrentGif.CurrentFrame = Range.X - 1;
 
-                        if (CurrentGif.currentFrame > CurrentGif.Frames)
-                            CurrentGif.currentFrame = CurrentGif.Frames;
+                        if (CurrentGif.CurrentFrame > CurrentGif.FrameCount)
+                            CurrentGif.CurrentFrame = CurrentGif.FrameCount;
                     }
                     else
                     {
-                        CurrentGif.currentFrame = Range.X - 1;
+                        CurrentGif.CurrentFrame = Range.X - 1;
                     }
                 }
 
-                if (CurrentGif.currentFrame != lastFrame)
+                if (CurrentGif.CurrentFrame != lastFrame)
                 {
                     // Change the frame
                     cpb_preview._Paint = false;
 
-                    CurrentGif.SetCurrentFrame(CurrentGif.currentFrame);
+                    CurrentGif.SetCurrentFrame(CurrentGif.CurrentFrame);
 
                     cpb_preview._Paint = true;
                     cpb_preview.Invalidate();
 
-                    ChangeFrame(CurrentGif.currentFrame);
+                    ChangeFrame(CurrentGif.CurrentFrame);
                 }
             }
             catch (Exception ex)
@@ -390,7 +390,7 @@ namespace GIF_Viewer
         {
             lastFrame = -1;
             ChangeFrame(newRange.NewRange.X - 1);
-            CurrentGif.currentFrame = newRange.NewRange.X - 1;
+            CurrentGif.CurrentFrame = newRange.NewRange.X - 1;
 
             AnimationTimer.Stop();
             AnimationTimer.Interval = 32;
