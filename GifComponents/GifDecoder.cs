@@ -224,6 +224,7 @@ namespace GifComponents
         }
 
         #region Decode() method
+
         /// <summary>
         /// Decodes the supplied GIF stream.
         /// </summary>
@@ -254,11 +255,17 @@ namespace GifComponents
                 _gct = new ColourTable(_stream, _lsd.GlobalColourTableSize, XmlDebugging);
             }
 
+            const long maxMemoryForBuffer = 1024 * 1024 * 50; // 50 mb
+            long memPerFrame = _lsd.LogicalScreenSize.Width * _lsd.LogicalScreenSize.Height * 4;
+
+            _maxFrameQueueSize = (int)(maxMemoryForBuffer / memPerFrame);
+
             if (ConsolidatedState == ErrorState.Ok)
             {
                 ReadContents(_stream);
             }
         }
+
         #endregion
 
         /// <summary>
