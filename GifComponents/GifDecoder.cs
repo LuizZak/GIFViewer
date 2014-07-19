@@ -59,58 +59,63 @@ using GifComponents.Components;
 
 namespace GifComponents
 {
-	/// <summary>
-	/// Class GifDecoder - Decodes a GIF file into one or more frames and 
-	/// exposes its properties, components and any error states.
-	/// </summary>
-	/// <remarks>
-	/// It would be nice to make GifDecoder derive from AsynchronousOperation, however
-	/// this would mean all the methods inherited from GifComponent are not available.
-	/// If we were to make GifComponent derive from AsynchronousOperation then all
-	/// the different GifComponent classes would need to implement 
-	/// AsynchronousOperation.
-	/// </remarks>
-	public class GifDecoder : GifComponent
-	{
-		/// <summary>
-		/// The header of the GIF file.
-		/// </summary>
-		private GifHeader _header;
-		
-		/// <summary>
-		/// The Logical Screen Descriptor contains the parameters necessary to 
-		/// define the area of the display device within which the images will 
-		/// be rendered.
-		/// The coordinates in this block are given with respect to the 
-		/// top-left corner of the virtual screen; they do not necessarily 
-		/// refer to absolute coordinates on the display device.
-		/// This implies that they could refer to window coordinates in a 
-		/// window-based environment or printer coordinates when a printer is 
-		/// used. 
-		/// This block is REQUIRED; exactly one Logical Screen Descriptor must be
-		/// present per Data Stream.
-		/// </summary>
-		private LogicalScreenDescriptor _lsd;
+    /// <summary>
+    /// Class GifDecoder - Decodes a GIF file into one or more frames and 
+    /// exposes its properties, components and any error states.
+    /// </summary>
+    /// <remarks>
+    /// It would be nice to make GifDecoder derive from AsynchronousOperation, however
+    /// this would mean all the methods inherited from GifComponent are not available.
+    /// If we were to make GifComponent derive from AsynchronousOperation then all
+    /// the different GifComponent classes would need to implement 
+    /// AsynchronousOperation.
+    /// </remarks>
+    public class GifDecoder : GifComponent
+    {
+        /// <summary>
+        /// The header of the GIF file.
+        /// </summary>
+        private GifHeader _header;
 
-		/// <summary>
-		/// The global colour table, if present.
-		/// </summary>
-		private ColourTable _gct;
+        /// <summary>
+        /// The Logical Screen Descriptor contains the parameters necessary to 
+        /// define the area of the display device within which the images will 
+        /// be rendered.
+        /// The coordinates in this block are given with respect to the 
+        /// top-left corner of the virtual screen; they do not necessarily 
+        /// refer to absolute coordinates on the display device.
+        /// This implies that they could refer to window coordinates in a 
+        /// window-based environment or printer coordinates when a printer is 
+        /// used. 
+        /// This block is REQUIRED; exactly one Logical Screen Descriptor must be
+        /// present per Data Stream.
+        /// </summary>
+        private LogicalScreenDescriptor _lsd;
 
-		/// <summary>
-		/// Netscape extension, if present
-		/// </summary>
-		private NetscapeExtension _netscapeExtension;
+        /// <summary>
+        /// The delay for each frame, in hundredths of a second
+        /// </summary>
+        private List<int> _frameDelays;
 
-		/// <summary>
-		/// Collection of the application extensions in the file.
-		/// </summary>
-		private Collection<ApplicationExtension> _applicationExtensions;
-		
-		/// <summary>
-		/// The frames which make up the GIF file.
-		/// </summary>
-		private Collection<GifFrame> _frames;
+        /// <summary>
+        /// The global colour table, if present.
+        /// </summary>
+        private ColourTable _gct;
+
+        /// <summary>
+        /// Netscape extension, if present
+        /// </summary>
+        private NetscapeExtension _netscapeExtension;
+
+        /// <summary>
+        /// Collection of the application extensions in the file.
+        /// </summary>
+        private Collection<ApplicationExtension> _applicationExtensions;
+
+        /// <summary>
+        /// The frames which make up the GIF file.
+        /// </summary>
+        private Collection<GifFrame> _frames;
 
         /// <summary>
         /// A list of frames that should not be unloaded from memory because they are used as keyframes
@@ -127,64 +132,64 @@ namespace GifComponents
         /// </summary>
         private int _maxFrameQueueSize;
 
-		/// <summary>
-		/// Holds the <see cref="System.IO.Stream"/> from which the GIF is being
-		/// read.
-		/// </summary>
-		private Stream _stream;
+        /// <summary>
+        /// Holds the <see cref="System.IO.Stream"/> from which the GIF is being
+        /// read.
+        /// </summary>
+        private Stream _stream;
 
-		/// <summary>
-		/// Reads a GIF file from specified file/URL source  
-		/// (URL assumed if name contains ":/" or "file:")
-		/// </summary>
-		/// <param name="fileName">
-		/// Path or URL of image file.
-		/// </param>
-		/// <exception cref="ArgumentNullException">
-		/// The supplied filename is null.
-		/// </exception>
-		public GifDecoder( string fileName )
-            : this( fileName, false ) { }
-		
-		/// <summary>
-		/// Reads a GIF file from specified file/URL source  
-		/// (URL assumed if name contains ":/" or "file:")
-		/// </summary>
-		/// <param name="fileName">
-		/// Path or URL of image file.
-		/// </param>
-		/// <param name="xmlDebugging">
-		/// A boolean value indicating whether or not an XML document should be 
-		/// created showing how the GIF stream was decoded.
-		/// </param>
-		/// <exception cref="ArgumentNullException">
-		/// The supplied filename is null.
-		/// </exception>
+        /// <summary>
+        /// Reads a GIF file from specified file/URL source  
+        /// (URL assumed if name contains ":/" or "file:")
+        /// </summary>
+        /// <param name="fileName">
+        /// Path or URL of image file.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// The supplied filename is null.
+        /// </exception>
+        public GifDecoder(string fileName)
+            : this(fileName, false) { }
+
+        /// <summary>
+        /// Reads a GIF file from specified file/URL source  
+        /// (URL assumed if name contains ":/" or "file:")
+        /// </summary>
+        /// <param name="fileName">
+        /// Path or URL of image file.
+        /// </param>
+        /// <param name="xmlDebugging">
+        /// A boolean value indicating whether or not an XML document should be 
+        /// created showing how the GIF stream was decoded.
+        /// </param>
+        /// <exception cref="ArgumentNullException">
+        /// The supplied filename is null.
+        /// </exception>
         public GifDecoder(string fileName, bool xmlDebugging)
             : this(new FileInfo(fileName).OpenRead(), xmlDebugging) { }
-		
-		/// <summary>
-		/// Reads a GIF file from the specified stream.
-		/// </summary>
-		/// <param name="inputStream">
-		/// A stream to read the GIF data from.
-		/// </param>
-		public GifDecoder( Stream inputStream )
-			: this( inputStream, false ) {}
 
-		/// <summary>
-		/// Reads a GIF file from the specified stream.
-		/// </summary>
-		/// <param name="inputStream">
-		/// A stream to read the GIF data from.
-		/// </param>
-		/// <param name="xmlDebugging">
-		/// A boolean value indicating whether or not an XML document should be 
-		/// created showing how the GIF stream was decoded.
-		/// </param>
-		public GifDecoder( Stream inputStream, bool xmlDebugging )
-			: base( xmlDebugging )
-		{
+        /// <summary>
+        /// Reads a GIF file from the specified stream.
+        /// </summary>
+        /// <param name="inputStream">
+        /// A stream to read the GIF data from.
+        /// </param>
+        public GifDecoder(Stream inputStream)
+            : this(inputStream, false) { }
+
+        /// <summary>
+        /// Reads a GIF file from the specified stream.
+        /// </summary>
+        /// <param name="inputStream">
+        /// A stream to read the GIF data from.
+        /// </param>
+        /// <param name="xmlDebugging">
+        /// A boolean value indicating whether or not an XML document should be 
+        /// created showing how the GIF stream was decoded.
+        /// </param>
+        public GifDecoder(Stream inputStream, bool xmlDebugging)
+            : base(xmlDebugging)
+        {
             if (inputStream == null)
             {
                 throw new ArgumentNullException("inputStream");
@@ -216,20 +221,21 @@ namespace GifComponents
             }
             _stream.Write(buffer, 0, buffer.Length);
             _stream.Position = 0;
-		}
-		
-		#region Decode() method
-		/// <summary>
-		/// Decodes the supplied GIF stream.
-		/// </summary>
-		public void Decode()
-		{
+        }
+
+        #region Decode() method
+        /// <summary>
+        /// Decodes the supplied GIF stream.
+        /// </summary>
+        public void Decode()
+        {
             _maxFrameQueueSize = 16;
+            _frameDelays = new List<int>();
             _keyFrames = new List<GifFrame>();
             _loadedFrames = new Queue<GifFrame>();
-			_frames = new Collection<GifFrame>();
-			_applicationExtensions = new Collection<ApplicationExtension>();
-			_gct = null;
+            _frames = new Collection<GifFrame>();
+            _applicationExtensions = new Collection<ApplicationExtension>();
+            _gct = null;
 
             _header = new GifHeader(_stream, XmlDebugging);
             if (_header.ErrorState != ErrorState.Ok)
@@ -252,104 +258,115 @@ namespace GifComponents
             {
                 ReadContents(_stream);
             }
-		}
-		#endregion
-		
-		#region properties
-		
-		#region Header property
-		/// <summary>
-		/// Gets the header of the GIF stream, containing the signature and
-		/// version of the GIF standard used.
-		/// </summary>
-		public GifHeader Header
-		{
-			get { return _header; }
-		}
-		#endregion
-		
-		#region Logical Screen descriptor property
-		/// <summary>
-		/// Gets the logical screen descriptor.
-		/// </summary>
-		/// <remarks>
-		/// The Logical Screen Descriptor contains the parameters necessary to 
-		/// define the area of the display device within which the images will 
-		/// be rendered.
-		/// The coordinates in this block are given with respect to the 
-		/// top-left corner of the virtual screen; they do not necessarily 
-		/// refer to absolute coordinates on the display device.
-		/// This implies that they could refer to window coordinates in a 
-		/// window-based environment or printer coordinates when a printer is 
-		/// used.
-		/// </remarks>
-		[Description( "The Logical Screen Descriptor contains the parameters " +
-		              "necessary to define the area of the display device " + 
-		              "within which the images will be rendered. " + 
-		              "The coordinates in this block are given with respect " + 
-		              "to the top-left corner of the virtual screen; they do " + 
-		              "not necessarily refer to absolute coordinates on the " + 
-		              "display device. " + 
-		              "This implies that they could refer to window " + 
-		              "coordinates in a window-based environment or printer " + 
-		              "coordinates when a printer is used." )]
-		public LogicalScreenDescriptor LogicalScreenDescriptor
-		{
-			get { return _lsd; }
-		}
-		#endregion
-		
-		#region BackgroundColour property
-		/// <summary>
-		/// Gets the background colour.
-		/// </summary>
-		[Description( "The default background colour for this GIF file." + 
-		             "This is derived using the background colour index in the " +
-		             "Logical Screen Descriptor and looking up the colour " + 
-		             "in the Global Colour Table." )]
-		public Color BackgroundColour
-		{
-			get 
-			{ 
-				return Color.FromArgb(_gct[_lsd.BackgroundColourIndex]);
-			}
-		}
-		#endregion
-		
-		#region ApplicationExtensions property
-		/// <summary>
-		/// Gets the application extensions contained within the GIF stream.
-		/// This is an array rather than a property because it looks better in
-		/// a property sheet control.
-		/// </summary>
-		[SuppressMessage("Microsoft.Performance", 
-		                 "CA1819:PropertiesShouldNotReturnArrays")]
-		public ApplicationExtension[] ApplicationExtensions
-		{
-			get
-			{ 
-				ApplicationExtension[] appExts 
-					= new ApplicationExtension[_applicationExtensions.Count];
-				_applicationExtensions.CopyTo( appExts, 0 );
-				return appExts;; 
-			}
-		}
-		#endregion
+        }
+        #endregion
 
-		#region NetscapeExtension property
-		/// <summary>
-		/// Gets the Netscape 2.0 application extension, if present.
-		/// This contains the animation's loop count.
-		/// </summary>
-		[Description( "Gets the Netscape 2.0 application extension, if " + 
-		              "present. This contains the animation's loop count." )]
-		public NetscapeExtension NetscapeExtension
-		{
-			get { return _netscapeExtension; }
-		}
-		#endregion
-		
-		#region Frames property
+        /// <summary>
+        /// Returns an integer that represents the delay for the given frame (in hundredths of a second)
+        /// </summary>
+        /// <param name="frameIndex">The index of the rame to get the delay from</param>
+        /// <returns>The delay, in hundredths of a second</returns>
+        public int GetDelayForFrame(int frameIndex)
+        {
+            return _frameDelays[frameIndex];
+        }
+
+        #region properties
+
+        #region Header property
+        /// <summary>
+        /// Gets the header of the GIF stream, containing the signature and
+        /// version of the GIF standard used.
+        /// </summary>
+        public GifHeader Header
+        {
+            get { return _header; }
+        }
+        #endregion
+
+        #region Logical Screen descriptor property
+        /// <summary>
+        /// Gets the logical screen descriptor.
+        /// </summary>
+        /// <remarks>
+        /// The Logical Screen Descriptor contains the parameters necessary to 
+        /// define the area of the display device within which the images will 
+        /// be rendered.
+        /// The coordinates in this block are given with respect to the 
+        /// top-left corner of the virtual screen; they do not necessarily 
+        /// refer to absolute coordinates on the display device.
+        /// This implies that they could refer to window coordinates in a 
+        /// window-based environment or printer coordinates when a printer is 
+        /// used.
+        /// </remarks>
+        [Description("The Logical Screen Descriptor contains the parameters " +
+                      "necessary to define the area of the display device " +
+                      "within which the images will be rendered. " +
+                      "The coordinates in this block are given with respect " +
+                      "to the top-left corner of the virtual screen; they do " +
+                      "not necessarily refer to absolute coordinates on the " +
+                      "display device. " +
+                      "This implies that they could refer to window " +
+                      "coordinates in a window-based environment or printer " +
+                      "coordinates when a printer is used.")]
+        public LogicalScreenDescriptor LogicalScreenDescriptor
+        {
+            get { return _lsd; }
+        }
+        #endregion
+
+        #region BackgroundColour property
+        /// <summary>
+        /// Gets the background colour.
+        /// </summary>
+        [Description("The default background colour for this GIF file." +
+                     "This is derived using the background colour index in the " +
+                     "Logical Screen Descriptor and looking up the colour " +
+                     "in the Global Colour Table.")]
+        public Color BackgroundColour
+        {
+            get
+            {
+                return Color.FromArgb(_gct[_lsd.BackgroundColourIndex]);
+            }
+        }
+        #endregion
+
+        #region ApplicationExtensions property
+        /// <summary>
+        /// Gets the application extensions contained within the GIF stream.
+        /// This is an array rather than a property because it looks better in
+        /// a property sheet control.
+        /// </summary>
+        [SuppressMessage("Microsoft.Performance",
+                         "CA1819:PropertiesShouldNotReturnArrays")]
+        public ApplicationExtension[] ApplicationExtensions
+        {
+            get
+            {
+                ApplicationExtension[] appExts
+                    = new ApplicationExtension[_applicationExtensions.Count];
+                _applicationExtensions.CopyTo(appExts, 0);
+                return appExts; ;
+            }
+        }
+        #endregion
+
+        #region NetscapeExtension property
+        /// <summary>
+        /// Gets the Netscape 2.0 application extension, if present.
+        /// This contains the animation's loop count.
+        /// </summary>
+        [Description("Gets the Netscape 2.0 application extension, if " +
+                      "present. This contains the animation's loop count.")]
+        public NetscapeExtension NetscapeExtension
+        {
+            get { return _netscapeExtension; }
+        }
+        #endregion
+
+        #region Frame-related properties
+
         /// <summary>
         /// Gets a frame from the GIF file.
         /// </summary>
@@ -375,176 +392,183 @@ namespace GifComponents
                 return frame;
             }
         }
-		#endregion
 
-		#region GlobalColourTable property
-		/// <summary>
-		/// Gets the global colour table for this GIF data stream, or null if the
-		/// frames have local colour tables.
-		/// </summary>
-		public ColourTable GlobalColourTable
-		{
-			get { return _gct; }
-		}
-		#endregion
-		
-		#endregion
+        /// <summary>
+        /// Gets the frame count for this GIF file
+        /// </summary>
+        public int FrameCount
+        {
+            get { return _frames.Count; }
+        }
 
-		#region private methods
-		
-		#region private ReadContents method
-		/// <summary>
-		/// Main file parser. Reads GIF content blocks.
-		/// </summary>
-		/// <param name="inputStream">
-		/// Input stream from which the GIF data is to be read.
-		/// </param>
-		private void ReadContents( Stream inputStream )
-		{
-			// read GIF file content blocks
-			bool done = false;
-			GraphicControlExtension lastGce = null;
-			string message; // for error conditions
-			while( !done/* && ConsolidatedState == ErrorState.Ok */)
-			{
-				int code = Read( inputStream );
-				WriteCodeToDebugXml( code );
-				
-				switch( code )
-				{
+        #endregion
 
-					case CodeImageSeparator:
-						WriteDebugXmlComment( "0x2C - image separator" );
+        #region GlobalColourTable property
+        /// <summary>
+        /// Gets the global colour table for this GIF data stream, or null if the
+        /// frames have local colour tables.
+        /// </summary>
+        public ColourTable GlobalColourTable
+        {
+            get { return _gct; }
+        }
+        #endregion
+
+        #endregion
+
+        #region private methods
+
+        #region private ReadContents method
+        /// <summary>
+        /// Main file parser. Reads GIF content blocks.
+        /// </summary>
+        /// <param name="inputStream">
+        /// Input stream from which the GIF data is to be read.
+        /// </param>
+        private void ReadContents(Stream inputStream)
+        {
+            // read GIF file content blocks
+            bool done = false;
+            GraphicControlExtension lastGce = null;
+            string message; // for error conditions
+            while (!done/* && ConsolidatedState == ErrorState.Ok */)
+            {
+                int code = Read(inputStream);
+                WriteCodeToDebugXml(code);
+
+                switch (code)
+                {
+
+                    case CodeImageSeparator:
+                        WriteDebugXmlComment("0x2C - image separator");
                         AddFrame(inputStream, lastGce);
-						break;
+                        break;
 
-					case CodeExtensionIntroducer:
-						WriteDebugXmlComment( "0x21 - extension introducer" );
-						code = Read( inputStream );
-						WriteCodeToDebugXml( code );
-						switch( code )
-						{
-							case CodePlaintextLabel:
-								// TODO: handle plain text extension (need support in AnimatedGifEncoder first)
-								// TESTME: plain text label extensions
-								WriteDebugXmlComment( "0x01 - plain text extension" );
-								SkipBlocks( inputStream );
-								break;
+                    case CodeExtensionIntroducer:
+                        WriteDebugXmlComment("0x21 - extension introducer");
+                        code = Read(inputStream);
+                        WriteCodeToDebugXml(code);
+                        switch (code)
+                        {
+                            case CodePlaintextLabel:
+                                // TODO: handle plain text extension (need support in AnimatedGifEncoder first)
+                                // TESTME: plain text label extensions
+                                WriteDebugXmlComment("0x01 - plain text extension");
+                                SkipBlocks(inputStream);
+                                break;
 
-							case CodeGraphicControlLabel:
-								WriteDebugXmlComment( "0xF9 - graphic control label" );
-								lastGce = new GraphicControlExtension( inputStream, 
-								                                       XmlDebugging );
-								WriteDebugXmlNode( lastGce.DebugXmlReader );
-								break;
-								
-							case CodeCommentLabel:
-								// TODO: handle comment extension
-								WriteDebugXmlComment( "0xFE - comment extension" );
-								SkipBlocks( inputStream );
-								break;
+                            case CodeGraphicControlLabel:
+                                WriteDebugXmlComment("0xF9 - graphic control label");
+                                lastGce = new GraphicControlExtension(inputStream, XmlDebugging);
+                                WriteDebugXmlNode(lastGce.DebugXmlReader);
+                                break;
 
-							case CodeApplicationExtensionLabel:
-								WriteDebugXmlComment( "0xFF - application extension label" );
-								ApplicationExtension ext 
-									= new ApplicationExtension( inputStream, 
-									                            XmlDebugging );
-								WriteDebugXmlNode( ext.DebugXmlReader );
-								if( ext.ApplicationIdentifier == "NETSCAPE"
-								    && ext.ApplicationAuthenticationCode == "2.0" )
-								{
-									_netscapeExtension = new NetscapeExtension( ext );
-								}
-								else
-								{
-									// TESTME: ReadContents - non-Netscape application extension
-									// TODO: Add support to AnimatedGifEncoder for non Netscape application extensions
-									_applicationExtensions.Add( ext );
-								}
-								break;
-	
-							default : // uninteresting extension
-								// TESTME: ReadContents - uninteresting extension
-								// TODO: Add support to AnimatedGifEncoder for uninteresting extensions
-								WriteDebugXmlComment( "Ignoring this extension" );
-								SkipBlocks( inputStream );
-								break;
-						}
-						break;
+                            case CodeCommentLabel:
+                                // TODO: handle comment extension
+                                WriteDebugXmlComment("0xFE - comment extension");
+                                SkipBlocks(inputStream);
+                                break;
 
-					case CodeTrailer:
-						// We've reached an explicit end-of-data marker, so stop
-						// processing the stream.
-						WriteDebugXmlComment( "0x3B - end of data" );
-						done = true;
-						break;
+                            case CodeApplicationExtensionLabel:
+                                WriteDebugXmlComment("0xFF - application extension label");
+                                ApplicationExtension ext
+                                    = new ApplicationExtension(inputStream,
+                                                                XmlDebugging);
+                                WriteDebugXmlNode(ext.DebugXmlReader);
+                                if (ext.ApplicationIdentifier == "NETSCAPE"
+                                    && ext.ApplicationAuthenticationCode == "2.0")
+                                {
+                                    _netscapeExtension = new NetscapeExtension(ext);
+                                }
+                                else
+                                {
+                                    // TESTME: ReadContents - non-Netscape application extension
+                                    // TODO: Add support to AnimatedGifEncoder for non Netscape application extensions
+                                    _applicationExtensions.Add(ext);
+                                }
+                                break;
 
-					case 0x00 : // bad byte, but keep going and see what happens
-						// TESTME: unexpected 0x00 read from input stream
-						WriteDebugXmlComment( "0x00 - unexpected code" );
-						message
-							= "Unexpected block terminator encountered at "
-							+ "position " + inputStream.Position
-							+ " after reading " + _frames.Count + " frames.";
-						SetStatus( ErrorState.UnexpectedBlockTerminator, 
-						           message );
-						break;
-						
-					case -1: // reached the end of the input stream
-						// TESTME: end of stream without finding 0x3b trailer
-						WriteDebugXmlComment( "-1 - end of input stream" );
-						message
-							= "Reached the end of the input stream without "
-							+ "encountering trailer 0x3b";
-						SetStatus( ErrorState.EndOfInputStream, message );
-						break;
+                            default: // uninteresting extension
+                                // TESTME: ReadContents - uninteresting extension
+                                // TODO: Add support to AnimatedGifEncoder for uninteresting extensions
+                                WriteDebugXmlComment("Ignoring this extension");
+                                SkipBlocks(inputStream);
+                                break;
+                        }
+                        break;
 
-					default :
-						// TESTME: unrecognised code
-						WriteDebugXmlComment( "Not a recognised code" );
-						message 
-							= "Bad data block introducer: 0x"
-							+ code.ToString( "X", CultureInfo.InvariantCulture ).PadLeft( 2, '0' )
-							+ " (" + code + ") at position " + inputStream.Position
-							+ " (" 
-							+ inputStream.Position.ToString( "X", 
-							                               CultureInfo.InvariantCulture )
-							+ " hex) after reading "
-							+ _frames.Count + " frames.";
-						SetStatus( ErrorState.BadDataBlockIntroducer, message );
-						break;
-				}
-			}
-		}
-		#endregion
-		
-		#region private WriteCodeToDebugXml method
-		private void WriteCodeToDebugXml( int code )
-		{
-			if( XmlDebugging )
-			{
-				WriteDebugXmlStartElement( "Code" );
-				WriteDebugXmlAttribute( "Value", ToHex( code ) );
-				WriteDebugXmlAttribute( "FrameCount", _frames.Count );
-				WriteDebugXmlEndElement();
-			}
-		}
-		#endregion
-		
-		#region private AddFrame method
-		/// <summary>
-		/// Reads a frame from the input stream and adds it to the collection
-		/// of frames.
-		/// </summary>
-		/// <param name="inputStream">
-		/// Input stream from which the frame is to be read.
-		/// </param>
-		/// <param name="lastGce">
-		/// The graphic control extension most recently read from the input
-		/// stream.
-		/// </param>
-        private void AddFrame(Stream inputStream,
-                               GraphicControlExtension lastGce)
+                    case CodeTrailer:
+                        // We've reached an explicit end-of-data marker, so stop
+                        // processing the stream.
+                        WriteDebugXmlComment("0x3B - end of data");
+                        done = true;
+                        break;
+
+                    case 0x00: // bad byte, but keep going and see what happens
+                        // TESTME: unexpected 0x00 read from input stream
+                        WriteDebugXmlComment("0x00 - unexpected code");
+                        message
+                            = "Unexpected block terminator encountered at "
+                            + "position " + inputStream.Position
+                            + " after reading " + _frames.Count + " frames.";
+                        SetStatus(ErrorState.UnexpectedBlockTerminator,
+                                   message);
+                        break;
+
+                    case -1: // reached the end of the input stream
+                        // TESTME: end of stream without finding 0x3b trailer
+                        WriteDebugXmlComment("-1 - end of input stream");
+                        message
+                            = "Reached the end of the input stream without "
+                            + "encountering trailer 0x3b";
+                        SetStatus(ErrorState.EndOfInputStream, message);
+                        break;
+
+                    default:
+                        // TESTME: unrecognised code
+                        WriteDebugXmlComment("Not a recognised code");
+                        message
+                            = "Bad data block introducer: 0x"
+                            + code.ToString("X", CultureInfo.InvariantCulture).PadLeft(2, '0')
+                            + " (" + code + ") at position " + inputStream.Position
+                            + " ("
+                            + inputStream.Position.ToString("X",
+                                                           CultureInfo.InvariantCulture)
+                            + " hex) after reading "
+                            + _frames.Count + " frames.";
+                        SetStatus(ErrorState.BadDataBlockIntroducer, message);
+                        break;
+                }
+            }
+        }
+        #endregion
+
+        #region private WriteCodeToDebugXml method
+        private void WriteCodeToDebugXml(int code)
+        {
+            if (XmlDebugging)
+            {
+                WriteDebugXmlStartElement("Code");
+                WriteDebugXmlAttribute("Value", ToHex(code));
+                WriteDebugXmlAttribute("FrameCount", _frames.Count);
+                WriteDebugXmlEndElement();
+            }
+        }
+        #endregion
+
+        #region private AddFrame method
+        /// <summary>
+        /// Reads a frame from the input stream and adds it to the collection
+        /// of frames.
+        /// </summary>
+        /// <param name="inputStream">
+        /// Input stream from which the frame is to be read.
+        /// </param>
+        /// <param name="lastGce">
+        /// The graphic control extension most recently read from the input
+        /// stream.
+        /// </param>
+        private void AddFrame(Stream inputStream, GraphicControlExtension lastGce)
         {
             GifFrame previousFrame = null;
             GifFrame previousFrameBut1 = null;
@@ -557,30 +581,40 @@ namespace GifComponents
                 previousFrameBut1 = _frames[_frames.Count - 2];
             }
 
+            // Setup the frame delay
+            if (lastGce == null)
+            {
+                _frameDelays.Add(100);
+            }
+            else
+            {
+                _frameDelays.Add(lastGce.DelayTime);
+            }
+
             GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, previousFrameBut1, _frames.Count, XmlDebugging);
             _frames.Add(frame);
             WriteDebugXmlNode(frame.DebugXmlReader);
         }
-		#endregion
+        #endregion
 
-		#region private WriteToStream method
-		/// <summary>
-		/// Throws a NotSupportedException.
-		/// GifDecoders are only intended to read from, and decode streams, not 
-		/// to write to them.
-		/// </summary>
-		/// <param name="outputStream">
-		/// The output stream to write to.
-		/// </param>
-		public override void WriteToStream( Stream outputStream )
-		{
-			string message
-				= "This method is not implemented because a GifDecoder should not "
-				+ "be written to a stream. It is meant for reading streams!";
-			throw new NotSupportedException( message );
-		}
-		#endregion
+        #region private WriteToStream method
+        /// <summary>
+        /// Throws a NotSupportedException.
+        /// GifDecoders are only intended to read from, and decode streams, not 
+        /// to write to them.
+        /// </summary>
+        /// <param name="outputStream">
+        /// The output stream to write to.
+        /// </param>
+        public override void WriteToStream(Stream outputStream)
+        {
+            string message
+                = "This method is not implemented because a GifDecoder should not "
+                + "be written to a stream. It is meant for reading streams!";
+            throw new NotSupportedException(message);
+        }
+        #endregion
 
-		#endregion
-	}
+        #endregion
+    }
 }

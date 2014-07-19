@@ -501,20 +501,14 @@ namespace GifComponents.Components
             {
                 SetStatus(ErrorState.NoGraphicControlExtension, "");
                 // use a default GCE
-                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
-                                                    DisposalMethod.NotSpecified,
-                                                    false,
-                                                    false,
-                                                    100,
-                                                    0);
+                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize, DisposalMethod.NotSpecified, false, false, 100, 0);
             }
 
             _extension = graphicControlExtension;
 
             int transparentColourIndex = graphicControlExtension.TransparentColourIndex;
 
-            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream,
-                                                                    XmlDebugging);
+            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream, XmlDebugging);
 
             #region determine the colour table to use for this frame
             Color backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
@@ -522,10 +516,7 @@ namespace GifComponents.Components
             ColourTable activeColourTable;
             if (imageDescriptor.HasLocalColourTable)
             {
-                _localColourTable
-                    = new ColourTable(inputStream,
-                                        imageDescriptor.LocalColourTableSize,
-                                        XmlDebugging);
+                _localColourTable = new ColourTable(inputStream, imageDescriptor.LocalColourTableSize, XmlDebugging);
                 activeColourTable = _localColourTable; // make local table active
             }
             else
@@ -534,8 +525,7 @@ namespace GifComponents.Components
                 {
                     // We have neither local nor global colour table, so we
                     // won't be able to decode this frame.
-                    Bitmap emptyBitmap = new Bitmap(logicalScreenDescriptor.LogicalScreenSize.Width,
-                                                        logicalScreenDescriptor.LogicalScreenSize.Height);
+                    Bitmap emptyBitmap = new Bitmap(logicalScreenDescriptor.LogicalScreenSize.Width, logicalScreenDescriptor.LogicalScreenSize.Height);
                     _image = emptyBitmap;
                     _delay = graphicControlExtension.DelayTime;
                     SetStatus(ErrorState.FrameHasNoColourTable, "");
@@ -894,19 +884,6 @@ namespace GifComponents.Components
 
             fastBaseImage.CopyFromArray(pixels, true);
 
-            /*for (int th = 0; th < h; th++)
-            {
-                for (int tw = 0; tw < w; tw++)
-                {
-                    int pixel = pixels[count];
-                    if (pixel != 0)
-                    {
-                        // then it's not a transparent pixel
-                        fastBaseImage.SetPixel(tw, th, pixel);
-                    }
-                    count++;
-                }
-            }*/
             fastBaseImage.UnlockImage();
             return baseImage;
         }

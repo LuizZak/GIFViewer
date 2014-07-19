@@ -15,7 +15,8 @@ using GIF_Viewer.Views;
 /// 
 /// @author             Luiz Fernando
 /// 
-/// @version 1.6.0b     Fixed crash related to .gif files with very fast frame intervals.
+/// @version 1.6.0b     Improved .gif speed when seeking frames at any point in the timeline. Utilizing code from the GifComponents (that was in turn based on NGif) open source project.
+/// @                   Fixed crash related to .gif files with very fast frame intervals.
 /// @                   Swapped the old timeline trackbar with a new more responsive timeline control.
 /// @                   Now the value stepper for the minimum frame interval is disabled when the checkbox is also off.
 /// @                   Now you can seek the .gif timeline using the arrow keys when the animation panel is focused (clicked on).
