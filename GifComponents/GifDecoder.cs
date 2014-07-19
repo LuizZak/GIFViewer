@@ -577,37 +577,24 @@ namespace GifComponents
 		/// The graphic control extension most recently read from the input
 		/// stream.
 		/// </param>
-		private void AddFrame( Stream inputStream,
-		                       GraphicControlExtension lastGce )
-		{
-			GifFrame previousFrame;
-			GifFrame previousFrameBut1;
-			if( _frames.Count > 0 )
-			{
-				previousFrame = _frames[_frames.Count - 1];
-			}
-			else
-			{
-				previousFrame = null;
-			}
-			if( _frames.Count > 1 )
-			{
-				previousFrameBut1 = _frames[_frames.Count - 2];
-			}
-			else
-			{
-				previousFrameBut1 = null;
-			}
-			GifFrame frame = new GifFrame( inputStream, 
-			                               _lsd,
-			                               _gct,
-			                               lastGce,
-			                               previousFrame,
-			                               previousFrameBut1,
-			                               XmlDebugging );
-			_frames.Add( frame );
-			WriteDebugXmlNode( frame.DebugXmlReader );
-		}
+        private void AddFrame(Stream inputStream,
+                               GraphicControlExtension lastGce)
+        {
+            GifFrame previousFrame = null;
+            GifFrame previousFrameBut1 = null;
+            if (_frames.Count > 0)
+            {
+                previousFrame = _frames[_frames.Count - 1];
+            }
+            if (_frames.Count > 1)
+            {
+                previousFrameBut1 = _frames[_frames.Count - 2];
+            }
+
+            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, previousFrameBut1, _frames.Count, XmlDebugging);
+            _frames.Add(frame);
+            WriteDebugXmlNode(frame.DebugXmlReader);
+        }
 		#endregion
 
 		#region private WriteToStream method

@@ -53,6 +53,7 @@ namespace GifComponents.Components
 	public class GifFrame : GifComponent
 	{
 		#region declarations
+        private int _index;
 		private Image _image;
 		private int _delay;
 		private bool _expectsUserInput;
@@ -83,21 +84,7 @@ namespace GifComponents.Components
 		#endregion
 
 		#region constructors
-		
-		#region constructor( Image )
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		/// <param name="theImage">
-		/// The image held in this frame of the GIF file
-		/// </param>
-		public GifFrame( Image theImage )
-		{
-			_image = theImage;
-			_delay = 10; // 10 1/100ths of a second, i.e. 1/10 of a second.
-		}
-		#endregion
-		
+
 		#region constructor( Stream, , , , ,  )
 		/// <summary>
 		/// Creates and returns a GifFrame by reading its data from the supplied
@@ -124,18 +111,21 @@ namespace GifComponents.Components
 		/// The frame which precedes the frame before this one in the GIF stream,
 		/// if present.
 		/// </param>
+        /// <param name="index">The index of this frame on the owning animation</param>
 		public GifFrame( Stream inputStream,
 		                 LogicalScreenDescriptor logicalScreenDescriptor,
 		                 ColourTable globalColourTable,
 		                 GraphicControlExtension graphicControlExtension,
 		                 GifFrame previousFrame,
-		                 GifFrame previousFrameBut1 )
+		                 GifFrame previousFrameBut1,
+                         int index)
 			: this( inputStream, 
 			        logicalScreenDescriptor, 
 			        globalColourTable, 
 			        graphicControlExtension, 
 			        previousFrame, 
-			        previousFrameBut1, 
+			        previousFrameBut1,
+                    index,
 			        false )
 		{
 			
@@ -168,6 +158,7 @@ namespace GifComponents.Components
 		/// The frame which precedes the frame before this one in the GIF stream,
 		/// if present.
 		/// </param>
+        /// <param name="index">The index of this frame on the owning animation</param>
 		/// <param name="xmlDebugging">Whether or not to create debug XML</param>
 		public GifFrame( Stream inputStream,
 		                 LogicalScreenDescriptor logicalScreenDescriptor,
@@ -175,9 +166,11 @@ namespace GifComponents.Components
 		                 GraphicControlExtension graphicControlExtension,
 		                 GifFrame previousFrame,
 		                 GifFrame previousFrameBut1, 
+                         int index,
 		                 bool xmlDebugging )
 			: base( xmlDebugging )
 		{
+            this._index = index;
             this.logicalScreenDescriptor = logicalScreenDescriptor;
             this.globalColourTable = globalColourTable;
             this.graphicControlExtension = graphicControlExtension;
@@ -317,7 +310,15 @@ namespace GifComponents.Components
 		#endregion
 		
 		#region read-only properties
-		
+
+        /// <summary>
+        /// The index of this frame on the animation
+        /// </summary>
+        public int Index
+        {
+            get { return _index; }
+        }
+
 		#region TheImage property
 		/// <summary>
 		/// Gets the image held in this frame.
