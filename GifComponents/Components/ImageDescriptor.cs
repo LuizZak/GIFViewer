@@ -136,31 +136,6 @@ namespace GifComponents.Components
 			_isInterlaced = packed.GetBit( 1 );
 			_isSorted = packed.GetBit( 2 );
 			_localColourTableSizeBits = packed.GetBits( 5, 3 );
-			
-			if( XmlDebugging )
-			{
-				WriteDebugXmlStartElement( "Position" );
-				WriteDebugXmlAttribute( "X", _position.X );
-				WriteDebugXmlAttribute( "Y", _position.Y );
-				WriteDebugXmlEndElement();
-				
-				WriteDebugXmlStartElement( "Size" );
-				WriteDebugXmlAttribute( "Width", _size.Width );
-				WriteDebugXmlAttribute( "Height", _size.Height );
-				WriteDebugXmlEndElement();
-				
-				WriteDebugXmlStartElement( "PackedFields" );
-				WriteDebugXmlAttribute( "ByteRead", ToHex( packed.Byte ) );
-				WriteDebugXmlAttribute( "HasLocalColourTable", 
-				                        _hasLocalColourTable );
-				WriteDebugXmlAttribute( "IsInterlaced", _isInterlaced );
-				WriteDebugXmlAttribute( "LocalColourTableIsSorted", _isSorted );
-				WriteDebugXmlAttribute( "LocalColourTableSizeBits", 
-				                        _localColourTableSizeBits );
-				WriteDebugXmlEndElement();
-				
-				WriteDebugXmlFinish();
-			}
 		}
 		#endregion
 
@@ -276,5 +251,14 @@ namespace GifComponents.Components
 			WriteByte( packed.Byte, outputStream );
 		}
 		#endregion
+
+        /// <summary>
+        /// Skips a whole image descriptor block on a given stream
+        /// </summary>
+        /// <param name="inputStream">The input stream</param>
+        public static void SkipOnStream(Stream inputStream)
+        {
+            inputStream.Position += 17;
+        }
 	}
 }
