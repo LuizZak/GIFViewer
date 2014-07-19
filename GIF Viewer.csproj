@@ -47,6 +47,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -57,6 +58,7 @@
     <WarningLevel>4</WarningLevel>
     <LangVersion>default</LangVersion>
     <DebugSymbols>true</DebugSymbols>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>8C319EE68B90AD1C369C575E3128F83553B57839</ManifestCertificateThumbprint>
@@ -70,9 +72,7 @@
   <PropertyGroup>
     <SignManifests>true</SignManifests>
   </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-  </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
     <TargetZone>LocalIntranet</TargetZone>
   </PropertyGroup>
@@ -81,6 +81,9 @@
   </PropertyGroup>
   <PropertyGroup>
     <StartupObject>GIF_Viewer.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -129,6 +132,25 @@
     <Compile Include="FrameExtractorHelp.Designer.cs">
       <DependentUpon>FrameExtractorHelp.cs</DependentUpon>
     </Compile>
+    <Compile Include="GifComponents\Components\ApplicationExtension.cs" />
+    <Compile Include="GifComponents\Components\ColourTable.cs" />
+    <Compile Include="GifComponents\Components\DataBlock.cs" />
+    <Compile Include="GifComponents\Components\GifComponent.cs" />
+    <Compile Include="GifComponents\Components\GifFrame.cs" />
+    <Compile Include="GifComponents\Components\GifHeader.cs" />
+    <Compile Include="GifComponents\Components\GraphicControlExtension.cs" />
+    <Compile Include="GifComponents\Components\ImageDescriptor.cs" />
+    <Compile Include="GifComponents\Components\LogicalScreenDescriptor.cs" />
+    <Compile Include="GifComponents\Components\NetscapeExtension.cs" />
+    <Compile Include="GifComponents\Components\TableBasedImageData.cs" />
+    <Compile Include="GifComponents\Enums\ColourTableStrategy.cs" />
+    <Compile Include="GifComponents\Enums\DisposalMethod.cs" />
+    <Compile Include="GifComponents\Enums\ErrorState.cs" />
+    <Compile Include="GifComponents\FastBitmap.cs" />
+    <Compile Include="GifComponents\GifDecoder.cs" />
+    <Compile Include="GifComponents\GifFrame.cs" />
+    <Compile Include="GifComponents\Types\GifComponentStatus.cs" />
+    <Compile Include="GifComponents\Types\PackedFields.cs" />
     <Compile Include="GIFFile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -136,6 +158,8 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Update.cs" />
+    <Compile Include="Utils\FastBitmap.cs" />
+    <Compile Include="Utils\GIFFileDecoder.cs" />
     <Compile Include="Views\ErrorBox.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -200,6 +224,9 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <None Include="GifComponents\license.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="icon32x32.ico" />
     <None Include="Resources\process-stop.png" />
     <None Include="Resources\action_check.png" />

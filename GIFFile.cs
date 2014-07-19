@@ -88,12 +88,15 @@ namespace GIF_Viewer
         /// </summary>
         public FrameDimension frameDimension;
 
+        GifComponents.GifDecoder dec;
+
         /// <summary>
         /// Disposes of this GIF file
         /// </summary>
         public void Dispose()
         {
             GIF.Dispose();
+            dec.Dispose();
         }
 
         /// <summary>
@@ -102,6 +105,10 @@ namespace GIF_Viewer
         /// <param name="path">The gif to load the parameters from</param>
         public void LoadFromPath(string path)
         {
+            dec = new GifComponents.GifDecoder(path);
+
+            dec.Decode();
+
             Loaded = false;
 
             GIFPath = path;
@@ -155,7 +162,13 @@ namespace GIF_Viewer
             // Get the total frames
             frameCount = gif.GetFrameCount(frameDimension);
 
+            //GIF = dec[0].TheImage;
             GIF = gif;
+            //GIF = dec.Frames[0].TheImage;
+            //GIF = new Bitmap(dec.LogicalScreenDescriptor.LogicalScreenSize.Width, dec.LogicalScreenDescriptor.LogicalScreenSize.Height);
+
+            // Force load of the first frame
+            Image img = dec[0].TheImage;
 
             Loaded = true;
         }
@@ -187,7 +200,8 @@ namespace GIF_Viewer
         {
             this.currentFrame = currentFrame;
             this.currentInterval = Intervals[currentFrame];
-            GIF.SelectActiveFrame(frameDimension, currentFrame);
+            GIF_Viewer.Utils.FastBitmap.CopyPixels((Bitmap)dec[currentFrame].TheImage, (Bitmap)GIF);
+            //GIF.SelectActiveFrame(frameDimension, currentFrame);
         }
 
         /// <summary>
@@ -196,7 +210,7 @@ namespace GIF_Viewer
         /// <returns>The frame count of this Gif file</returns>
         public int GetFrameCount()
         {
-            return GIF.GetFrameCount(frameDimension);
+            return frameCount;
         }
     }
 }
