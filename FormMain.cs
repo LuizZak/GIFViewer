@@ -19,6 +19,7 @@ using GIF_Viewer.Views;
 /// @                   Swapped the old timeline trackbar with a new more responsive timeline control.
 /// @                   Now the value stepper for the minimum frame interval is disabled when the checkbox is also off.
 /// @                   Now you can seek the .gif timeline using the arrow keys when the animation panel is focused (clicked on).
+/// @                   Fixed half-pixel misalignment on images (only visible when zoomed in).
 /// 
 /// @version 1.4.7b     Now the program will fail silently when trying to load the .gif files in the folder. Still on the hunt for runtime exceptions.
 /// @                   Added an error form that has a copiable field for copying information about errors.
