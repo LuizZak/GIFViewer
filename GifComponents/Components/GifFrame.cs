@@ -662,87 +662,88 @@ namespace GifComponents.Components
 										// setting in an interlaced image.
             bool hasTransparent = gce.HasTransparentColour;
             int transparentColor = gce.TransparentColourIndex;
-            Size logicalScreenSize = lsd.LogicalScreenSize;
             int logicalWidth = lsd.LogicalScreenSize.Width;
             int logicalHeight = lsd.LogicalScreenSize.Height;
-			for( int i = 0; i < id.Size.Height; i++)  
-			{
-				int pixelRowNumber = i;
-				if( id.IsInterlaced ) 
-				{
-					#region work out the pixel row we're setting for an interlaced image
-					if( interlaceRowNumber >= id.Size.Height ) 
-					{
-						pass++;
-						switch( pass )
-						{
-							case 2 :
-								interlaceRowNumber = 4;
-								break;
-							case 3 :
-								interlaceRowNumber = 2;
-								interlaceRowIncrement = 4;
-								break;
-							case 4 :
-								interlaceRowNumber = 1;
-								interlaceRowIncrement = 2;
-								break;
-						}
-					}
-					#endregion
-					pixelRowNumber = interlaceRowNumber;
-					interlaceRowNumber += interlaceRowIncrement;
-				}
-				
-				// Colour in the pixels for this row
-				pixelRowNumber += id.Position.Y;
-                if (pixelRowNumber < logicalHeight) 
-				{
+
+            int[] colorTableIndices = activeColourTable.IntColours;
+            int numColors = activeColourTable.Length;
+
+            for (int i = 0; i < id.Size.Height; i++)
+            {
+                int pixelRowNumber = i;
+                if (id.IsInterlaced)
+                {
+                    #region work out the pixel row we're setting for an interlaced image
+                    if (interlaceRowNumber >= id.Size.Height)
+                    {
+                        pass++;
+                        switch (pass)
+                        {
+                            case 2:
+                                interlaceRowNumber = 4;
+                                break;
+                            case 3:
+                                interlaceRowNumber = 2;
+                                interlaceRowIncrement = 4;
+                                break;
+                            case 4:
+                                interlaceRowNumber = 1;
+                                interlaceRowIncrement = 2;
+                                break;
+                        }
+                    }
+                    #endregion
+                    pixelRowNumber = interlaceRowNumber;
+                    interlaceRowNumber += interlaceRowIncrement;
+                }
+
+                // Colour in the pixels for this row
+                pixelRowNumber += id.Position.Y;
+                if (pixelRowNumber < logicalHeight)
+                {
                     int k = pixelRowNumber * logicalWidth;
-					int dx = k + id.Position.X; // start of line in dest
-					int dlim = dx + id.Size.Width; // end of dest line
-                    if ((k + logicalWidth) < dlim) 
-					{
-						// TESTME: CreateBitmap - past dest edge
+                    int dx = k + id.Position.X; // start of line in dest
+                    int dlim = dx + id.Size.Width; // end of dest line
+                    if ((k + logicalWidth) < dlim)
+                    {
+                        // TESTME: CreateBitmap - past dest edge
                         dlim = k + logicalWidth; // past dest edge
-					}
-					int sx = i * id.Size.Width; // start of line in source
-					while (dx < dlim) 
-					{
-						// map color and insert in destination
-						int indexInColourTable = (int) imageData.PixelIndexes[sx++];
-						// Set this pixel's colour if its index isn't the 
-						// transparent colour index, or if this frame doesn't
-						// have a transparent colour.
-						int c;
+                    }
+                    int sx = i * id.Size.Width; // start of line in source
+                    while (dx < dlim)
+                    {
+                        // map color and insert in destination
+                        int indexInColourTable = (int)imageData.PixelIndexes[sx++];
+                        // Set this pixel's colour if its index isn't the 
+                        // transparent colour index, or if this frame doesn't
+                        // have a transparent colour.
+                        int c;
                         if (hasTransparent && indexInColourTable == transparentColor)
-						{
-							c = 0; // transparent pixel
-						}
-						else
-						{
-							if( indexInColourTable < activeColourTable.Length )
-							{
-								c = activeColourTable[indexInColourTable];
-							}
-							else
-							{
-								// TESTME: CreateBitmap - BadColourIndex 
-								c = (255 << 24);
-								string message 
-									= "Colour index: "
-									+ indexInColourTable
-									+ ", colour table length: "
-									+ activeColourTable.Length
-									+ " (" + dx + "," + pixelRowNumber + ")";
-								SetStatus( ErrorState.BadColourIndex, message );
-							}
-						}
+                        {
+                            c = 0; // transparent pixel
+                        }
+                        else if (indexInColourTable < numColors)
+                        {
+                            c = colorTableIndices[indexInColourTable];
+                        }
+                        else
+                        {
+                            // TESTME: CreateBitmap - BadColourIndex 
+                            c = (255 << 24);
+                            string message
+                                = "Colour index: "
+                                + indexInColourTable
+                                + ", colour table length: "
+                                + activeColourTable.Length
+                                + " (" + dx + "," + pixelRowNumber + ")";
+                            SetStatus(ErrorState.BadColourIndex, message);
+                        }
+
                         pixelsForThisFrameInt[dx] = c;
-						dx++;
-					}
-				}
-			}
+                        dx++;
+                    }
+                }
+            }
 			return CreateBitmap( baseImage, pixelsForThisFrameInt );
 		}
 		#endregion
