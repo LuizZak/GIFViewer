@@ -77,7 +77,7 @@ namespace GIF_Viewer
         /// </summary>
         public int Height
         {
-            get { return Height; }
+            get { return height; }
         }
 
         /// <summary>
