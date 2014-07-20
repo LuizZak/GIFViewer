@@ -874,13 +874,7 @@ namespace GifComponents.Components
 					baseImage = new Bitmap( width, height );
 					FastBitmap fastBaseImage = new FastBitmap( baseImage );
 					fastBaseImage.LockImage();
-					for( int y = 0; y < height; y++ )
-					{
-						for( int x = 0; x < height; x++ )
-						{
-							fastBaseImage.SetPixel( x, y, backgroundColour );
-						}
-					}
+                    fastBaseImage.Clear(backgroundColour);
 					fastBaseImage.UnlockImage();
 					break;
 					

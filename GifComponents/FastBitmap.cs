@@ -125,6 +125,38 @@ namespace GifComponents
         }
 
         /// <summary>
+        /// Clears the bitmap with the given color
+        /// </summary>
+        /// <param name="color">The color to clear the bitmap with</param>
+        public void Clear(int color)
+        {
+            // Clear all the pixels
+            int count = _imageWidth * _imageHeight;
+            int* curScan = _pBase;
+
+            int rem = count % 8;
+
+            count /= 8;
+
+            while (count-- > 0)
+            {
+                *(curScan++) = color;
+                *(curScan++) = color;
+                *(curScan++) = color;
+                *(curScan++) = color;
+
+                *(curScan++) = color;
+                *(curScan++) = color;
+                *(curScan++) = color;
+                *(curScan++) = color;
+            }
+            while (rem-- > 0)
+            {
+                *(curScan++) = color;
+            }
+        }
+        
+        /// <summary>
         /// Copies the contents of the given array of colors into this FastBitmap.
         /// Throws an ArgumentException if the count of colors on the array mismatches the pixel count from this FastBitmap
         /// </summary>
