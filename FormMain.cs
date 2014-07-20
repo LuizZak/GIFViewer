@@ -466,6 +466,9 @@ namespace GIF_Viewer
             // Hide the loading label:
             lblLoading.Visible = false;
 
+            // Reset the last frame reference:
+            this.lastFrame = 0;
+
             // Start the animation timer
             if (CurrentGif.FrameCount > 1)
             {
