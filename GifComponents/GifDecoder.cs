@@ -322,12 +322,11 @@ namespace GifComponents
                         }
                     }
 
-                    frame.RecurseCheckRequiresRedraw();
-                    frame.RecurseToKeyframe();
-                    frame.Decode();
-
                     _loadedFrames.Enqueue(frame);
                 }
+
+                frame.RecurseToKeyframe(10);
+                frame.Decode();
 
                 return frame;
             }

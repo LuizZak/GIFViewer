@@ -85,9 +85,9 @@ namespace GifComponents.Components
         /// </summary>
         private bool keyframeReady;
         /// <summary>
-        /// Whether the image from this frame was created with partial informationn (lacking information from all the previous frames)
+        /// Whether the image for this frame was created with partial information (lacking information from all the previous frames)
         /// </summary>
-        private bool imageIsPartial;
+        private bool isImagePartial;
         private GifFrame previousFrame;
 		private GifFrame previousFrameBut1;
 		#endregion
@@ -187,9 +187,9 @@ namespace GifComponents.Components
             this.requiresRedraw = true;
             this.streamOffset = inputStream.Position;
             this.inputStream = inputStream;
+            this.isImagePartial = true;
             this.previousFrame = previousFrame;
             this.previousFrameBut1 = previousFrameBut1;
-            //Decode();
             Skip();
 		}
 		#endregion
@@ -475,24 +475,19 @@ namespace GifComponents.Components
         /// <summary>
         /// Recursively checks whether the current sequence of frames requires redrawing
         /// </summary>
-        public void RecurseCheckRequiresRedraw()
+        public void CheckRequiresRedraw()
         {
-            if (this._keyframe && this.keyframeReady)
+            // Base case: This frame is the first, and has an image attached to it
+            if (this._index == 0 && this._image != null)
             {
                 this.requiresRedraw = false;
                 return;
             }
 
-            if (previousFrame == null)
+            if (this.previousFrame != null)
             {
-                requiresRedraw = _image == null;
-                return;
+                this.requiresRedraw = this._image == null || this.previousFrame.requiresRedraw;
             }
-
-            if (previousFrame != null)
-                previousFrame.RecurseCheckRequiresRedraw();
-
-            requiresRedraw = _image == null || previousFrame.requiresRedraw;
 
             if (this._keyframe && !keyframeReady)
             {
@@ -503,8 +498,11 @@ namespace GifComponents.Components
         /// <summary>
         /// Recurses the drawing until a keyframe is hit
         /// </summary>
-        public bool RecurseToKeyframe()
+        public bool RecurseToKeyframe(int maxDepth)
         {
+            if (maxDepth <= 0)
+                return false;
+
             if (!requiresRedraw)
                 return true;
 
@@ -514,13 +512,15 @@ namespace GifComponents.Components
 
                 if (previousFrame != null)
                 {
-                    redraw = previousFrame.RecurseToKeyframe();
+                    redraw = previousFrame.RecurseToKeyframe(maxDepth - 1);
                 }
 
                 if(redraw)
                 {
                     Decode();
                 }
+
+                return redraw;
             }
 
             return keyframeReady;
@@ -532,8 +532,6 @@ namespace GifComponents.Components
         /// <param name="force">Whether to force redraw, even if the frame is already drawn</param>
         public void Decode(bool force = false)
         {
-            RecurseCheckRequiresRedraw();
-
             if (isLoaded && !requiresRedraw && !force)
             {
                 return;
@@ -622,7 +620,12 @@ namespace GifComponents.Components
             _backgroundColour = backgroundColour;
             _image = CreateBitmap(tbid, logicalScreenDescriptor, imageDescriptor, activeColourTable, graphicControlExtension, previousFrame, previousFrameBut1);
 
-            RecurseCheckRequiresRedraw();
+            CheckRequiresRedraw();
+
+            if (this._image != null && previousFrame != null)
+            {
+                isImagePartial = previousFrame.isImagePartial;
+            }
 
             isLoaded = true;
         }
@@ -641,6 +644,7 @@ namespace GifComponents.Components
             this._image = null;
             this._imageDescriptor = null;
 
+            this.requiresRedraw = true;
             this.isLoaded = false;
         }
 
