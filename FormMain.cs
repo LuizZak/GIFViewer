@@ -428,7 +428,10 @@ namespace GIF_Viewer
 
             if (!CurrentGif.Loaded)
             {
-                MessageBox.Show("There was an unkown error loading the selected GIF file! ]:");
+                PlayBtn.Text = "&Open...";
+                PlayBtn.Enabled = true;
+
+                MessageBox.Show("There was an unkown error loading the selected GIF file! ]:", "Information", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                 lblLoading.Visible = false;
                 return;

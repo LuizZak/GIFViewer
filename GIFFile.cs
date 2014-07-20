@@ -127,6 +127,13 @@ namespace GIF_Viewer
             GIFDecoded = new GifComponents.GifDecoder(path);
             GIFDecoded.Decode();
 
+            if (GIFDecoded.ConsolidatedState != ErrorState.Ok)
+            {
+                GIFDecoded.Dispose();
+                Loaded = false;
+                return;
+            }
+
             // Get information from the gif file
             width = GIFDecoded.LogicalScreenDescriptor.LogicalScreenSize.Width;
             height = GIFDecoded.LogicalScreenDescriptor.LogicalScreenSize.Height;
