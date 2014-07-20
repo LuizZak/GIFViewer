@@ -550,7 +550,7 @@ namespace GIF_Viewer
                     pb_gif.Invalidate();
                 }
 
-                if (CurrentGif.CurrentFrame == (CurrentGif.FrameCount - 1) && CurrentGif.CanLoop == false)
+                if (CurrentGif.CurrentFrame == (CurrentGif.FrameCount) && CurrentGif.CanLoop == false)
                 {
                     CurrentGif.Playing = false;
                 }
