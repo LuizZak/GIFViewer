@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
+
 using GifComponents;
 
 namespace GIF_Viewer
@@ -147,6 +148,8 @@ namespace GIF_Viewer
             Image img = GIFDecoded[0].TheImage;
 
             GIF = new Bitmap(img.Width, img.Height);
+
+            GIF_Viewer.Utils.FastBitmap.CopyPixels((Bitmap)GIFDecoded[currentFrame].TheImage, (Bitmap)GIF);
 
             Loaded = true;
         }

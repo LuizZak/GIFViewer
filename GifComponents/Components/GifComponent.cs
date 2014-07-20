@@ -319,24 +319,7 @@ namespace GifComponents.Components
 		{
 			get 
 			{
-				XmlReader xr;
-				if( _xmlDebugging )
-				{
-					_debugXmlStream.Position = 0;
-					xr = new XmlTextReader( _debugXmlStream );
-				}
-				else
-				{
-					string message
-						= "<Message>There is no DebugXml because XML debugging "
-						+ "has not been enabled for this "
-						+ this.GetType().Name
-						+ " instance.</Message>";
-					TextReader tr = new StringReader( message );
-					xr = new XmlTextReader( tr );
-				}
-				xr.MoveToContent();
-				return xr;
+                return null;
 			}
 		}
 		#endregion

@@ -54,6 +54,7 @@ namespace GifComponents.Components
 	{
 		#region declarations
         private int _index;
+        private bool _keyframe;
 		private Image _image;
 		private int _delay;
 		private bool _expectsUserInput;
@@ -78,6 +79,15 @@ namespace GifComponents.Components
         /// The offset of the stream for this frame
         /// </summary>
         private long streamOffset;
+        /// <summary>
+        /// Field used by keyframes to signal that their drawing state is fully ready.
+        /// When all previous frames before a keyframe are drawn, the keyframe is said to be 'ready' to be used as a proper keyframe.
+        /// </summary>
+        private bool keyframeReady;
+        /// <summary>
+        /// Whether the image from this frame was created with partial informationn (lacking information from all the previous frames)
+        /// </summary>
+        private bool imageIsPartial;
         private GifFrame previousFrame;
 		private GifFrame previousFrameBut1;
 		#endregion
@@ -305,6 +315,15 @@ namespace GifComponents.Components
 			}
 		}
 		#endregion
+
+        /// <summary>
+        /// Gets or sets whether this frame is a keyword
+        /// </summary>
+        public bool Keyframe
+        {
+            get { return _keyframe; }
+            set { _keyframe = value; }
+        }
 		
 		#endregion
 		
@@ -398,6 +417,9 @@ namespace GifComponents.Components
                 previousFrame.Decode();
         }
 
+        /// <summary>
+        /// Skips the stream past the frame
+        /// </summary>
         private void Skip()
         {
             inputStream.Position = streamOffset;
@@ -453,22 +475,71 @@ namespace GifComponents.Components
         /// <summary>
         /// Recursively checks whether the current sequence of frames requires redrawing
         /// </summary>
-        private void RecurseCheckRequiresRedraw()
+        public void RecurseCheckRequiresRedraw()
         {
+            if (this._keyframe && this.keyframeReady)
+            {
+                this.requiresRedraw = false;
+                return;
+            }
+
+            if (previousFrame == null)
+            {
+                requiresRedraw = _image == null;
+                return;
+            }
+
             if (previousFrame != null)
                 previousFrame.RecurseCheckRequiresRedraw();
 
-            requiresRedraw = (previousFrame != null && (previousFrame._image == null || previousFrame.requiresRedraw));
+            requiresRedraw = _image == null || previousFrame.requiresRedraw;
+
+            if (this._keyframe && !keyframeReady)
+            {
+                keyframeReady = !requiresRedraw;
+            }
         }
 
-        public void Decode()
+        /// <summary>
+        /// Recurses the drawing until a keyframe is hit
+        /// </summary>
+        public bool RecurseToKeyframe()
         {
-            if (isLoaded && !requiresRedraw)
+            if (!requiresRedraw)
+                return true;
+
+            if (!_keyframe)
+            {
+                bool redraw = false;
+
+                if (previousFrame != null)
+                {
+                    redraw = previousFrame.RecurseToKeyframe();
+                }
+
+                if(redraw)
+                {
+                    Decode();
+                }
+            }
+
+            return keyframeReady;
+        }
+
+        /// <summary>
+        /// Decodes the contents of the GifFrame from the binded stream
+        /// </summary>
+        /// <param name="force">Whether to force redraw, even if the frame is already drawn</param>
+        public void Decode(bool force = false)
+        {
+            RecurseCheckRequiresRedraw();
+
+            if (isLoaded && !requiresRedraw && !force)
             {
                 return;
             }
 
-            if (isLoaded && requiresRedraw)
+            if (isLoaded && (requiresRedraw || force))
             {
                 Unload();
             }
@@ -568,7 +639,7 @@ namespace GifComponents.Components
             this._imageDescriptor.Dispose();
 
             this._image = null;
-            this._image = null;
+            this._imageDescriptor = null;
 
             this.isLoaded = false;
         }
@@ -850,18 +921,16 @@ namespace GifComponents.Components
 		/// </param>
         private static Bitmap CreateBitmap(Bitmap baseImage, int[] pixels)
         {
-            int count = 0;
             FastBitmap fastBaseImage = new FastBitmap(baseImage);
+
             fastBaseImage.LockImage();
-            int w = baseImage.Width;
-            int h = baseImage.Height;
-
             fastBaseImage.CopyFromArray(pixels, true);
-
             fastBaseImage.UnlockImage();
+
             return baseImage;
         }
 		#endregion
+
         #endregion
     }
 }

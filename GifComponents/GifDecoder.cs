@@ -128,6 +128,11 @@ namespace GifComponents
         private Queue<GifFrame> _loadedFrames;
 
         /// <summary>
+        /// The base interval for keyframes
+        /// </summary>
+        private int _keyframeInterval;
+
+        /// <summary>
         /// The maximum frame queue size
         /// </summary>
         private int _maxFrameQueueSize;
@@ -223,6 +228,16 @@ namespace GifComponents
             _stream.Position = 0;
         }
 
+        /// <summary>
+        /// Returns an integer that represents the delay for the given frame (in hundredths of a second)
+        /// </summary>
+        /// <param name="frameIndex">The index of the rame to get the delay from</param>
+        /// <returns>The delay, in hundredths of a second</returns>
+        public int GetDelayForFrame(int frameIndex)
+        {
+            return _frameDelays[frameIndex];
+        }
+
         #region Decode() method
 
         /// <summary>
@@ -230,7 +245,6 @@ namespace GifComponents
         /// </summary>
         public void Decode()
         {
-            _maxFrameQueueSize = 16;
             _frameDelays = new List<int>();
             _keyFrames = new List<GifFrame>();
             _loadedFrames = new Queue<GifFrame>();
@@ -255,30 +269,69 @@ namespace GifComponents
                 _gct = new ColourTable(_stream, _lsd.GlobalColourTableSize, XmlDebugging);
             }
 
-            const long maxMemoryForBuffer = 1024 * 1024 * 50; // 50 mb
             long memPerFrame = _lsd.LogicalScreenSize.Width * _lsd.LogicalScreenSize.Height * 4;
 
+            // Calculate an optional buffer size to enqueue frames on
+            const long maxMemoryForBuffer = 1024 * 1024 * 50; // 50 mb for buffers
             _maxFrameQueueSize = (int)(maxMemoryForBuffer / memPerFrame);
 
             if (ConsolidatedState == ErrorState.Ok)
             {
                 ReadContents(_stream);
             }
+
+            // Mark keyframes
+            const long maxMemoryForKeyframes = 1024 * 1024 * 15; // 15 mb for keyframes
+            _keyframeInterval = 10;
+
+            if ((_keyframeInterval) * memPerFrame > maxMemoryForKeyframes)
+            {
+                long totFrames = maxMemoryForKeyframes / memPerFrame;
+                _keyframeInterval = (int)(_frames.Count / totFrames);
+            }
+
+            for (int i = 0; i < _frames.Count; i += _keyframeInterval)
+            {
+                _frames[i].Keyframe = true;
+            }
         }
 
         #endregion
 
-        /// <summary>
-        /// Returns an integer that represents the delay for the given frame (in hundredths of a second)
-        /// </summary>
-        /// <param name="frameIndex">The index of the rame to get the delay from</param>
-        /// <returns>The delay, in hundredths of a second</returns>
-        public int GetDelayForFrame(int frameIndex)
-        {
-            return _frameDelays[frameIndex];
-        }
-
         #region properties
+
+        /// <summary>
+        /// Gets a frame from the GIF file.
+        /// </summary>
+        public GifFrame this[int index]
+        {
+            get
+            {
+                GifFrame frame = _frames[index];
+
+                if (!_loadedFrames.Contains(frame))
+                {
+                    // Unload a previous frame, is the queue is full
+                    while (_loadedFrames.Count >= _maxFrameQueueSize)
+                    {
+                        GifFrame oldFrame = _loadedFrames.Dequeue();
+
+                        if (!oldFrame.Keyframe)
+                        {
+                            oldFrame.Unload();
+                        }
+                    }
+
+                    frame.RecurseCheckRequiresRedraw();
+                    frame.RecurseToKeyframe();
+                    frame.Decode();
+
+                    _loadedFrames.Enqueue(frame);
+                }
+
+                return frame;
+            }
+        }
 
         #region Header property
         /// <summary>
@@ -373,32 +426,6 @@ namespace GifComponents
         #endregion
 
         #region Frame-related properties
-
-        /// <summary>
-        /// Gets a frame from the GIF file.
-        /// </summary>
-        public GifFrame this[int index]
-        {
-            get
-            {
-                GifFrame frame = _frames[index];
-
-                if (!_loadedFrames.Contains(frame))
-                {
-                    // Unload a previous frame, is the queue is full
-                    while (_loadedFrames.Count >= _maxFrameQueueSize)
-                    {
-                        _loadedFrames.Dequeue().Unload();
-                    }
-
-                    _loadedFrames.Enqueue(frame);
-                }
-
-                frame.Decode();
-
-                return frame;
-            }
-        }
 
         /// <summary>
         /// Gets the frame count for this GIF file
@@ -599,6 +626,9 @@ namespace GifComponents
             }
 
             GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, previousFrameBut1, _frames.Count, XmlDebugging);
+            
+
+
             _frames.Add(frame);
             WriteDebugXmlNode(frame.DebugXmlReader);
         }
