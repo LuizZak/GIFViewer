@@ -290,7 +290,7 @@ namespace GifComponents
                 _keyframeInterval = (int)(_frames.Count / totFrames);
             }
 
-            for (int i = 0; i < _frames.Count; i += _keyframeInterval)
+            for (int i = 0; i < _frames.Count; i += Math.Max(1, _keyframeInterval))
             {
                 _frames[i].Keyframe = true;
             }
