@@ -685,8 +685,6 @@ namespace GifComponents.Components
 		                             GifFrame previousFrame,
 		                             GifFrame previousFrameBut1 )
 		{
-			Color[] pixelsForThisFrame = new Color[lsd.LogicalScreenSize.Width 
-			                                       * lsd.LogicalScreenSize.Height];
             int[] pixelsForThisFrameInt = new int[lsd.LogicalScreenSize.Width * lsd.LogicalScreenSize.Height];
 			Bitmap baseImage = GetBaseImage( previousFrame, 
 			                                 previousFrameBut1, 
@@ -881,7 +879,9 @@ namespace GifComponents.Components
 				case DisposalMethod.RestoreToPrevious:
 					// pre-populate image with previous frame but 1
 					// TESTME: DisposalMethod.RestoreToPrevious
-					baseImage = new Bitmap( previousFrameBut1.TheImage );
+					//baseImage = new Bitmap( (previousFrameBut1 == null ? previousFrame : previousFrameBut1).TheImage );
+                    //baseImage = new Bitmap(previousFrame.TheImage);
+                    baseImage = new Bitmap(width, height);
 					break;
 					
 				default: // DisposalMethod.NotSpecified

@@ -127,26 +127,6 @@ namespace GifComponents.Components
 			_delayTime = ReadShort( inputStream ); // delay in hundredths of a second
 			_transparentColourIndex = Read( inputStream ); // transparent color index
 			int blockTerminator = Read( inputStream ); // block terminator
-			
-			if( xmlDebugging )
-			{
-				WriteDebugXmlElement( "BlockSize", _blockSize );
-				
-				WriteDebugXmlStartElement( "PackedFields" );
-				WriteDebugXmlAttribute( "ByteRead", ToHex( packed.Byte ) );
-				WriteDebugXmlAttribute( "DisposalMethod", 
-				                        _disposalMethod.ToString() );
-				WriteDebugXmlAttribute( "ExpectsUserInput", _expectsUserInput );
-				WriteDebugXmlAttribute( "HasTransparentColour", _hasTransparentColour );
-				WriteDebugXmlEndElement();
-				
-				WriteDebugXmlElement( "DelayTime", _delayTime );
-				WriteDebugXmlElement( "TransparentColourIndex", 
-				                      _transparentColourIndex );
-				WriteDebugXmlElement( "BlockTerminator", blockTerminator );
-				
-				WriteDebugXmlFinish();
-			}
 		}
 		#endregion
 
