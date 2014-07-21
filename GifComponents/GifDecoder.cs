@@ -473,47 +473,37 @@ namespace GifComponents
             while (!done/* && ConsolidatedState == ErrorState.Ok */)
             {
                 int code = Read(inputStream);
-                WriteCodeToDebugXml(code);
 
                 switch (code)
                 {
 
                     case CodeImageSeparator:
-                        WriteDebugXmlComment("0x2C - image separator");
                         AddFrame(inputStream, lastGce);
                         break;
 
                     case CodeExtensionIntroducer:
-                        WriteDebugXmlComment("0x21 - extension introducer");
                         code = Read(inputStream);
-                        WriteCodeToDebugXml(code);
                         switch (code)
                         {
                             case CodePlaintextLabel:
                                 // TODO: handle plain text extension (need support in AnimatedGifEncoder first)
                                 // TESTME: plain text label extensions
-                                WriteDebugXmlComment("0x01 - plain text extension");
                                 SkipBlocks(inputStream);
                                 break;
 
                             case CodeGraphicControlLabel:
-                                WriteDebugXmlComment("0xF9 - graphic control label");
                                 lastGce = new GraphicControlExtension(inputStream, XmlDebugging);
-                                WriteDebugXmlNode(lastGce.DebugXmlReader);
                                 break;
 
                             case CodeCommentLabel:
                                 // TODO: handle comment extension
-                                WriteDebugXmlComment("0xFE - comment extension");
                                 SkipBlocks(inputStream);
                                 break;
 
                             case CodeApplicationExtensionLabel:
-                                WriteDebugXmlComment("0xFF - application extension label");
                                 ApplicationExtension ext
                                     = new ApplicationExtension(inputStream,
                                                                 XmlDebugging);
-                                WriteDebugXmlNode(ext.DebugXmlReader);
                                 if (ext.ApplicationIdentifier == "NETSCAPE"
                                     && ext.ApplicationAuthenticationCode == "2.0")
                                 {
@@ -530,7 +520,6 @@ namespace GifComponents
                             default: // uninteresting extension
                                 // TESTME: ReadContents - uninteresting extension
                                 // TODO: Add support to AnimatedGifEncoder for uninteresting extensions
-                                WriteDebugXmlComment("Ignoring this extension");
                                 SkipBlocks(inputStream);
                                 break;
                         }
@@ -539,13 +528,11 @@ namespace GifComponents
                     case CodeTrailer:
                         // We've reached an explicit end-of-data marker, so stop
                         // processing the stream.
-                        WriteDebugXmlComment("0x3B - end of data");
                         done = true;
                         break;
 
                     case 0x00: // bad byte, but keep going and see what happens
                         // TESTME: unexpected 0x00 read from input stream
-                        WriteDebugXmlComment("0x00 - unexpected code");
                         message
                             = "Unexpected block terminator encountered at "
                             + "position " + inputStream.Position
@@ -556,7 +543,6 @@ namespace GifComponents
 
                     case -1: // reached the end of the input stream
                         // TESTME: end of stream without finding 0x3b trailer
-                        WriteDebugXmlComment("-1 - end of input stream");
                         message
                             = "Reached the end of the input stream without "
                             + "encountering trailer 0x3b";
@@ -565,7 +551,6 @@ namespace GifComponents
 
                     default:
                         // TESTME: unrecognised code
-                        WriteDebugXmlComment("Not a recognised code");
                         message
                             = "Bad data block introducer: 0x"
                             + code.ToString("X", CultureInfo.InvariantCulture).PadLeft(2, '0')
