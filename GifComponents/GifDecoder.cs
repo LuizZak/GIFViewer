@@ -316,6 +316,12 @@ namespace GifComponents
                     {
                         GifFrame oldFrame = _loadedFrames.Dequeue();
 
+                        if (oldFrame.Index == index - 1)
+                        {
+                            _loadedFrames.Enqueue(oldFrame);
+                            continue;
+                        }
+
                         if (!oldFrame.Keyframe)
                         {
                             oldFrame.Unload();
