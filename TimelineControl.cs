@@ -105,7 +105,7 @@ namespace GIF_Viewer
                 // Invalidate last playhead position:
                 InvalidatePlayhead();
 
-                currentFrame = value;
+                currentFrame = Math.Max(this.minimum, Math.Min(this.maximum, value));
 
                 // Invalidate new playhead position:
                 InvalidatePlayhead();
@@ -439,6 +439,8 @@ namespace GIF_Viewer
         /// <param name="oldFrame">The new frame to display</param>
         public void ChangeFrame(int newFrame)
         {
+            newFrame = Math.Max(this.minimum, Math.Min(this.maximum, newFrame));
+
             if (currentFrame == newFrame)
                 return;
 
@@ -606,6 +608,7 @@ namespace GIF_Viewer
         {
             base.OnMouseDown(e);
 
+            this.FindForm().ActiveControl = this;
             Focus();
 
             if (!Enabled)
