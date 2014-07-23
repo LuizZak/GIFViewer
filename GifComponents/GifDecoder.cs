@@ -138,6 +138,21 @@ namespace GifComponents
         private int _maxFrameQueueSize;
 
         /// <summary>
+        /// The maximum memory allocated for buffers
+        /// </summary>
+        private int _maxMemoryForBuffer;
+
+        /// <summary>
+        /// The maximum memory allocated for keyframes
+        /// </summary>
+        private int _maxMemoryForKeyframes;
+
+        /// <summary>
+        /// The maximum number of frames to try to backtrack into a keyframe before failing and trying to draw the uncomplete frame anyways
+        /// </summary>
+        private int _maxKeyframeReach;
+
+        /// <summary>
         /// Holds the <see cref="System.IO.Stream"/> from which the GIF is being
         /// read.
         /// </summary>
@@ -206,6 +221,9 @@ namespace GifComponents
                 throw new ArgumentException(message, "inputStream");
             }
 
+            _maxMemoryForBuffer = 1024 * 1024 * 100;   // 100mb for buffering frames
+            _maxMemoryForKeyframes = 1024 * 1024 * 15; // 15mb for keyframes
+
             _stream = new MemoryStream();
             int bytesRead = 0;
             long copyLength = inputStream.Length;
@@ -269,24 +287,30 @@ namespace GifComponents
                 _gct = new ColourTable(_stream, _lsd.GlobalColourTableSize, XmlDebugging);
             }
 
-            long memPerFrame = _lsd.LogicalScreenSize.Width * _lsd.LogicalScreenSize.Height * 4;
-
-            // Calculate an optional buffer size to enqueue frames on
-            const long maxMemoryForBuffer = 1024 * 1024 * 50; // 50 mb for buffers
-            _maxFrameQueueSize = (int)(maxMemoryForBuffer / memPerFrame);
-
             if (ConsolidatedState == ErrorState.Ok)
             {
                 ReadContents(_stream);
             }
 
+            ApplyMemoryFields();
+        }
+
+        /// <summary>
+        /// Applies the max memory usage fields to the frames on the program
+        /// </summary>
+        public void ApplyMemoryFields()
+        {
+            long memPerFrame = _lsd.LogicalScreenSize.Width * _lsd.LogicalScreenSize.Height * 4;
+
+            // Calculate an optional buffer size to enqueue frames on
+            _maxFrameQueueSize = (int)(_maxMemoryForBuffer / memPerFrame);
+
             // Mark keyframes
-            const long maxMemoryForKeyframes = 1024 * 1024 * 15; // 15 mb for keyframes
             _keyframeInterval = 10;
 
-            if ((_keyframeInterval) * memPerFrame > maxMemoryForKeyframes)
+            if ((_keyframeInterval) * memPerFrame > _maxMemoryForKeyframes)
             {
-                long totFrames = maxMemoryForKeyframes / memPerFrame;
+                long totFrames = _maxMemoryForKeyframes / memPerFrame;
                 _keyframeInterval = (int)(_frames.Count / totFrames);
             }
 
@@ -337,6 +361,49 @@ namespace GifComponents
                 return frame;
             }
         }
+
+        #region Memory/Performance related properties
+
+        /// <summary>
+        /// Gets or sets the maximum memory allocated for buffers
+        /// </summary>
+        public int MaxMemoryForBuffer
+        {
+            get { return _maxMemoryForBuffer; }
+            set
+            {
+                this._maxMemoryForBuffer = value;
+                ApplyMemoryFields();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum memory allocated for keyframes
+        /// </summary>
+        public int MaxMemoryForKeyframes
+        {
+            get { return this._maxMemoryForKeyframes; }
+            set
+            {
+                this._maxMemoryForKeyframes = value;
+                ApplyMemoryFields();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of frames to try to backtrack into a keyframe before failing and trying to draw the uncomplete frame anyways
+        /// </summary>
+        public int MaxKeyframeReach
+        {
+            get { return _maxKeyframeReach; }
+            set
+            {
+                _maxKeyframeReach = value;
+                ApplyMemoryFields();
+            }
+        }
+
+        #endregion
 
         #region Header property
         /// <summary>
