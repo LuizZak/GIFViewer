@@ -408,69 +408,8 @@ namespace GifComponents.Components
 			throw new NotImplementedException( message );
 		}
 		#endregion
-		
-		#region private methods
 
-        private void RecursiveDecodeBack()
-        {
-            if (previousFrame != null && previousFrame != this)
-                previousFrame.Decode();
-        }
-
-        /// <summary>
-        /// Skips the stream past the frame
-        /// </summary>
-        private void Skip()
-        {
-            inputStream.Position = streamOffset;
-
-            if (logicalScreenDescriptor == null)
-            {
-                throw new ArgumentNullException("logicalScreenDescriptor");
-            }
-
-            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream, XmlDebugging);
-
-            if (imageDescriptor.HasLocalColourTable)
-            {
-                ColourTable.SkipOnStream(inputStream, imageDescriptor.LocalColourTableSize);
-            }
-
-            // decode pixel data
-            int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
-
-            //inputStream.Position += TableBasedImageData.SkipOnStream(inputStream, pixelCount);
-            TableBasedImageData.SkipOnStream(inputStream);
-
-            // Skip any remaining blocks up to the next block terminator (in
-            // case there is any surplus data before the next frame)
-            SkipBlocks(inputStream);
-
-            //Decode();
-        }
-
-        /// <summary>
-        /// Propagates the graphics control extension through all the frames
-        /// </summary>
-        private void RecurseGraphicControlExtension()
-        {
-            if (previousFrame != null)
-                previousFrame.RecurseGraphicControlExtension();
-
-            if (graphicControlExtension == null)
-            {
-                SetStatus(ErrorState.NoGraphicControlExtension, "");
-                // use a default GCE
-                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
-                                                   DisposalMethod.NotSpecified,
-                                                   false,
-                                                   false,
-                                                   100,
-                                                   0);
-            }
-
-            _extension = graphicControlExtension;
-        }
+        #region public methods
 
         /// <summary>
         /// Recursively checks whether the current sequence of frames requires redrawing
@@ -641,6 +580,71 @@ namespace GifComponents.Components
 
             this.requiresRedraw = true;
             this.isLoaded = false;
+        }
+
+        #endregion
+
+        #region private methods
+
+        private void RecursiveDecodeBack()
+        {
+            if (previousFrame != null && previousFrame != this)
+                previousFrame.Decode();
+        }
+
+        /// <summary>
+        /// Skips the stream past the frame
+        /// </summary>
+        private void Skip()
+        {
+            inputStream.Position = streamOffset;
+
+            if (logicalScreenDescriptor == null)
+            {
+                throw new ArgumentNullException("logicalScreenDescriptor");
+            }
+
+            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream, XmlDebugging);
+
+            if (imageDescriptor.HasLocalColourTable)
+            {
+                ColourTable.SkipOnStream(inputStream, imageDescriptor.LocalColourTableSize);
+            }
+
+            // decode pixel data
+            int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
+
+            //inputStream.Position += TableBasedImageData.SkipOnStream(inputStream, pixelCount);
+            TableBasedImageData.SkipOnStream(inputStream);
+
+            // Skip any remaining blocks up to the next block terminator (in
+            // case there is any surplus data before the next frame)
+            SkipBlocks(inputStream);
+
+            //Decode();
+        }
+
+        /// <summary>
+        /// Propagates the graphics control extension through all the frames
+        /// </summary>
+        private void RecurseGraphicControlExtension()
+        {
+            if (previousFrame != null)
+                previousFrame.RecurseGraphicControlExtension();
+
+            if (graphicControlExtension == null)
+            {
+                SetStatus(ErrorState.NoGraphicControlExtension, "");
+                // use a default GCE
+                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
+                                                   DisposalMethod.NotSpecified,
+                                                   false,
+                                                   false,
+                                                   100,
+                                                   0);
+            }
+
+            _extension = graphicControlExtension;
         }
 
 		#region private static CreateBitmap( GifDecoder, ImageDescriptor, ColourTable, bool ) method
