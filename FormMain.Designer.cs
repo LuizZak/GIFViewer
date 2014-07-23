@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.tlc_timeline = new GIF_Viewer.TimelineControl();
             this.cb_useMinFrameInterval = new System.Windows.Forms.CheckBox();
             this.fileFormatWarningImage = new System.Windows.Forms.PictureBox();
             this.nud_minFrameInterval = new System.Windows.Forms.NumericUpDown();
@@ -40,7 +41,6 @@
             this.openWithToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lblLoading = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.tlc_timeline = new GIF_Viewer.TimelineControl();
             this.pb_gif = new GIF_Viewer.CPictureBox();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.fileFormatWarningImage)).BeginInit();
@@ -62,6 +62,27 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(484, 50);
             this.panel1.TabIndex = 1;
+            // 
+            // tlc_timeline
+            // 
+            this.tlc_timeline.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tlc_timeline.BehaviorType = GIF_Viewer.TimelineBehaviorType.Timeline;
+            this.tlc_timeline.CurrentFrame = 1;
+            this.tlc_timeline.DisplayFrameUnderMouse = true;
+            this.tlc_timeline.FrameDisplayType = GIF_Viewer.TimelineFrameDisplayType.FrameNumber;
+            this.tlc_timeline.Location = new System.Drawing.Point(75, 4);
+            this.tlc_timeline.Maximum = 10;
+            this.tlc_timeline.Minimum = 1;
+            this.tlc_timeline.Name = "tlc_timeline";
+            this.tlc_timeline.Range = new System.Drawing.Point(1, 9);
+            this.tlc_timeline.ScrollScaleWidth = 1D;
+            this.tlc_timeline.ScrollX = 0D;
+            this.tlc_timeline.Size = new System.Drawing.Size(316, 38);
+            this.tlc_timeline.TabIndex = 6;
+            this.tlc_timeline.Text = "timelineControl1";
+            this.tlc_timeline.TimelineHeight = 15;
+            this.tlc_timeline.FrameChanged += new GIF_Viewer.TimelineControl.FrameChangedEventHandler(this.tlc_timeline_FrameChanged);
             // 
             // cb_useMinFrameInterval
             // 
@@ -149,27 +170,6 @@
             this.lblLoading.TabIndex = 2;
             this.lblLoading.Text = "Loading...";
             this.lblLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tlc_timeline
-            // 
-            this.tlc_timeline.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tlc_timeline.BehaviorType = GIF_Viewer.TimelineBehaviorType.Timeline;
-            this.tlc_timeline.CurrentFrame = 1;
-            this.tlc_timeline.DisplayFrameUnderMouse = true;
-            this.tlc_timeline.FrameDisplayType = GIF_Viewer.TimelineFrameDisplayType.FrameNumber;
-            this.tlc_timeline.Location = new System.Drawing.Point(75, 4);
-            this.tlc_timeline.Maximum = 10;
-            this.tlc_timeline.Minimum = 1;
-            this.tlc_timeline.Name = "tlc_timeline";
-            this.tlc_timeline.Range = new System.Drawing.Point(1, 9);
-            this.tlc_timeline.ScrollScaleWidth = 1F;
-            this.tlc_timeline.ScrollX = 0F;
-            this.tlc_timeline.Size = new System.Drawing.Size(316, 38);
-            this.tlc_timeline.TabIndex = 6;
-            this.tlc_timeline.Text = "timelineControl1";
-            this.tlc_timeline.TimelineHeight = 15;
-            this.tlc_timeline.FrameChanged += new GIF_Viewer.TimelineControl.FrameChangedEventHandler(this.tlc_timeline_FrameChanged);
             // 
             // pb_gif
             // 

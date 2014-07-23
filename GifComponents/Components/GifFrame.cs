@@ -885,7 +885,7 @@ namespace GifComponents.Components
 					break;
 					
 				default: // DisposalMethod.NotSpecified
-					if( previousFrame == null )
+					if( previousFrame == null || previousFrame._image == null )
 					{
 						// this is the first frame so start with an empty bitmap
 						baseImage = new Bitmap( width, height );
@@ -894,7 +894,7 @@ namespace GifComponents.Components
 					{
 						// pre-populate image with previous frame
 						// TESTME: DisposalMethod.NotSpecified on 2nd frame or later
-						baseImage = new Bitmap( previousFrame.TheImage );
+						baseImage = new Bitmap( previousFrame._image );
 					}
 					break;
 			}

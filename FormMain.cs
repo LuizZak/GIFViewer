@@ -775,6 +775,7 @@ namespace GIF_Viewer
                 LoadGIF(Images[currentImage]);
 
                 e.Handled = true;
+                e.SuppressKeyPress = true;
             }
 
             // Seek previous GIF with the Page Up key
@@ -785,6 +786,7 @@ namespace GIF_Viewer
                 LoadGIF(Images[currentImage]);
 
                 e.Handled = true;
+                e.SuppressKeyPress = true;
             }
 
             if(CurrentGif.Loaded && CurrentGif.GetFrameCount() > 0)
@@ -795,6 +797,9 @@ namespace GIF_Viewer
                     if (tlc_timeline.CurrentFrame > 0)
                     {
                         tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame - 1);
+
+                        e.Handled = true;
+                        e.SuppressKeyPress = true;
                     }
                 }
                 else if (e.KeyData == Keys.Right)
@@ -802,6 +807,9 @@ namespace GIF_Viewer
                     if (tlc_timeline.CurrentFrame < tlc_timeline.Maximum)
                     {
                         tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame + 1);
+
+                        e.Handled = true;
+                        e.SuppressKeyPress = true;
                     }
                 }
             }
