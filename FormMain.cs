@@ -534,7 +534,6 @@ namespace GIF_Viewer
                     // Change the current frame
                     newFrame = (CurrentGif.CurrentFrame + 1) % CurrentGif.FrameCount;
                     changeTimelineFrame(newFrame);
-                    UpdateFrameText();
                 }
 
                 if (newFrame != lastFrame)
@@ -544,6 +543,7 @@ namespace GIF_Viewer
                     pb_gif._Paint = false;
 
                     CurrentGif.SetCurrentFrame(newFrame);
+                    UpdateFrameText();
 
                     pb_gif._Paint = true;
 
