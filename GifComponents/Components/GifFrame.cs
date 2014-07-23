@@ -503,27 +503,22 @@ namespace GifComponents.Components
             if (maxDepth <= 0)
                 return false;
 
-            if (!requiresRedraw)
+            if (!requiresRedraw || keyframeReady)
                 return true;
 
-            if (!_keyframe)
+            bool redraw = false;
+
+            if (previousFrame != null)
             {
-                bool redraw = false;
-
-                if (previousFrame != null)
-                {
-                    redraw = previousFrame.RecurseToKeyframe(maxDepth - 1);
-                }
-
-                if(redraw)
-                {
-                    Decode();
-                }
-
-                return redraw;
+                redraw = previousFrame.RecurseToKeyframe(maxDepth - 1);
             }
 
-            return keyframeReady;
+            if (redraw)
+            {
+                Decode();
+            }
+
+            return redraw;
         }
 
         /// <summary>
