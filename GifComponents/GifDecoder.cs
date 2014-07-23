@@ -608,7 +608,7 @@ namespace GifComponents
             // Setup the frame delay
             if (lastGce == null)
             {
-                _frameDelays.Add(100);
+                _frameDelays.Add(0);
             }
             else
             {
