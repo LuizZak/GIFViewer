@@ -9,6 +9,7 @@ using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 using GIF_Viewer.Views;
+using GIF_Viewer.Utils;
 
 /// @title              GIF Viewer
 /// @description        Helps visualizing animated and non-animated .GIF files
@@ -22,6 +23,7 @@ using GIF_Viewer.Views;
 /// @                   Now you can seek the .gif timeline using the arrow keys when the animation panel is focused (clicked on).
 /// @                   Fixed half-pixel misalignment on images (only visible when zoomed in).
 /// @                   Fixed opening and closing the frame extract form doubling the animation's playback speed on the main form.
+/// @                   Added a settings panel to edit the main settings of the program.
 /// 
 /// @version 1.4.7b     Now the program will fail silently when trying to load the .gif files in the folder. Still on the hunt for runtime exceptions.
 /// @                   Added an error form that has a copiable field for copying information about errors.
@@ -204,11 +206,6 @@ namespace GIF_Viewer
         public ToolStripItem FrameExtract;
 
         /// <summary>
-        /// Programs on the context menu
-        /// </summary>
-        public Dictionary<string, string> Programs;
-
-        /// <summary>
         /// Generic event handler
         /// </summary>
         public EventHandler hand;
@@ -217,10 +214,6 @@ namespace GIF_Viewer
         /// Helper object used to check the file association for the .gif extension on Windows
         /// </summary>
         public FileAssociation Association;
-        /// <summary>
-        /// Whether to ask on startup to change .gif file association to this program
-        /// </summary>
-        public bool AskOnStartup = true;
 
         /// <summary>
         /// Windows' Open File Dialog:
@@ -258,7 +251,7 @@ namespace GIF_Viewer
                 Association = new FileAssociation(".gif");
 
                 // Check .GIF file association
-                if (AskOnStartup)
+                if (!Settings.Instance.DontAskAssociate)
                 {
                     if (Association.GetProgram() != "\"" + Application.ExecutablePath + "\" \"%1\"")
                     {
@@ -278,14 +271,14 @@ namespace GIF_Viewer
                         }
                         else if (res == System.Windows.Forms.DialogResult.Cancel)
                         {
-                            AskOnStartup = false;
+                            Settings.Instance.DontAskAssociate = true;
 
                             SaveSettings();
                         }
                     }
                 }
             }
-            catch (Exception) { }
+            catch (Exception e) { }
 
             // Load a gif file from the command line arguments
             if (args.Length > 0 && File.Exists(args[0]))
@@ -566,61 +559,19 @@ namespace GIF_Viewer
         /// </summary>
         public void LoadSettings()
         {
-            // Set the filename:
-            string fileName = Application.StartupPath + "\\settings.ini";
-
-            // Clear the Programs Dictionary:
-            Programs = new Dictionary<string, string>();
-
-            // No settings file, leave it blank:
-            if (!File.Exists(fileName))
-            {
-                IniFile = File.Create(fileName);
-            }
-            else
-            {
-                // Read the settings:
-                IniFile = File.Open(fileName, FileMode.Open);
-            }
-            StreamReader reader = new StreamReader(IniFile);
-
-            // Temp definitions:
-            string line;
-            string programName;
-            string programPath;
-            
-            // Main loop:
-            while (!reader.EndOfStream)
-            {
-                line = reader.ReadLine(); // Get a line
-
-                // If the program should ask the user about the .gif file association on startup:
-                if (line == "[DontAskAssociate]")
-                    AskOnStartup = false;
-                // A program:
-                else if (line.Contains("="))
-                {
-                    programName = line.Split('=')[0].Substring(1, line.IndexOf("=") - 2); // Reads off the screen name
-                    programPath = line.Split('=')[1].Substring(1, line.Split('=')[1].LastIndexOf('"') - 1); // Reads off the program's path
-
-                    Programs.Add(programName, programPath); // Add this program to thye program's list
-                }
-            }
-
-            // Close the reader:
-            reader.Close();
+            Settings.Instance.LoadSettings();
 
             // Fill in the contextMenu with the programs:
             cms_gifRightClick.Items.Clear();
 
             // Loop through each entry in the Programs Dictionary:
-            foreach (string k in Programs.Keys)
+            foreach (string k in Settings.Instance.Programs.Keys)
             {
                 // Add a new contex menu:
                 ToolStripItem tsi = cms_gifRightClick.Items.Add(k);
 
                 // Set the path to the application:
-                tsi.Tag = Programs[k];
+                tsi.Tag = Settings.Instance.Programs[k];
             }
 
             // Add default context menu buttons:
@@ -658,26 +609,7 @@ namespace GIF_Viewer
             if (File.Exists(fileName))
                 File.Delete(fileName);
 
-            // If no settings file exists, create one!
-            IniFile = File.Create(fileName);
-
-            // Opens a stream to write the settings down:
-            StreamWriter writter = new StreamWriter(IniFile);
-
-            // Iterate through the programs, and write down one at a time
-            foreach (string k in Programs.Keys)
-            {
-                writter.WriteLine("\"" + k + "\"=\"" + Programs[k] + "\"");
-            }
-
-            // If the program should ask the user about the .gif file association on startup:
-            if (AskOnStartup == false)
-            {
-                writter.WriteLine("[DontAskAssociate]");
-            }
-
-            // Close the stream:
-            writter.Close();
+            Settings.Instance.SaveSettings();
         }
 
         /// <summary>
@@ -1006,33 +938,6 @@ namespace GIF_Viewer
         }
 
         /// <summary>
-        /// Changes the current frame on the timeline to the specified ammount
-        /// </summary>
-        /// <param name="newValue">The new ammount to set</param>
-        public void changeTimelineFrame(int newValue)
-        {
-            tlc_timeline.CurrentFrame = newValue + 1;
-        }
-
-        /// <summary>
-        /// Changes the lblFrame text
-        /// </summary>
-        /// <param name="newString">The new label to change the lblFrame to</param>
-        public void changeText(string newString)
-        {
-            lblFrame.Text = newString;
-        }
-
-        /// <summary>
-        /// Change the PlayBtn label
-        /// </summary>
-        /// <param name="newString">The new label to change the PlayBtn to</param>
-        public void changeBtnText(string newString)
-        {
-            PlayBtn.Text = newString;
-        }
-
-        /// <summary>
         /// Function called whenever the user clicks an item on the right-click context menu
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
@@ -1065,7 +970,7 @@ namespace GIF_Viewer
                         cms_gifRightClick.Items.Remove(it);
                         cms_gifRightClick.Items.Insert(cms_gifRightClick.Items.Count - 1, it);
 
-                        Programs.Add(Path.GetFileNameWithoutExtension(ofd.FileName), ofd.FileName);
+                        Settings.Instance.Programs.Add(Path.GetFileNameWithoutExtension(ofd.FileName), ofd.FileName);
 
                         SaveSettings();
 
@@ -1082,7 +987,7 @@ namespace GIF_Viewer
             {
                 if (MessageBox.Show("Program not found. Do you want to remove it from the list?", "File not found", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    Programs.Remove(e.ClickedItem.Text);
+                    Settings.Instance.Programs.Remove(e.ClickedItem.Text);
                     SaveSettings();
                     LoadSettings();
                 }
@@ -1095,6 +1000,51 @@ namespace GIF_Viewer
 
             // Close this application
             this.Close();
+        }
+
+        /// <summary>
+        /// Event fired everytime the user clicks the Settings button
+        /// </summary>
+        /// <param name="sender">Object that fired this event</param>
+        /// <param name="e">The arguments for this event</param>
+        private void btn_configuration_Click(object sender, EventArgs e)
+        {
+            SettingsForm settings = new SettingsForm();
+
+            if (settings.ShowDialog(this) == DialogResult.OK)
+            {
+                if (CurrentGif != null)
+                {
+                    CurrentGif.ApplyMemorySettings();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Changes the current frame on the timeline to the specified ammount
+        /// </summary>
+        /// <param name="newValue">The new ammount to set</param>
+        public void changeTimelineFrame(int newValue)
+        {
+            tlc_timeline.CurrentFrame = newValue + 1;
+        }
+
+        /// <summary>
+        /// Changes the lblFrame text
+        /// </summary>
+        /// <param name="newString">The new label to change the lblFrame to</param>
+        public void changeText(string newString)
+        {
+            lblFrame.Text = newString;
+        }
+
+        /// <summary>
+        /// Change the PlayBtn label
+        /// </summary>
+        /// <param name="newString">The new label to change the PlayBtn to</param>
+        public void changeBtnText(string newString)
+        {
+            PlayBtn.Text = newString;
         }
 
         /// <summary>

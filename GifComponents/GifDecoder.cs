@@ -223,6 +223,7 @@ namespace GifComponents
 
             _maxMemoryForBuffer = 1024 * 1024 * 100;   // 100mb for buffering frames
             _maxMemoryForKeyframes = 1024 * 1024 * 15; // 15mb for keyframes
+            _maxKeyframeReach = 10;
 
             _stream = new MemoryStream();
             int bytesRead = 0;
@@ -311,7 +312,7 @@ namespace GifComponents
             if ((_keyframeInterval) * memPerFrame > _maxMemoryForKeyframes)
             {
                 long totFrames = _maxMemoryForKeyframes / memPerFrame;
-                _keyframeInterval = (int)(_frames.Count / totFrames);
+                _keyframeInterval = (int)(_frames.Count / Math.Max(1, totFrames));
             }
 
             for (int i = 0; i < _frames.Count; i += Math.Max(1, _keyframeInterval))
@@ -355,7 +356,7 @@ namespace GifComponents
                     _loadedFrames.Enqueue(frame);
                 }
 
-                frame.RecurseToKeyframe(10);
+                frame.RecurseToKeyframe(_maxKeyframeReach);
                 frame.Decode();
 
                 return frame;

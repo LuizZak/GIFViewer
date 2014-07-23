@@ -5,6 +5,8 @@ using System.Drawing.Imaging;
 
 using GifComponents;
 
+using GIF_Viewer.Utils;
+
 namespace GIF_Viewer
 {
     /// <summary>
@@ -112,6 +114,23 @@ namespace GIF_Viewer
         {
             GIF.Dispose();
             GIFDecoded.Dispose();
+
+            GIFDecoded = null;
+        }
+
+        /// <summary>
+        /// Applies the memory settings to the currently loaded gif file
+        /// </summary>
+        public void ApplyMemorySettings()
+        {
+            if (this.GIFDecoded == null || !this.Loaded)
+                return;
+
+            this.GIFDecoded.MaxMemoryForBuffer    = Settings.Instance.MaxBufferMemory * 1024 * 1024;
+            this.GIFDecoded.MaxMemoryForKeyframes = Settings.Instance.MaxKeyframeMemory * 1024 * 1024;
+            this.GIFDecoded.MaxKeyframeReach = Settings.Instance.MaxKeyframeReach;
+
+            this.GIFDecoded.ApplyMemoryFields();
         }
 
         /// <summary>
@@ -159,6 +178,8 @@ namespace GIF_Viewer
             GIF_Viewer.Utils.FastBitmap.CopyPixels((Bitmap)GIFDecoded[currentFrame].TheImage, (Bitmap)GIF);
 
             Loaded = true;
+
+            ApplyMemorySettings();
         }
 
         /// <summary>
