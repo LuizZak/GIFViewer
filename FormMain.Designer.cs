@@ -31,26 +31,28 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             this.panel1 = new System.Windows.Forms.Panel();
-            this.tlc_timeline = new GIF_Viewer.TimelineControl();
             this.cb_useMinFrameInterval = new System.Windows.Forms.CheckBox();
-            this.fileFormatWarningImage = new System.Windows.Forms.PictureBox();
             this.nud_minFrameInterval = new System.Windows.Forms.NumericUpDown();
             this.lblFrame = new System.Windows.Forms.Label();
             this.PlayBtn = new System.Windows.Forms.Button();
             this.cms_gifRightClick = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.openWithToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lblLoading = new System.Windows.Forms.Label();
-            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.tt_mainTooltip = new System.Windows.Forms.ToolTip(this.components);
+            this.btn_configuration = new System.Windows.Forms.Button();
+            this.fileFormatWarningImage = new System.Windows.Forms.PictureBox();
+            this.tlc_timeline = new GIF_Viewer.TimelineControl();
             this.pb_gif = new GIF_Viewer.CPictureBox();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.fileFormatWarningImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nud_minFrameInterval)).BeginInit();
             this.cms_gifRightClick.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.fileFormatWarningImage)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pb_gif)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.btn_configuration);
             this.panel1.Controls.Add(this.tlc_timeline);
             this.panel1.Controls.Add(this.cb_useMinFrameInterval);
             this.panel1.Controls.Add(this.fileFormatWarningImage);
@@ -62,27 +64,6 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(484, 50);
             this.panel1.TabIndex = 1;
-            // 
-            // tlc_timeline
-            // 
-            this.tlc_timeline.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.tlc_timeline.BehaviorType = GIF_Viewer.TimelineBehaviorType.Timeline;
-            this.tlc_timeline.CurrentFrame = 1;
-            this.tlc_timeline.DisplayFrameUnderMouse = true;
-            this.tlc_timeline.FrameDisplayType = GIF_Viewer.TimelineFrameDisplayType.FrameNumber;
-            this.tlc_timeline.Location = new System.Drawing.Point(75, 4);
-            this.tlc_timeline.Maximum = 10;
-            this.tlc_timeline.Minimum = 1;
-            this.tlc_timeline.Name = "tlc_timeline";
-            this.tlc_timeline.Range = new System.Drawing.Point(1, 9);
-            this.tlc_timeline.ScrollScaleWidth = 1D;
-            this.tlc_timeline.ScrollX = 0D;
-            this.tlc_timeline.Size = new System.Drawing.Size(316, 38);
-            this.tlc_timeline.TabIndex = 6;
-            this.tlc_timeline.Text = "timelineControl1";
-            this.tlc_timeline.TimelineHeight = 15;
-            this.tlc_timeline.FrameChanged += new GIF_Viewer.TimelineControl.FrameChangedEventHandler(this.tlc_timeline_FrameChanged);
             // 
             // cb_useMinFrameInterval
             // 
@@ -98,18 +79,6 @@
             this.cb_useMinFrameInterval.UseVisualStyleBackColor = true;
             this.cb_useMinFrameInterval.CheckedChanged += new System.EventHandler(this.cb_useMinFrameInterval_CheckedChanged);
             // 
-            // fileFormatWarningImage
-            // 
-            this.fileFormatWarningImage.BackColor = System.Drawing.Color.Transparent;
-            this.fileFormatWarningImage.Image = global::GIF_Viewer.Properties.Resources.emblem_important;
-            this.fileFormatWarningImage.Location = new System.Drawing.Point(6, 7);
-            this.fileFormatWarningImage.Name = "fileFormatWarningImage";
-            this.fileFormatWarningImage.Size = new System.Drawing.Size(16, 16);
-            this.fileFormatWarningImage.TabIndex = 3;
-            this.fileFormatWarningImage.TabStop = false;
-            this.toolTip1.SetToolTip(this.fileFormatWarningImage, "This image  is not in a .GIF file format!");
-            this.fileFormatWarningImage.Visible = false;
-            // 
             // nud_minFrameInterval
             // 
             this.nud_minFrameInterval.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -120,7 +89,7 @@
             0,
             0});
             this.nud_minFrameInterval.Name = "nud_minFrameInterval";
-            this.nud_minFrameInterval.Size = new System.Drawing.Size(80, 20);
+            this.nud_minFrameInterval.Size = new System.Drawing.Size(50, 20);
             this.nud_minFrameInterval.TabIndex = 4;
             this.nud_minFrameInterval.ValueChanged += new System.EventHandler(this.nud_minFrameInterval_ValueChanged);
             this.nud_minFrameInterval.KeyUp += new System.Windows.Forms.KeyEventHandler(this.nud_minFrameInterval_KeyUp);
@@ -171,6 +140,51 @@
             this.lblLoading.Text = "Loading...";
             this.lblLoading.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // btn_configuration
+            // 
+            this.btn_configuration.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_configuration.AutoSize = true;
+            this.btn_configuration.Image = global::GIF_Viewer.Properties.Resources.applications_system;
+            this.btn_configuration.Location = new System.Drawing.Point(453, 20);
+            this.btn_configuration.Name = "btn_configuration";
+            this.btn_configuration.Size = new System.Drawing.Size(23, 23);
+            this.btn_configuration.TabIndex = 7;
+            this.tt_mainTooltip.SetToolTip(this.btn_configuration, "Configurations");
+            this.btn_configuration.UseVisualStyleBackColor = true;
+            // 
+            // fileFormatWarningImage
+            // 
+            this.fileFormatWarningImage.BackColor = System.Drawing.Color.Transparent;
+            this.fileFormatWarningImage.Image = global::GIF_Viewer.Properties.Resources.emblem_important;
+            this.fileFormatWarningImage.Location = new System.Drawing.Point(6, 7);
+            this.fileFormatWarningImage.Name = "fileFormatWarningImage";
+            this.fileFormatWarningImage.Size = new System.Drawing.Size(16, 16);
+            this.fileFormatWarningImage.TabIndex = 3;
+            this.fileFormatWarningImage.TabStop = false;
+            this.tt_mainTooltip.SetToolTip(this.fileFormatWarningImage, "This image  is not in a .GIF file format!");
+            this.fileFormatWarningImage.Visible = false;
+            // 
+            // tlc_timeline
+            // 
+            this.tlc_timeline.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tlc_timeline.BehaviorType = GIF_Viewer.TimelineBehaviorType.Timeline;
+            this.tlc_timeline.CurrentFrame = 1;
+            this.tlc_timeline.DisplayFrameUnderMouse = true;
+            this.tlc_timeline.FrameDisplayType = GIF_Viewer.TimelineFrameDisplayType.FrameNumber;
+            this.tlc_timeline.Location = new System.Drawing.Point(75, 4);
+            this.tlc_timeline.Maximum = 10;
+            this.tlc_timeline.Minimum = 1;
+            this.tlc_timeline.Name = "tlc_timeline";
+            this.tlc_timeline.Range = new System.Drawing.Point(1, 9);
+            this.tlc_timeline.ScrollScaleWidth = 1D;
+            this.tlc_timeline.ScrollX = 0D;
+            this.tlc_timeline.Size = new System.Drawing.Size(316, 38);
+            this.tlc_timeline.TabIndex = 6;
+            this.tlc_timeline.Text = "timelineControl1";
+            this.tlc_timeline.TimelineHeight = 15;
+            this.tlc_timeline.FrameChanged += new GIF_Viewer.TimelineControl.FrameChangedEventHandler(this.tlc_timeline_FrameChanged);
+            // 
             // pb_gif
             // 
             this.pb_gif.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -203,9 +217,9 @@
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FormMain_KeyDown);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.fileFormatWarningImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nud_minFrameInterval)).EndInit();
             this.cms_gifRightClick.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.fileFormatWarningImage)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pb_gif)).EndInit();
             this.ResumeLayout(false);
 
@@ -223,8 +237,9 @@
         private System.Windows.Forms.ToolStripMenuItem openWithToolStripMenuItem;
         private System.Windows.Forms.Label lblLoading;
         private System.Windows.Forms.PictureBox fileFormatWarningImage;
-        private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.ToolTip tt_mainTooltip;
         private TimelineControl tlc_timeline;
+        private System.Windows.Forms.Button btn_configuration;
     }
 }
 
