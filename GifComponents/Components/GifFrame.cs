@@ -129,18 +129,6 @@ namespace GifComponents.Components
                          GifFrame previousFrameBut1,
                          int index)
         {
-            this._index = index;
-            this.logicalScreenDescriptor = logicalScreenDescriptor;
-            this.globalColourTable = globalColourTable;
-            this.graphicControlExtension = graphicControlExtension;
-            this.isLoaded = false;
-            this.requiresRedraw = true;
-            this.streamOffset = inputStream.Position;
-            this.inputStream = inputStream;
-            this.isImagePartial = true;
-            this.previousFrame = previousFrame;
-            this.previousFrameBut1 = previousFrameBut1;
-
             if (logicalScreenDescriptor == null)
             {
                 throw new ArgumentNullException("logicalScreenDescriptor");
@@ -152,6 +140,18 @@ namespace GifComponents.Components
                 // use a default GCE
                 graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize, DisposalMethod.NotSpecified, false, false, 100, 0);
             }
+
+            this._index = index;
+            this.logicalScreenDescriptor = logicalScreenDescriptor;
+            this.globalColourTable = globalColourTable;
+            this.graphicControlExtension = graphicControlExtension;
+            this.isLoaded = false;
+            this.requiresRedraw = true;
+            this.streamOffset = inputStream.Position;
+            this.inputStream = inputStream;
+            this.isImagePartial = true;
+            this.previousFrame = previousFrame;
+            this.previousFrameBut1 = previousFrameBut1;
 
             Skip();
         }
