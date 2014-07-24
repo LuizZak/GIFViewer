@@ -43,26 +43,26 @@ using System.IO;
 
 namespace GifComponents.Components
 {
-	/// <summary>
-	/// A single image frame from a GIF file.
-	/// Originally a nested class within the GifDecoder class by Kevin Weiner.
-	/// Downloaded from 
-	/// http://www.thinkedge.com/BlogEngine/file.axd?file=NGif_src2.zip
-	/// </summary>
-	[TypeConverter( typeof( ExpandableObjectConverter ) )]
-	public class GifFrame : GifComponent
-	{
-		#region declarations
+    /// <summary>
+    /// A single image frame from a GIF file.
+    /// Originally a nested class within the GifDecoder class by Kevin Weiner.
+    /// Downloaded from 
+    /// http://www.thinkedge.com/BlogEngine/file.axd?file=NGif_src2.zip
+    /// </summary>
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public class GifFrame : GifComponent
+    {
+        #region declarations
         private int _index;
         private bool _keyframe;
-		private Image _image;
-		private int _delay;
-		private bool _expectsUserInput;
-		private Point _position;
-		private ColourTable _localColourTable;
-		private GraphicControlExtension _extension;
-		private ImageDescriptor _imageDescriptor;
-		private Color _backgroundColour;
+        private Image _image;
+        private int _delay;
+        private bool _expectsUserInput;
+        private Point _position;
+        private ColourTable _localColourTable;
+        private GraphicControlExtension _extension;
+        private ImageDescriptor _imageDescriptor;
+        private Color _backgroundColour;
         private Stream inputStream;
         private LogicalScreenDescriptor logicalScreenDescriptor;
         private ColourTable globalColourTable;
@@ -89,96 +89,96 @@ namespace GifComponents.Components
         /// </summary>
         private bool isImagePartial;
         private GifFrame previousFrame;
-		private GifFrame previousFrameBut1;
-		#endregion
+        private GifFrame previousFrameBut1;
+        #endregion
 
-		#region constructors
+        #region constructors
 
-		#region constructor( Stream, , , , ,  )
-		/// <summary>
-		/// Creates and returns a GifFrame by reading its data from the supplied
-		/// input stream.
-		/// </summary>
-		/// <param name="inputStream">
-		/// A stream containing the data which makes the GifStream, starting 
-		/// with the image descriptor for this frame.
-		/// </param>
-		/// <param name="logicalScreenDescriptor">
-		/// The logical screen descriptor for the GIF stream.
-		/// </param>
-		/// <param name="globalColourTable">
-		/// The global colour table for the GIF stream.
-		/// </param>
-		/// <param name="graphicControlExtension">
-		/// The graphic control extension, if any, which precedes this image in
-		/// the input stream.
-		/// </param>
-		/// <param name="previousFrame">
-		/// The frame which precedes this one in the GIF stream, if present.
-		/// </param>
-		/// <param name="previousFrameBut1">
-		/// The frame which precedes the frame before this one in the GIF stream,
-		/// if present.
-		/// </param>
+        #region constructor( Stream, , , , ,  )
+        /// <summary>
+        /// Creates and returns a GifFrame by reading its data from the supplied
+        /// input stream.
+        /// </summary>
+        /// <param name="inputStream">
+        /// A stream containing the data which makes the GifStream, starting 
+        /// with the image descriptor for this frame.
+        /// </param>
+        /// <param name="logicalScreenDescriptor">
+        /// The logical screen descriptor for the GIF stream.
+        /// </param>
+        /// <param name="globalColourTable">
+        /// The global colour table for the GIF stream.
+        /// </param>
+        /// <param name="graphicControlExtension">
+        /// The graphic control extension, if any, which precedes this image in
+        /// the input stream.
+        /// </param>
+        /// <param name="previousFrame">
+        /// The frame which precedes this one in the GIF stream, if present.
+        /// </param>
+        /// <param name="previousFrameBut1">
+        /// The frame which precedes the frame before this one in the GIF stream,
+        /// if present.
+        /// </param>
         /// <param name="index">The index of this frame on the owning animation</param>
-		public GifFrame( Stream inputStream,
-		                 LogicalScreenDescriptor logicalScreenDescriptor,
-		                 ColourTable globalColourTable,
-		                 GraphicControlExtension graphicControlExtension,
-		                 GifFrame previousFrame,
-		                 GifFrame previousFrameBut1,
+        public GifFrame(Stream inputStream,
+                         LogicalScreenDescriptor logicalScreenDescriptor,
+                         ColourTable globalColourTable,
+                         GraphicControlExtension graphicControlExtension,
+                         GifFrame previousFrame,
+                         GifFrame previousFrameBut1,
                          int index)
-			: this( inputStream, 
-			        logicalScreenDescriptor, 
-			        globalColourTable, 
-			        graphicControlExtension, 
-			        previousFrame, 
-			        previousFrameBut1,
+            : this(inputStream,
+                    logicalScreenDescriptor,
+                    globalColourTable,
+                    graphicControlExtension,
+                    previousFrame,
+                    previousFrameBut1,
                     index,
-			        false )
-		{
-			
-		}
-		#endregion
-		
-		#region constructor( Stream, , , , , bool )
-		/// <summary>
-		/// Creates and returns a GifFrame by reading its data from the supplied
-		/// input stream.
-		/// </summary>
-		/// <param name="inputStream">
-		/// A stream containing the data which makes the GifStream, starting 
-		/// with the image descriptor for this frame.
-		/// </param>
-		/// <param name="logicalScreenDescriptor">
-		/// The logical screen descriptor for the GIF stream.
-		/// </param>
-		/// <param name="globalColourTable">
-		/// The global colour table for the GIF stream.
-		/// </param>
-		/// <param name="graphicControlExtension">
-		/// The graphic control extension, if any, which precedes this image in
-		/// the input stream.
-		/// </param>
-		/// <param name="previousFrame">
-		/// The frame which precedes this one in the GIF stream, if present.
-		/// </param>
-		/// <param name="previousFrameBut1">
-		/// The frame which precedes the frame before this one in the GIF stream,
-		/// if present.
-		/// </param>
+                    false)
+        {
+
+        }
+        #endregion
+
+        #region constructor( Stream, , , , , bool )
+        /// <summary>
+        /// Creates and returns a GifFrame by reading its data from the supplied
+        /// input stream.
+        /// </summary>
+        /// <param name="inputStream">
+        /// A stream containing the data which makes the GifStream, starting 
+        /// with the image descriptor for this frame.
+        /// </param>
+        /// <param name="logicalScreenDescriptor">
+        /// The logical screen descriptor for the GIF stream.
+        /// </param>
+        /// <param name="globalColourTable">
+        /// The global colour table for the GIF stream.
+        /// </param>
+        /// <param name="graphicControlExtension">
+        /// The graphic control extension, if any, which precedes this image in
+        /// the input stream.
+        /// </param>
+        /// <param name="previousFrame">
+        /// The frame which precedes this one in the GIF stream, if present.
+        /// </param>
+        /// <param name="previousFrameBut1">
+        /// The frame which precedes the frame before this one in the GIF stream,
+        /// if present.
+        /// </param>
         /// <param name="index">The index of this frame on the owning animation</param>
-		/// <param name="xmlDebugging">Whether or not to create debug XML</param>
-		public GifFrame( Stream inputStream,
-		                 LogicalScreenDescriptor logicalScreenDescriptor,
-		                 ColourTable globalColourTable,
-		                 GraphicControlExtension graphicControlExtension,
-		                 GifFrame previousFrame,
-		                 GifFrame previousFrameBut1, 
+        /// <param name="xmlDebugging">Whether or not to create debug XML</param>
+        public GifFrame(Stream inputStream,
+                         LogicalScreenDescriptor logicalScreenDescriptor,
+                         ColourTable globalColourTable,
+                         GraphicControlExtension graphicControlExtension,
+                         GifFrame previousFrame,
+                         GifFrame previousFrameBut1,
                          int index,
-		                 bool xmlDebugging )
-			: base( xmlDebugging )
-		{
+                         bool xmlDebugging)
+            : base(xmlDebugging)
+        {
             this._index = index;
             this.logicalScreenDescriptor = logicalScreenDescriptor;
             this.globalColourTable = globalColourTable;
@@ -191,130 +191,130 @@ namespace GifComponents.Components
             this.previousFrame = previousFrame;
             this.previousFrameBut1 = previousFrameBut1;
             Skip();
-		}
-		#endregion
+        }
+        #endregion
 
-		#endregion
-		
-		#region properties
-		
-		#region read/write properties
-		
-		#region Delay property
-		/// <summary>
-		/// Gets and sets the delay in hundredths of a second before showing 
-		/// the next frame.
-		/// </summary>
-		[Description( "The delay in hundredths of a second before showing " +
-		              "the next frame in the animation" )]
-		public int Delay
-		{
-			get { return _delay; }
-			set { _delay = value; }
-		}
-		#endregion
-		
-		#region BackgroundColour property
-		/// <summary>
-		/// Gets and sets the background colour of the current frame
-		/// </summary>
-		[Description( "The background colour for this frame." )]
-		public Color BackgroundColour
-		{
-			get { return _backgroundColour; }
-			set { _backgroundColour = value; }
-		}
-		#endregion
-		
-		#region ExpectsUserInput property
-		/// <summary>
-		/// Gets a flag indicating whether the device displaying the animation
-		/// should wait for user input (e.g. a mouse click or key press) before
-		/// displaying the next frame.
-		/// </summary>
-		/// <remarks>
-		/// This is actually a property of the graphic control extension.
-		/// </remarks>
-		/// <exception cref="InvalidOperationException">
-		/// An attempt was made to set this property for a GifFrame which was
-		/// created by a GifDecoder.
-		/// </exception>
-		[Description( "Gets a flag indicating whether the device displaying " +
-		              "the animation should wait for user input (e.g. a mouse " +
-		              "click or key press) before displaying the next frame." )]
-		public bool ExpectsUserInput
-		{
-			get 
-			{ 
-				if( _extension == null )
-				{
-					return _expectsUserInput; 
-				}
-				else
-				{
-					return _extension.ExpectsUserInput;
-				}
-			}
-			set 
-			{ 
-				if( _extension == null )
-				{
-					_expectsUserInput = value;
-				}
-				else
-				{
-					string message
-						= "This GifFrame was returned by a GifDecoder so this "
-						+ "property is read-only";
-					throw new InvalidOperationException( message );
-				}
-			}
-		}
-		#endregion
-		
-		#region Position property
-		/// <summary>
-		/// Gets and sets the position of this frame's image within the logical
-		/// screen.
-		/// </summary>
-		/// <remarks>
-		/// This is actually a property of the image descriptor.
-		/// </remarks>
-		/// <exception cref="InvalidOperationException">
-		/// An attempt was made to set this property for a GifFrame which was
-		/// created by a GifDecoder.
-		/// </exception>
-		[Description( "Gets and sets the position of this frame's image " +
-		              "within the logical screen." )]
-		public Point Position
-		{
-			get
-			{
-				if( _imageDescriptor == null )
-				{
-					return _position;
-				}
-				else
-				{
-					return _imageDescriptor.Position;
-				}
-			}
-			set
-			{
-				if( _imageDescriptor == null )
-				{
-					_position = value;
-				}
-				else
-				{
-					string message
-						= "This GifFrame was returned by a GifDecoder so this "
-						+ "property is read-only";
-					throw new InvalidOperationException( message );
-				}
-			}
-		}
-		#endregion
+        #endregion
+
+        #region properties
+
+        #region read/write properties
+
+        #region Delay property
+        /// <summary>
+        /// Gets and sets the delay in hundredths of a second before showing 
+        /// the next frame.
+        /// </summary>
+        [Description("The delay in hundredths of a second before showing " +
+                      "the next frame in the animation")]
+        public int Delay
+        {
+            get { return _delay; }
+            set { _delay = value; }
+        }
+        #endregion
+
+        #region BackgroundColour property
+        /// <summary>
+        /// Gets and sets the background colour of the current frame
+        /// </summary>
+        [Description("The background colour for this frame.")]
+        public Color BackgroundColour
+        {
+            get { return _backgroundColour; }
+            set { _backgroundColour = value; }
+        }
+        #endregion
+
+        #region ExpectsUserInput property
+        /// <summary>
+        /// Gets a flag indicating whether the device displaying the animation
+        /// should wait for user input (e.g. a mouse click or key press) before
+        /// displaying the next frame.
+        /// </summary>
+        /// <remarks>
+        /// This is actually a property of the graphic control extension.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// An attempt was made to set this property for a GifFrame which was
+        /// created by a GifDecoder.
+        /// </exception>
+        [Description("Gets a flag indicating whether the device displaying " +
+                      "the animation should wait for user input (e.g. a mouse " +
+                      "click or key press) before displaying the next frame.")]
+        public bool ExpectsUserInput
+        {
+            get
+            {
+                if (_extension == null)
+                {
+                    return _expectsUserInput;
+                }
+                else
+                {
+                    return _extension.ExpectsUserInput;
+                }
+            }
+            set
+            {
+                if (_extension == null)
+                {
+                    _expectsUserInput = value;
+                }
+                else
+                {
+                    string message
+                        = "This GifFrame was returned by a GifDecoder so this "
+                        + "property is read-only";
+                    throw new InvalidOperationException(message);
+                }
+            }
+        }
+        #endregion
+
+        #region Position property
+        /// <summary>
+        /// Gets and sets the position of this frame's image within the logical
+        /// screen.
+        /// </summary>
+        /// <remarks>
+        /// This is actually a property of the image descriptor.
+        /// </remarks>
+        /// <exception cref="InvalidOperationException">
+        /// An attempt was made to set this property for a GifFrame which was
+        /// created by a GifDecoder.
+        /// </exception>
+        [Description("Gets and sets the position of this frame's image " +
+                      "within the logical screen.")]
+        public Point Position
+        {
+            get
+            {
+                if (_imageDescriptor == null)
+                {
+                    return _position;
+                }
+                else
+                {
+                    return _imageDescriptor.Position;
+                }
+            }
+            set
+            {
+                if (_imageDescriptor == null)
+                {
+                    _position = value;
+                }
+                else
+                {
+                    string message
+                        = "This GifFrame was returned by a GifDecoder so this "
+                        + "property is read-only";
+                    throw new InvalidOperationException(message);
+                }
+            }
+        }
+        #endregion
 
         /// <summary>
         /// Gets or sets whether this frame is a keyword
@@ -324,10 +324,10 @@ namespace GifComponents.Components
             get { return _keyframe; }
             set { _keyframe = value; }
         }
-		
-		#endregion
-		
-		#region read-only properties
+
+        #endregion
+
+        #region read-only properties
 
         /// <summary>
         /// The index of this frame on the animation
@@ -337,77 +337,77 @@ namespace GifComponents.Components
             get { return _index; }
         }
 
-		#region TheImage property
-		/// <summary>
-		/// Gets the image held in this frame.
-		/// </summary>
-		[Description( "The image held in this frame" )]
-		[Category( "Set by decoder" )]
-		public Image TheImage
-		{
-			get { return _image; }
-		}
-		#endregion
-		
-		#region LocalColourTable property
-		/// <summary>
-		/// Gets the local colour table for this frame.
-		/// </summary>
-		[Description( "The local colour table for this frame" )]
-		[Category( "Set by decoder" )]
-		public ColourTable LocalColourTable
-		{
-			get { return _localColourTable; }
-		}
-		#endregion
+        #region TheImage property
+        /// <summary>
+        /// Gets the image held in this frame.
+        /// </summary>
+        [Description("The image held in this frame")]
+        [Category("Set by decoder")]
+        public Image TheImage
+        {
+            get { return _image; }
+        }
+        #endregion
 
-		#region GraphicControlExtension property
-		/// <summary>
-		/// Gets the graphic control extension which precedes this image.
-		/// </summary>
-		[Description( "The graphic control extension which precedes this image." )]
-		[Category( "Set by decoder" )]
-		public GraphicControlExtension GraphicControlExtension
-		{
-			get { return _extension; }
-		}
-		#endregion
-		
-		#region ImageDescriptor property
-		/// <summary>
-		/// Gets the image descriptor for this frame.
-		/// </summary>
-		[Category( "Set by decoder" )]
-		[Description( "The image descriptor for this frame. This contains the " +
-		              "size and position of the image, and flags indicating " +
-		              "whether the colour table is global or local, whether " +
-		              "it is sorted, and whether the image is interlaced." )]
-		public ImageDescriptor ImageDescriptor
-		{
-			get { return _imageDescriptor; }
-		}
-		#endregion
-		
-		#endregion
-		
-		#endregion
-		
-		#region public override WriteToStream method
-		/// <summary>
-		/// Not implemented in this class because writing out of frames is performed
-		/// by the WriteFrame method of the AnimatedGifEncoder class
-		/// </summary>
-		/// <param name="outputStream">
-		/// The output stream to write to.
-		/// </param>
-		public override void WriteToStream( Stream outputStream )
-		{
-			string message
-				= "This method is not implemented because writing of GifFrames is "
-				+ "performed by the WriteFrame method of the AnimatedGifEncoder class";
-			throw new NotImplementedException( message );
-		}
-		#endregion
+        #region LocalColourTable property
+        /// <summary>
+        /// Gets the local colour table for this frame.
+        /// </summary>
+        [Description("The local colour table for this frame")]
+        [Category("Set by decoder")]
+        public ColourTable LocalColourTable
+        {
+            get { return _localColourTable; }
+        }
+        #endregion
+
+        #region GraphicControlExtension property
+        /// <summary>
+        /// Gets the graphic control extension which precedes this image.
+        /// </summary>
+        [Description("The graphic control extension which precedes this image.")]
+        [Category("Set by decoder")]
+        public GraphicControlExtension GraphicControlExtension
+        {
+            get { return _extension; }
+        }
+        #endregion
+
+        #region ImageDescriptor property
+        /// <summary>
+        /// Gets the image descriptor for this frame.
+        /// </summary>
+        [Category("Set by decoder")]
+        [Description("The image descriptor for this frame. This contains the " +
+                      "size and position of the image, and flags indicating " +
+                      "whether the colour table is global or local, whether " +
+                      "it is sorted, and whether the image is interlaced.")]
+        public ImageDescriptor ImageDescriptor
+        {
+            get { return _imageDescriptor; }
+        }
+        #endregion
+
+        #endregion
+
+        #endregion
+
+        #region public override WriteToStream method
+        /// <summary>
+        /// Not implemented in this class because writing out of frames is performed
+        /// by the WriteFrame method of the AnimatedGifEncoder class
+        /// </summary>
+        /// <param name="outputStream">
+        /// The output stream to write to.
+        /// </param>
+        public override void WriteToStream(Stream outputStream)
+        {
+            string message
+                = "This method is not implemented because writing of GifFrames is "
+                + "performed by the WriteFrame method of the AnimatedGifEncoder class";
+            throw new NotImplementedException(message);
+        }
+        #endregion
 
         #region public methods
 
@@ -423,6 +423,13 @@ namespace GifComponents.Components
                 return;
             }
 
+            // If the disposal mode is set to restore to the background, and the frame image is set, it is said to be valid
+            if (graphicControlExtension.DisposalMethod == DisposalMethod.RestoreToBackgroundColour)
+            {
+
+            }
+
+            // Check if the previous frame requires redraw, if either this frame or the previous require redraw, mark this one as requiring a redraw
             if (this.previousFrame != null)
             {
                 this.requiresRedraw = this._image == null || this.previousFrame.requiresRedraw;
@@ -458,6 +465,24 @@ namespace GifComponents.Components
             }
 
             return redraw;
+        }
+
+        /// <summary>
+        /// Unloads the data from this frame from memory and marks this frame as not loaded
+        /// </summary>
+        public void Unload()
+        {
+            if (!this.isLoaded)
+                return;
+
+            this._image.Dispose();
+            this._imageDescriptor.Dispose();
+
+            this._image = null;
+            this._imageDescriptor = null;
+
+            this.requiresRedraw = true;
+            this.isLoaded = false;
         }
 
         /// <summary>
@@ -564,24 +589,6 @@ namespace GifComponents.Components
             isLoaded = true;
         }
 
-        /// <summary>
-        /// Unloads the data from this frame from memory and marks this frame as not loaded
-        /// </summary>
-        public void Unload()
-        {
-            if (!this.isLoaded)
-                return;
-
-            this._image.Dispose();
-            this._imageDescriptor.Dispose();
-
-            this._image = null;
-            this._imageDescriptor = null;
-
-            this.requiresRedraw = true;
-            this.isLoaded = false;
-        }
-
         #endregion
 
         #region private methods
@@ -647,55 +654,55 @@ namespace GifComponents.Components
             _extension = graphicControlExtension;
         }
 
-		#region private static CreateBitmap( GifDecoder, ImageDescriptor, ColourTable, bool ) method
-		/// <summary>
-		/// Sets the pixels of the decoded image.
-		/// </summary>
-		/// <param name="imageData">
-		/// Table based image data containing the indices within the active
-		/// colour table of the colours of the pixels in this frame.
-		/// </param>
-		/// <param name="lsd">
-		/// The logical screen descriptor for the GIF stream.
-		/// </param>
-		/// <param name="id">
-		/// The image descriptor for this frame.
-		/// </param>
-		/// <param name="activeColourTable">
-		/// The colour table to use with this frame - either the global colour
-		/// table or a local colour table.
-		/// </param>
-		/// <param name="gce">
-		/// The graphic control extension, if any, which precedes this image in
-		/// the input stream.
-		/// </param>
-		/// <param name="previousFrame">
-		/// The frame which precedes this one in the GIF stream, if present.
-		/// </param>
-		/// <param name="previousFrameBut1">
-		/// The frame which precedes the frame before this one in the GIF stream,
-		/// if present.
-		/// </param>
-		private Bitmap CreateBitmap( TableBasedImageData imageData,
-		                             LogicalScreenDescriptor lsd,
-		                             ImageDescriptor id,
-		                             ColourTable activeColourTable,
-		                             GraphicControlExtension gce,
-		                             GifFrame previousFrame,
-		                             GifFrame previousFrameBut1 )
-		{
+        #region private static CreateBitmap( GifDecoder, ImageDescriptor, ColourTable, bool ) method
+        /// <summary>
+        /// Sets the pixels of the decoded image.
+        /// </summary>
+        /// <param name="imageData">
+        /// Table based image data containing the indices within the active
+        /// colour table of the colours of the pixels in this frame.
+        /// </param>
+        /// <param name="lsd">
+        /// The logical screen descriptor for the GIF stream.
+        /// </param>
+        /// <param name="id">
+        /// The image descriptor for this frame.
+        /// </param>
+        /// <param name="activeColourTable">
+        /// The colour table to use with this frame - either the global colour
+        /// table or a local colour table.
+        /// </param>
+        /// <param name="gce">
+        /// The graphic control extension, if any, which precedes this image in
+        /// the input stream.
+        /// </param>
+        /// <param name="previousFrame">
+        /// The frame which precedes this one in the GIF stream, if present.
+        /// </param>
+        /// <param name="previousFrameBut1">
+        /// The frame which precedes the frame before this one in the GIF stream,
+        /// if present.
+        /// </param>
+        private Bitmap CreateBitmap(TableBasedImageData imageData,
+                                     LogicalScreenDescriptor lsd,
+                                     ImageDescriptor id,
+                                     ColourTable activeColourTable,
+                                     GraphicControlExtension gce,
+                                     GifFrame previousFrame,
+                                     GifFrame previousFrameBut1)
+        {
             int[] pixelsForThisFrameInt = new int[lsd.LogicalScreenSize.Width * lsd.LogicalScreenSize.Height];
-			Bitmap baseImage = GetBaseImage( previousFrame, 
-			                                 previousFrameBut1, 
-			                                 lsd, 
-			                                 gce, 
-			                                 activeColourTable );
+            Bitmap baseImage = GetBaseImage(previousFrame,
+                                             previousFrameBut1,
+                                             lsd,
+                                             gce,
+                                             activeColourTable);
 
-			// copy each source line to the appropriate place in the destination
-			int pass = 1;
-			int interlaceRowIncrement = 8;
-			int interlaceRowNumber = 0; // the row of pixels we're currently 
-										// setting in an interlaced image.
+            // copy each source line to the appropriate place in the destination
+            int pass = 1;
+            int interlaceRowIncrement = 8;
+            int interlaceRowNumber = 0; // the row of pixels we're currently 
+            // setting in an interlaced image.
             bool hasTransparent = gce.HasTransparentColour;
             int transparentColor = gce.TransparentColourIndex;
             int logicalWidth = lsd.LogicalScreenSize.Width;
@@ -780,142 +787,159 @@ namespace GifComponents.Components
                     }
                 }
             }
-			return CreateBitmap( baseImage, pixelsForThisFrameInt );
-		}
-		#endregion
-		
-		#region private static GetBaseImage method
-		/// <summary>
-		/// Gets the base image for this frame. This will be overpainted with
-		/// the pixels for this frame, where they are not transparent.
-		/// </summary>
-		/// <param name="previousFrame">
-		/// The frame which preceded this frame in the GIF stream.
-		/// Null if this is the first frame in the stream.
-		/// </param>
-		/// <param name="previousFrameBut1">
-		/// The frame which preceded the previous frame in the GIF stream.
-		/// Null if this is the first or seond frame in the stream.
-		/// </param>
-		/// <param name="lsd">
-		/// The logical screen descriptor for this GIF stream.
-		/// </param>
-		/// <param name="gce">
-		/// The graphic control extension for this frame.
-		/// </param>
-		/// <param name="act">
-		/// The active colour table for this frame.
-		/// </param>
-		/// <returns></returns>
-		private Bitmap GetBaseImage( GifFrame previousFrame, 
-		                             GifFrame previousFrameBut1,
-		                             LogicalScreenDescriptor lsd,
-		                             GraphicControlExtension gce,
-		                             ColourTable act )
-		{
+            return CreateBitmap(baseImage, pixelsForThisFrameInt);
+        }
+        #endregion
+
+        #region private static GetBaseImage method
+        /// <summary>
+        /// Gets the base image for this frame. This will be overpainted with
+        /// the pixels for this frame, where they are not transparent.
+        /// </summary>
+        /// <param name="previousFrame">
+        /// The frame which preceded this frame in the GIF stream.
+        /// Null if this is the first frame in the stream.
+        /// </param>
+        /// <param name="previousFrameBut1">
+        /// The frame which preceded the previous frame in the GIF stream.
+        /// Null if this is the first or seond frame in the stream.
+        /// </param>
+        /// <param name="lsd">
+        /// The logical screen descriptor for this GIF stream.
+        /// </param>
+        /// <param name="gce">
+        /// The graphic control extension for this frame.
+        /// </param>
+        /// <param name="act">
+        /// The active colour table for this frame.
+        /// </param>
+        /// <returns></returns>
+        private Bitmap GetBaseImage(GifFrame previousFrame,
+                                     GifFrame previousFrameBut1,
+                                     LogicalScreenDescriptor lsd,
+                                     GraphicControlExtension gce,
+                                     ColourTable act)
+        {
             RecurseGraphicControlExtension();
 
-			#region Get the disposal method of the previous frame read from the GIF stream
-			DisposalMethod previousDisposalMethod;
-			if( previousFrame == null )
-			{
-				previousDisposalMethod = DisposalMethod.NotSpecified;
-			}
-			else
-			{
-				previousDisposalMethod = previousFrame.GraphicControlExtension.DisposalMethod;
-			}
-			#endregion
+            #region Get the disposal method of the previous frame read from the GIF stream
+            DisposalMethod previousDisposalMethod;
+            if (previousFrame == null)
+            {
+                previousDisposalMethod = DisposalMethod.NotSpecified;
+            }
+            else
+            {
+                previousDisposalMethod = previousFrame.GraphicControlExtension.DisposalMethod;
 
-			Bitmap baseImage;
-			int width = lsd.LogicalScreenSize.Width;
-			int height = lsd.LogicalScreenSize.Height;
-			
-			#region paint baseImage
-			switch( previousDisposalMethod )
-			{
-				case DisposalMethod.DoNotDispose:
-					// pre-populate image with previous frame
-                    
-                    if(previousFrame.TheImage != null)
-					    baseImage = new Bitmap(previousFrame.TheImage);
+                if (previousDisposalMethod == DisposalMethod.RestoreToPrevious && previousFrameBut1 == null)
+                {
+                    previousDisposalMethod = DisposalMethod.RestoreToBackgroundColour;
+                }
+            }
+            #endregion
+
+            Bitmap baseImage;
+            int width = lsd.LogicalScreenSize.Width;
+            int height = lsd.LogicalScreenSize.Height;
+            int backgroundColorIndex = previousFrame == null ? lsd.BackgroundColourIndex : previousFrame.logicalScreenDescriptor.BackgroundColourIndex;
+            int transparentColorIndex = previousFrame == null ? gce.TransparentColourIndex : previousFrame.graphicControlExtension.TransparentColourIndex;
+            act = (previousFrame == null ? act : previousFrame._localColourTable == null ? globalColourTable : previousFrame._localColourTable);
+            
+            #region paint baseImage
+
+            if (previousFrame == null || previousFrame._image == null)
+            {
+                baseImage = new Bitmap(width, height);
+            }
+            else
+            {
+                baseImage = new Bitmap(previousFrame._image);
+            }
+
+            switch (previousDisposalMethod)
+            {
+                case DisposalMethod.DoNotDispose:
+                    // pre-populate image with previous frame
+                    break;
+
+                case DisposalMethod.RestoreToBackgroundColour:
+                    // pre-populate image with background colour
+                    int backgroundColour;
+                    if (backgroundColorIndex == transparentColorIndex)
+                    {
+                        backgroundColour = 0;
+                    }
                     else
-                        baseImage = new Bitmap(width, height);
-                    
-					break;
-					
-				case DisposalMethod.RestoreToBackgroundColour:
-					// pre-populate image with background colour
-					int backgroundColour ;
-					if( lsd.BackgroundColourIndex == gce.TransparentColourIndex )
-					{
-						backgroundColour = 0;
-					}
-					else
-					{
-						if( lsd.BackgroundColourIndex < act.Length )
-						{
-							backgroundColour = act[lsd.BackgroundColourIndex];
-						}
-						else
-						{
-							backgroundColour = (255 << 24);
-							string message 
-								= "Background colour index: "
-								+ lsd.BackgroundColourIndex
-								+ ", colour table length: "
-								+ act.Length;
-							SetStatus( ErrorState.BadColourIndex, message );
-						}
-					}
-					baseImage = new Bitmap( width, height );
-					FastBitmap fastBaseImage = new FastBitmap( baseImage );
-					fastBaseImage.LockImage();
-                    fastBaseImage.Clear(backgroundColour);
-					fastBaseImage.UnlockImage();
-					break;
-					
-				case DisposalMethod.RestoreToPrevious:
-					// pre-populate image with previous frame but 1
-					// TESTME: DisposalMethod.RestoreToPrevious
-					//baseImage = new Bitmap( (previousFrameBut1 == null ? previousFrame : previousFrameBut1).TheImage );
-                    //baseImage = new Bitmap(previousFrame.TheImage);
-                    baseImage = new Bitmap(width, height);
-					break;
-					
-				default: // DisposalMethod.NotSpecified
-					if( previousFrame == null || previousFrame._image == null )
-					{
-						// this is the first frame so start with an empty bitmap
-						baseImage = new Bitmap( width, height );
-					}
-					else
-					{
-						// pre-populate image with previous frame
-						// TESTME: DisposalMethod.NotSpecified on 2nd frame or later
-						baseImage = new Bitmap( previousFrame._image );
-					}
-					break;
-			}
-			#endregion
-			
-			return baseImage;
-		}
-		#endregion
+                    {
+                        if (backgroundColorIndex < act.Length)
+                        {
+                            backgroundColour = act[backgroundColorIndex];
+                        }
+                        else
+                        {
+                            backgroundColour = (255 << 24);
+                            string message
+                                = "Background colour index: "
+                                + lsd.BackgroundColourIndex
+                                + ", colour table length: "
+                                + act.Length;
+                            SetStatus(ErrorState.BadColourIndex, message);
+                        }
+                    }
 
-		#region private static CreateBitmap( Bitmap, Color[] ) method
-		/// <summary>
-		/// Creates and returns a Bitmap of the supplied size composed of pixels
-		/// of the supplied colours, working left to right and then top to 
-		/// bottom.
-		/// </summary>
-		/// <param name="baseImage">
-		/// The image to start with; this is overpainted with the supplied 
-		/// pixels where they are not transparent.
-		/// </param>
-		/// <param name="pixels">
-		/// An array of the colours of the pixels for the bitmap to be created.
-		/// </param>
+                    // Adjust transparency
+                    backgroundColour &= 0x00FFFFFF;
+
+                    FastBitmap fastBaseImage = new FastBitmap(baseImage);
+                    fastBaseImage.LockImage();
+
+                    // If the area to redraw is the whole image, utilize the fast image drawing method FastBitmap.Clear()
+                    if (previousFrame._imageDescriptor.Position.X == 0 && previousFrame._imageDescriptor.Position.Y == 0 &&
+                        previousFrame._imageDescriptor.Size.Width == logicalScreenDescriptor.LogicalScreenSize.Width &&
+                        previousFrame._imageDescriptor.Size.Width == logicalScreenDescriptor.LogicalScreenSize.Width)
+                    {
+                        fastBaseImage.Clear(backgroundColour);
+                    }
+                    else
+                    {
+                        for (int y = previousFrame._imageDescriptor.Position.Y; y < previousFrame._imageDescriptor.Position.Y + previousFrame._imageDescriptor.Size.Height; y++)
+                        {
+                            for (int x = previousFrame._imageDescriptor.Position.X; x < previousFrame._imageDescriptor.Position.X + previousFrame._imageDescriptor.Size.Width; x++)
+                            {
+                                fastBaseImage.SetPixel(x, y, backgroundColour);
+                            }
+                        }
+                    }
+
+                    fastBaseImage.UnlockImage();
+                    break;
+
+                case DisposalMethod.RestoreToPrevious:
+                    // pre-populate image with previous frame but 1
+                    // TESTME: DisposalMethod.RestoreToPrevious
+                    baseImage = new Bitmap( (previousFrameBut1 == null ? previousFrame : previousFrameBut1).TheImage );
+                    break;
+            }
+            #endregion
+
+            return baseImage;
+        }
+        #endregion
+
+        #region private static CreateBitmap( Bitmap, Color[] ) method
+        /// <summary>
+        /// Creates and returns a Bitmap of the supplied size composed of pixels
+        /// of the supplied colours, working left to right and then top to 
+        /// bottom.
+        /// </summary>
+        /// <param name="baseImage">
+        /// The image to start with; this is overpainted with the supplied 
+        /// pixels where they are not transparent.
+        /// </param>
+        /// <param name="pixels">
+        /// An array of the colours of the pixels for the bitmap to be created.
+        /// </param>
         private static Bitmap CreateBitmap(Bitmap baseImage, int[] pixels)
         {
             FastBitmap fastBaseImage = new FastBitmap(baseImage);
@@ -926,7 +950,7 @@ namespace GifComponents.Components
 
             return baseImage;
         }
-		#endregion
+        #endregion
 
         #endregion
     }

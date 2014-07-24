@@ -93,6 +93,11 @@ namespace GifComponents
         private LogicalScreenDescriptor _lsd;
 
         /// <summary>
+        /// A reference to the last frame that had a disposal mode of NoDisposal
+        /// </summary>
+        private GifFrame lastNoDisposalFrame;
+
+        /// <summary>
         /// The delay for each frame, in hundredths of a second
         /// </summary>
         private List<int> _frameDelays;
@@ -663,14 +668,9 @@ namespace GifComponents
         private void AddFrame(Stream inputStream, GraphicControlExtension lastGce)
         {
             GifFrame previousFrame = null;
-            GifFrame previousFrameBut1 = null;
             if (_frames.Count > 0)
             {
                 previousFrame = _frames[_frames.Count - 1];
-            }
-            if (_frames.Count > 1)
-            {
-                previousFrameBut1 = _frames[_frames.Count - 2];
             }
 
             // Setup the frame delay
@@ -683,9 +683,12 @@ namespace GifComponents
                 _frameDelays.Add(lastGce.DelayTime);
             }
 
-            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, previousFrameBut1, _frames.Count, XmlDebugging);
-            
+            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, lastNoDisposalFrame, _frames.Count, XmlDebugging);
 
+            if (lastGce.DisposalMethod == DisposalMethod.DoNotDispose || lastGce.DisposalMethod == DisposalMethod.NotSpecified)
+            {
+                lastNoDisposalFrame = frame;
+            }
 
             _frames.Add(frame);
             WriteDebugXmlNode(frame.DebugXmlReader);
