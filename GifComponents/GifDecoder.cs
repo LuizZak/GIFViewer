@@ -648,7 +648,7 @@ namespace GifComponents
 
             GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, lastNoDisposalFrame, _frames.Count);
 
-            if (lastGce.DisposalMethod == DisposalMethod.DoNotDispose || lastGce.DisposalMethod == DisposalMethod.NotSpecified)
+            if (lastGce == null || lastGce.DisposalMethod == DisposalMethod.DoNotDispose || lastGce.DisposalMethod == DisposalMethod.NotSpecified)
             {
                 lastNoDisposalFrame = frame;
             }
