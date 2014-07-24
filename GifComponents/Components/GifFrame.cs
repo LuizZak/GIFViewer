@@ -140,6 +140,19 @@ namespace GifComponents.Components
             this.isImagePartial = true;
             this.previousFrame = previousFrame;
             this.previousFrameBut1 = previousFrameBut1;
+
+            if (logicalScreenDescriptor == null)
+            {
+                throw new ArgumentNullException("logicalScreenDescriptor");
+            }
+
+            if (graphicControlExtension == null)
+            {
+                SetStatus(ErrorState.NoGraphicControlExtension, "");
+                // use a default GCE
+                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize, DisposalMethod.NotSpecified, false, false, 100, 0);
+            }
+
             Skip();
         }
         #endregion
@@ -441,29 +454,18 @@ namespace GifComponents.Components
         /// <param name="force">Whether to force redraw, even if the frame is already drawn</param>
         public void Decode(bool force = false)
         {
+            // Image preparation and reutilization checks
             if (isLoaded && !requiresRedraw && !force)
             {
                 return;
             }
-
             if (isLoaded && (requiresRedraw || force))
             {
                 Unload();
             }
 
+            // Prepare the stream
             inputStream.Position = streamOffset;
-
-            if (logicalScreenDescriptor == null)
-            {
-                throw new ArgumentNullException("logicalScreenDescriptor");
-            }
-
-            if (graphicControlExtension == null)
-            {
-                SetStatus(ErrorState.NoGraphicControlExtension, "");
-                // use a default GCE
-                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize, DisposalMethod.NotSpecified, false, false, 100, 0);
-            }
 
             _extension = graphicControlExtension;
 
@@ -605,6 +607,7 @@ namespace GifComponents.Components
         }
 
         #region private static CreateBitmap( GifDecoder, ImageDescriptor, ColourTable, bool ) method
+
         /// <summary>
         /// Sets the pixels of the decoded image.
         /// </summary>
@@ -633,20 +636,10 @@ namespace GifComponents.Components
         /// The frame which precedes the frame before this one in the GIF stream,
         /// if present.
         /// </param>
-        private Bitmap CreateBitmap(TableBasedImageData imageData,
-                                     LogicalScreenDescriptor lsd,
-                                     ImageDescriptor id,
-                                     ColourTable activeColourTable,
-                                     GraphicControlExtension gce,
-                                     GifFrame previousFrame,
-                                     GifFrame previousFrameBut1)
+        private Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
         {
             int[] pixelsForThisFrameInt = new int[lsd.LogicalScreenSize.Width * lsd.LogicalScreenSize.Height];
-            Bitmap baseImage = GetBaseImage(previousFrame,
-                                             previousFrameBut1,
-                                             lsd,
-                                             gce,
-                                             activeColourTable);
+            Bitmap baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
 
             // copy each source line to the appropriate place in the destination
             int pass = 1;
@@ -659,6 +652,7 @@ namespace GifComponents.Components
             int logicalHeight = lsd.LogicalScreenSize.Height;
 
             int[] colorTableIndices = activeColourTable.IntColours;
+            byte[] pixelIndices = imageData.PixelIndexes;
             int numColors = activeColourTable.Length;
 
             for (int i = 0; i < id.Size.Height; i++)
@@ -706,7 +700,7 @@ namespace GifComponents.Components
                     while (dx < dlim)
                     {
                         // map color and insert in destination
-                        int indexInColourTable = (int)imageData.PixelIndexes[sx++];
+                        int indexInColourTable = pixelIndices[sx++];
                         // Set this pixel's colour if its index isn't the 
                         // transparent colour index, or if this frame doesn't
                         // have a transparent colour.
@@ -739,6 +733,7 @@ namespace GifComponents.Components
             }
             return CreateBitmap(baseImage, pixelsForThisFrameInt);
         }
+
         #endregion
 
         #region private static GetBaseImage method
