@@ -646,7 +646,7 @@ namespace GifComponents
                 _frameDelays.Add(lastGce.DelayTime);
             }
 
-            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, lastNoDisposalFrame, _frames.Count);
+            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, lastNoDisposalFrame, _header, _frames.Count);
 
             if (lastGce == null || lastGce.DisposalMethod == DisposalMethod.DoNotDispose || lastGce.DisposalMethod == DisposalMethod.NotSpecified)
             {

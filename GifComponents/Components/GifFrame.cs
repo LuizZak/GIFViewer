@@ -41,6 +41,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.IO;
 
+using GIF_Viewer.Utils;
+
 namespace GifComponents.Components
 {
     /// <summary>
@@ -59,6 +61,7 @@ namespace GifComponents.Components
         private int _delay;
         private bool _expectsUserInput;
         private Point _position;
+        private GifHeader _header;
         private ColourTable _localColourTable;
         private GraphicControlExtension _extension;
         private ImageDescriptor _imageDescriptor;
@@ -94,7 +97,7 @@ namespace GifComponents.Components
 
         #region constructors
 
-        #region constructor( Stream, , , , , )
+        #region constructor( Stream, , , , , , )
         /// <summary>
         /// Creates and returns a GifFrame by reading its data from the supplied
         /// input stream.
@@ -120,6 +123,7 @@ namespace GifComponents.Components
         /// The frame which precedes the frame before this one in the GIF stream,
         /// if present.
         /// </param>
+        /// <param name="header">The header of the GIF file</param>
         /// <param name="index">The index of this frame on the owning animation</param>
         public GifFrame(Stream inputStream,
                          LogicalScreenDescriptor logicalScreenDescriptor,
@@ -127,6 +131,7 @@ namespace GifComponents.Components
                          GraphicControlExtension graphicControlExtension,
                          GifFrame previousFrame,
                          GifFrame previousFrameBut1,
+                         GifHeader header,
                          int index)
         {
             if (logicalScreenDescriptor == null)
@@ -150,6 +155,7 @@ namespace GifComponents.Components
             this.streamOffset = inputStream.Position;
             this.inputStream = inputStream;
             this.isImagePartial = true;
+            this._header = header;
             this.previousFrame = previousFrame;
             this.previousFrameBut1 = previousFrameBut1;
 
@@ -510,9 +516,7 @@ namespace GifComponents.Components
             {
                 // TESTME: constructor - PixelIndexes.Length == 0
                 // TODO: probably not possible as TBID constructor rejects 0 pixels
-                Bitmap emptyBitmap
-                    = new Bitmap(logicalScreenDescriptor.LogicalScreenSize.Width,
-                                    logicalScreenDescriptor.LogicalScreenSize.Height);
+                Bitmap emptyBitmap = new Bitmap(logicalScreenDescriptor.LogicalScreenSize.Width, logicalScreenDescriptor.LogicalScreenSize.Height);
                 _image = emptyBitmap;
                 _delay = graphicControlExtension.DelayTime;
                 SetStatus(ErrorState.FrameHasNoImageData, "");
@@ -530,7 +534,7 @@ namespace GifComponents.Components
             _imageDescriptor = imageDescriptor;
             _backgroundColour = backgroundColour;
             _image = CreateBitmap(tbid, logicalScreenDescriptor, imageDescriptor, activeColourTable, graphicControlExtension, previousFrame, previousFrameBut1);
-
+            
             CheckRequiresRedraw();
 
             if (this._image != null && previousFrame != null)
@@ -573,14 +577,7 @@ namespace GifComponents.Components
             // decode pixel data
             int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
 
-            //inputStream.Position += TableBasedImageData.SkipOnStream(inputStream, pixelCount);
             TableBasedImageData.SkipOnStream(inputStream);
-
-            // Skip any remaining blocks up to the next block terminator (in
-            // case there is any surplus data before the next frame)
-            SkipBlocks(inputStream);
-
-            //Decode();
         }
 
         /// <summary>
@@ -606,7 +603,7 @@ namespace GifComponents.Components
             _extension = graphicControlExtension;
         }
 
-        #region private static CreateBitmap( GifDecoder, ImageDescriptor, ColourTable, bool ) method
+        #region private static CreateBitmap( ) method
 
         /// <summary>
         /// Sets the pixels of the decoded image.
@@ -732,6 +729,49 @@ namespace GifComponents.Components
                 }
             }
             return CreateBitmap(baseImage, pixelsForThisFrameInt);
+        }
+
+        /// <summary>
+        /// Sets the pixels of the decoded image.
+        /// </summary>
+        /// <param name="imageData">
+        /// Table based image data containing the indices within the active
+        /// colour table of the colours of the pixels in this frame.
+        /// </param>
+        /// <param name="lsd">
+        /// The logical screen descriptor for the GIF stream.
+        /// </param>
+        /// <param name="id">
+        /// The image descriptor for this frame.
+        /// </param>
+        /// <param name="activeColourTable">
+        /// The colour table to use with this frame - either the global colour
+        /// table or a local colour table.
+        /// </param>
+        /// <param name="gce">
+        /// The graphic control extension, if any, which precedes this image in
+        /// the input stream.
+        /// </param>
+        /// <param name="previousFrame">
+        /// The frame which precedes this one in the GIF stream, if present.
+        /// </param>
+        /// <param name="previousFrameBut1">
+        /// The frame which precedes the frame before this one in the GIF stream,
+        /// if present.
+        /// </param>
+        private Bitmap CreateBitmap(Bitmap bitmap, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
+        {
+            int[] pixelsForThisFrameInt = new int[lsd.LogicalScreenSize.Width * lsd.LogicalScreenSize.Height];
+            Bitmap baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
+            
+            //return CreateBitmap(baseImage, pixelsForThisFrameInt);
+            Graphics g = Graphics.FromImage(baseImage);
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
+            g.DrawImage(bitmap, Point.Empty);
+            g.Flush();
+            g.Dispose();
+
+            return baseImage;
         }
 
         #endregion

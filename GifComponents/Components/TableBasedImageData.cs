@@ -446,7 +446,29 @@ namespace GifComponents.Components
         }
         private static DataBlock ReadDataBlockStatic(Stream inputStream)
         {
-            return new DataBlock(inputStream, false);
+            return new DataBlock(inputStream);
+        }
+
+        /// <summary>
+        /// Returns the size of a table-based image data section on the given stream.
+        /// This method keeps the current position of the stream unmodified after it finishes
+        /// </summary>
+        /// <param name="inputStream">The input stream</param>
+        /// <returns>The length of the table-based image data on the stream, in bytes</returns>
+        public static long GetDataSizeOnStream(Stream inputStream)
+        {
+            long startStreamPosition = inputStream.Position;
+            long endStreamPosition = 0;
+
+            //  Initialize GIF data stream decoder.
+            Read(inputStream);
+            //ReadDataBlockStatic(inputStream);
+            SkipBlocksStatic(inputStream);
+
+            endStreamPosition = inputStream.Position;
+            inputStream.Position = startStreamPosition;
+
+            return endStreamPosition - startStreamPosition;
         }
 
         /// <summary>
@@ -455,11 +477,7 @@ namespace GifComponents.Components
         /// <param name="inputStream">The input stream</param>
         public static void SkipOnStream(Stream inputStream)
         {
-            long startStreamPosition = inputStream.Position;
-
-            //  Initialize GIF data stream decoder.
-            Read(inputStream);
-            ReadDataBlockStatic(inputStream);
+            inputStream.Position += GetDataSizeOnStream(inputStream);
         }
 
         /// <summary>

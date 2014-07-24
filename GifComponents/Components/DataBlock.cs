@@ -82,17 +82,6 @@ namespace GifComponents.Components
 		}
 		#endregion
 		
-		#region constructor( Stream )
-		/// <summary>
-		/// Reads the next variable length data block from the input stream.
-		/// </summary>
-		/// <param name="inputStream">
-		/// The input stream to read.
-		/// </param>
-		public DataBlock( Stream inputStream ) : this( inputStream, false )
-		{}
-		#endregion
-		
 		#region constructor( Stream, bool )
 		/// <summary>
 		/// Reads the next variable length data block from the input stream.
@@ -100,8 +89,7 @@ namespace GifComponents.Components
 		/// <param name="inputStream">
 		/// The input stream to read.
 		/// </param>
-		/// <param name="xmlDebugging">Whether or not to create debug XML</param>
-		public DataBlock( Stream inputStream, bool xmlDebugging )
+		public DataBlock( Stream inputStream )
 		{
 			if( inputStream == null )
 			{
