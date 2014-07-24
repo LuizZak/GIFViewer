@@ -130,16 +130,17 @@ namespace GifComponents.Components
 
             //  Initialize GIF data stream decoder.
             _lzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
-            nextAvailableCode = ClearCode + 2;
+            int clearCode = ClearCode;
+            nextAvailableCode = clearCode + 2;
             previousCode = _nullCode;
             currentCodeSize = InitialCodeSize;
 
             #region guard against LZW code size being too large
-            if (ClearCode >= _maxStackSize)
+            if (clearCode >= _maxStackSize)
             {
                 string message
                     = "LZW minimum code size: " + _lzwMinimumCodeSize
-                    + ". Clear code: " + ClearCode
+                    + ". Clear code: " + clearCode
                     + ". Max stack size: " + _maxStackSize;
                 SetStatus(ErrorState.LzwMinimumCodeSizeTooLarge, message);
                 return;
@@ -147,7 +148,7 @@ namespace GifComponents.Components
             #endregion
 
             // TODO: what are prefix and suffix and why are we initialising them like this?
-            for (code = 0; code < ClearCode; code++)
+            for (code = 0; code < clearCode; code++)
             {
                 prefix[code] = 0;
                 suffix[code] = (byte)code;
@@ -261,7 +262,7 @@ namespace GifComponents.Components
                     #endregion
 
                     #region clear code?
-                    if (code == ClearCode)
+                    if (code == clearCode)
                     {
                         // We can get a clear code at any point in the image
                         // data, this is an instruction to reset the decoder
@@ -299,7 +300,7 @@ namespace GifComponents.Components
                         code = previousCode;
                     }
 
-                    while (code > ClearCode)
+                    while (code > clearCode)
                     {
                         pixelStack.Push(suffix[code]);
                         code = prefix[code];
