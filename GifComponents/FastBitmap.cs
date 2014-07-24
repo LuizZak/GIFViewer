@@ -207,29 +207,9 @@ namespace GifComponents
                 }
                 else
                 {
-                    // Unfold the loop
-                    const int sizeBlock = 4;
-                    int rem = count % sizeBlock;
-
-                    count /= sizeBlock;
-
                     while (count-- > 0)
                     {
                         if (*(s0s) == 0) { s0t++; s0s++; continue; }
-                        *(s0t++) = *(s0s++);
-
-                        if (*(s0s) == 0) { s0t++; s0s++; continue; }
-                        *(s0t++) = *(s0s++);
-
-                        if (*(s0s) == 0) { s0t++; s0s++; continue; }
-                        *(s0t++) = *(s0s++);
-
-                        if (*(s0s) == 0) { s0t++; s0s++; continue; }
-                        *(s0t++) = *(s0s++);
-                    }
-
-                    while (rem-- > 0)
-                    {
                         *(s0t++) = *(s0s++);
                     }
                 }
