@@ -94,7 +94,7 @@ namespace GifComponents.Components
 
         #region constructors
 
-        #region constructor( Stream, , , , ,  )
+        #region constructor( Stream, , , , , )
         /// <summary>
         /// Creates and returns a GifFrame by reading its data from the supplied
         /// input stream.
@@ -128,56 +128,6 @@ namespace GifComponents.Components
                          GifFrame previousFrame,
                          GifFrame previousFrameBut1,
                          int index)
-            : this(inputStream,
-                    logicalScreenDescriptor,
-                    globalColourTable,
-                    graphicControlExtension,
-                    previousFrame,
-                    previousFrameBut1,
-                    index,
-                    false)
-        {
-
-        }
-        #endregion
-
-        #region constructor( Stream, , , , , bool )
-        /// <summary>
-        /// Creates and returns a GifFrame by reading its data from the supplied
-        /// input stream.
-        /// </summary>
-        /// <param name="inputStream">
-        /// A stream containing the data which makes the GifStream, starting 
-        /// with the image descriptor for this frame.
-        /// </param>
-        /// <param name="logicalScreenDescriptor">
-        /// The logical screen descriptor for the GIF stream.
-        /// </param>
-        /// <param name="globalColourTable">
-        /// The global colour table for the GIF stream.
-        /// </param>
-        /// <param name="graphicControlExtension">
-        /// The graphic control extension, if any, which precedes this image in
-        /// the input stream.
-        /// </param>
-        /// <param name="previousFrame">
-        /// The frame which precedes this one in the GIF stream, if present.
-        /// </param>
-        /// <param name="previousFrameBut1">
-        /// The frame which precedes the frame before this one in the GIF stream,
-        /// if present.
-        /// </param>
-        /// <param name="index">The index of this frame on the owning animation</param>
-        /// <param name="xmlDebugging">Whether or not to create debug XML</param>
-        public GifFrame(Stream inputStream,
-                         LogicalScreenDescriptor logicalScreenDescriptor,
-                         ColourTable globalColourTable,
-                         GraphicControlExtension graphicControlExtension,
-                         GifFrame previousFrame,
-                         GifFrame previousFrameBut1,
-                         int index,
-                         bool xmlDebugging)
-            : base(xmlDebugging)
         {
             this._index = index;
             this.logicalScreenDescriptor = logicalScreenDescriptor;
@@ -519,7 +469,7 @@ namespace GifComponents.Components
 
             int transparentColourIndex = graphicControlExtension.TransparentColourIndex;
 
-            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream, XmlDebugging);
+            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream);
 
             #region determine the colour table to use for this frame
             Color backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
@@ -527,7 +477,7 @@ namespace GifComponents.Components
             ColourTable activeColourTable;
             if (imageDescriptor.HasLocalColourTable)
             {
-                _localColourTable = new ColourTable(inputStream, imageDescriptor.LocalColourTableSize, XmlDebugging);
+                _localColourTable = new ColourTable(inputStream, imageDescriptor.LocalColourTableSize);
                 activeColourTable = _localColourTable; // make local table active
             }
             else
@@ -553,7 +503,7 @@ namespace GifComponents.Components
 
             // decode pixel data
             int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
-            TableBasedImageData tbid = new TableBasedImageData(inputStream, pixelCount, XmlDebugging);
+            TableBasedImageData tbid = new TableBasedImageData(inputStream, pixelCount);
             if (tbid.PixelIndexes.Length == 0)
             {
                 // TESTME: constructor - PixelIndexes.Length == 0
@@ -611,7 +561,7 @@ namespace GifComponents.Components
                 throw new ArgumentNullException("logicalScreenDescriptor");
             }
 
-            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream, XmlDebugging);
+            ImageDescriptor imageDescriptor = new ImageDescriptor(inputStream);
 
             if (imageDescriptor.HasLocalColourTable)
             {
@@ -845,7 +795,7 @@ namespace GifComponents.Components
             int backgroundColorIndex = previousFrame == null ? lsd.BackgroundColourIndex : previousFrame.logicalScreenDescriptor.BackgroundColourIndex;
             int transparentColorIndex = previousFrame == null ? gce.TransparentColourIndex : previousFrame.graphicControlExtension.TransparentColourIndex;
             act = (previousFrame == null ? act : previousFrame._localColourTable == null ? globalColourTable : previousFrame._localColourTable);
-            
+
             #region paint baseImage
 
             if (previousFrame == null || previousFrame._image == null)
@@ -918,7 +868,7 @@ namespace GifComponents.Components
                 case DisposalMethod.RestoreToPrevious:
                     // pre-populate image with previous frame but 1
                     // TESTME: DisposalMethod.RestoreToPrevious
-                    baseImage = new Bitmap( (previousFrameBut1 == null ? previousFrame : previousFrameBut1).TheImage );
+                    baseImage = new Bitmap((previousFrameBut1 == null ? previousFrame : previousFrameBut1).TheImage);
                     break;
             }
             #endregion

@@ -85,21 +85,6 @@ namespace GifComponents.Components
         /// <param name="pixelCount">
         /// Number of pixels in the image.
         /// </param>
-        public TableBasedImageData(Stream inputStream, int pixelCount)
-            : this(inputStream, pixelCount, false)
-        { }
-
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="inputStream">
-        /// The stream from which the image data is to be read, starting with
-        /// the LZW minimum code size, and ending with a block terminator.
-        /// </param>
-        /// <param name="pixelCount">
-        /// Number of pixels in the image.
-        /// </param>
-        /// <param name="xmlDebugging">Whether or not to create debug XML</param>
         /// <remarks>
         /// The input stream is read, first into the LZW minimum code size, then
         /// into data blocks. Bytes are extracted from the data blocks into a
@@ -109,8 +94,7 @@ namespace GifComponents.Components
         /// end-of-information code or error condition is encountered, any
         /// remaining pixel indices not already populated default to zero.
         /// </remarks>
-        public TableBasedImageData(Stream inputStream, int pixelCount, bool xmlDebugging)
-            : base(xmlDebugging)
+        public TableBasedImageData(Stream inputStream, int pixelCount)
         {
             #region guard against silly image sizes
             if (pixelCount < 1)
@@ -146,7 +130,6 @@ namespace GifComponents.Components
 
             //  Initialize GIF data stream decoder.
             _lzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
-            WriteDebugXmlElement("LzwMinimumCodeSize", _lzwMinimumCodeSize);
             nextAvailableCode = ClearCode + 2;
             previousCode = _nullCode;
             currentCodeSize = InitialCodeSize;
@@ -159,7 +142,6 @@ namespace GifComponents.Components
                     + ". Clear code: " + ClearCode
                     + ". Max stack size: " + _maxStackSize;
                 SetStatus(ErrorState.LzwMinimumCodeSizeTooLarge, message);
-                WriteDebugXmlFinish();
                 return;
             }
             #endregion
@@ -170,8 +152,6 @@ namespace GifComponents.Components
                 prefix[code] = 0;
                 suffix[code] = (byte)code;
             }
-
-            WriteDebugXmlStartElement("DataBlocks");
 
             #region decode LZW image data
 
@@ -459,9 +439,8 @@ namespace GifComponents.Components
 
         private DataBlock ReadDataBlock(Stream inputStream)
         {
-            DataBlock block = new DataBlock(inputStream, XmlDebugging);
+            DataBlock block = new DataBlock(inputStream);
             _dataBlocks.Add(block);
-            WriteDebugXmlNode(block.DebugXmlReader);
             return block;
         }
         private static DataBlock ReadDataBlockStatic(Stream inputStream)

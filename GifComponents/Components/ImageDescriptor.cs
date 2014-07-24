@@ -102,17 +102,6 @@ namespace GifComponents.Components
 		}
 		#endregion
 		
-		#region constructor( Stream )
-		/// <summary>
-		/// Reads and returns an image descriptor from the supplied stream.
-		/// </summary>
-		/// <param name="inputStream">
-		/// The input stream to read.
-		/// </param>
-		public ImageDescriptor( Stream inputStream ) : this( inputStream, false )
-		{}
-		#endregion
-		
 		#region constructor( Stream, bool )
 		/// <summary>
 		/// Reads and returns an image descriptor from the supplied stream.
@@ -120,9 +109,7 @@ namespace GifComponents.Components
 		/// <param name="inputStream">
 		/// The input stream to read.
 		/// </param>
-		/// <param name="xmlDebugging">Whether or not to create debug XML</param>
-		public ImageDescriptor( Stream inputStream, bool xmlDebugging )
-			: base( xmlDebugging )
+		public ImageDescriptor( Stream inputStream )
 		{
 			int leftPosition = ReadShort( inputStream ); // (sub)image position & size
 			int topPosition = ReadShort( inputStream );

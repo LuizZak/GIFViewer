@@ -102,7 +102,6 @@ namespace GifComponents.Components
 		/// </param>
 		/// <param name="xmlDebugging">Whether or not to create debug XML</param>
 		public DataBlock( Stream inputStream, bool xmlDebugging )
-			: base( xmlDebugging )
 		{
 			if( inputStream == null )
 			{
@@ -118,8 +117,7 @@ namespace GifComponents.Components
 				string message
 					= "The end of the input stream was reached whilst "
 					+ "attempting to read a DataBlock.";
-				SetStatus( ErrorState.EndOfInputStream, message );
-				WriteDebugXmlFinish();
+                SetStatus(ErrorState.EndOfInputStream, message);
 				return;
 			}
 			
@@ -143,9 +141,6 @@ namespace GifComponents.Components
 			}
 
 			SaveData( blockSize, buffer );
-			
-			WriteDebugXmlElement( "BlockSize", blockSize );
-			WriteDebugXmlByteValues( "BytesRead", buffer );
 
 			if( bytesRead < blockSize )
 			{
@@ -154,8 +149,6 @@ namespace GifComponents.Components
 					+ ". Actual block size: " + bytesRead;
 				SetStatus( ErrorState.DataBlockTooShort, message );
 			}
-			
-			WriteDebugXmlFinish();
 		}
 		#endregion
 

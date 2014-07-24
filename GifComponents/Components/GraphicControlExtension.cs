@@ -110,7 +110,6 @@ namespace GifComponents.Components
 		/// </param>
 		/// <param name="xmlDebugging">Whether or not to create debug XML</param>
 		public GraphicControlExtension( Stream inputStream, bool xmlDebugging )
-			: base( xmlDebugging )
 		{
 			_blockSize = Read( inputStream ); // block size
 			

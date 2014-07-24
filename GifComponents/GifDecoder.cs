@@ -170,50 +170,27 @@ namespace GifComponents
         /// <param name="fileName">
         /// Path or URL of image file.
         /// </param>
+        /// <param name="xmlDebugging">
+        /// A boolean value indicating whether or not an XML document should be 
+        /// created showing how the GIF stream was decoded.
+        /// </param>
         /// <exception cref="ArgumentNullException">
         /// The supplied filename is null.
         /// </exception>
         public GifDecoder(string fileName)
-            : this(fileName, false) { }
-
-        /// <summary>
-        /// Reads a GIF file from specified file/URL source  
-        /// (URL assumed if name contains ":/" or "file:")
-        /// </summary>
-        /// <param name="fileName">
-        /// Path or URL of image file.
-        /// </param>
-        /// <param name="xmlDebugging">
-        /// A boolean value indicating whether or not an XML document should be 
-        /// created showing how the GIF stream was decoded.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// The supplied filename is null.
-        /// </exception>
-        public GifDecoder(string fileName, bool xmlDebugging)
-            : this(new FileInfo(fileName).OpenRead(), xmlDebugging) { }
+            : this(new FileInfo(fileName).OpenRead()) { }
 
         /// <summary>
         /// Reads a GIF file from the specified stream.
         /// </summary>
         /// <param name="inputStream">
         /// A stream to read the GIF data from.
+        /// </param>
+        /// <param name="xmlDebugging">
+        /// A boolean value indicating whether or not an XML document should be 
+        /// created showing how the GIF stream was decoded.
         /// </param>
         public GifDecoder(Stream inputStream)
-            : this(inputStream, false) { }
-
-        /// <summary>
-        /// Reads a GIF file from the specified stream.
-        /// </summary>
-        /// <param name="inputStream">
-        /// A stream to read the GIF data from.
-        /// </param>
-        /// <param name="xmlDebugging">
-        /// A boolean value indicating whether or not an XML document should be 
-        /// created showing how the GIF stream was decoded.
-        /// </param>
-        public GifDecoder(Stream inputStream, bool xmlDebugging)
-            : base(xmlDebugging)
         {
             if (inputStream == null)
             {
@@ -276,13 +253,13 @@ namespace GifComponents
             _applicationExtensions = new Collection<ApplicationExtension>();
             _gct = null;
 
-            _header = new GifHeader(_stream, XmlDebugging);
+            _header = new GifHeader(_stream);
             if (_header.ErrorState != ErrorState.Ok)
             {
                 return;
             }
 
-            _lsd = new LogicalScreenDescriptor(_stream, XmlDebugging);
+            _lsd = new LogicalScreenDescriptor(_stream);
             if (TestState(ErrorState.EndOfInputStream))
             {
                 return;
@@ -290,7 +267,7 @@ namespace GifComponents
 
             if (_lsd.HasGlobalColourTable)
             {
-                _gct = new ColourTable(_stream, _lsd.GlobalColourTableSize, XmlDebugging);
+                _gct = new ColourTable(_stream, _lsd.GlobalColourTableSize);
             }
 
             if (ConsolidatedState == ErrorState.Ok)
@@ -565,7 +542,7 @@ namespace GifComponents
                                 break;
 
                             case CodeGraphicControlLabel:
-                                lastGce = new GraphicControlExtension(inputStream, XmlDebugging);
+                                lastGce = new GraphicControlExtension(inputStream);
                                 break;
 
                             case CodeCommentLabel:
@@ -575,8 +552,7 @@ namespace GifComponents
 
                             case CodeApplicationExtensionLabel:
                                 ApplicationExtension ext
-                                    = new ApplicationExtension(inputStream,
-                                                                XmlDebugging);
+                                    = new ApplicationExtension(inputStream);
                                 if (ext.ApplicationIdentifier == "NETSCAPE"
                                     && ext.ApplicationAuthenticationCode == "2.0")
                                 {
@@ -640,19 +616,6 @@ namespace GifComponents
         }
         #endregion
 
-        #region private WriteCodeToDebugXml method
-        private void WriteCodeToDebugXml(int code)
-        {
-            if (XmlDebugging)
-            {
-                WriteDebugXmlStartElement("Code");
-                WriteDebugXmlAttribute("Value", ToHex(code));
-                WriteDebugXmlAttribute("FrameCount", _frames.Count);
-                WriteDebugXmlEndElement();
-            }
-        }
-        #endregion
-
         #region private AddFrame method
         /// <summary>
         /// Reads a frame from the input stream and adds it to the collection
@@ -683,7 +646,7 @@ namespace GifComponents
                 _frameDelays.Add(lastGce.DelayTime);
             }
 
-            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, lastNoDisposalFrame, _frames.Count, XmlDebugging);
+            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, lastNoDisposalFrame, _frames.Count);
 
             if (lastGce.DisposalMethod == DisposalMethod.DoNotDispose || lastGce.DisposalMethod == DisposalMethod.NotSpecified)
             {
@@ -691,7 +654,6 @@ namespace GifComponents
             }
 
             _frames.Add(frame);
-            WriteDebugXmlNode(frame.DebugXmlReader);
         }
         #endregion
 

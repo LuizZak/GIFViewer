@@ -85,7 +85,6 @@ namespace GifComponents.Components
         public ColourTable(Stream inputStream,
                             int numberOfColours,
                             bool xmlDebugging)
-            : base(xmlDebugging)
         {
             string message
                 = "The number of colours must be between 0 and 256. "
