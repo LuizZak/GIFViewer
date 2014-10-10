@@ -31,7 +31,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Whether there is a GIF file currently loaded on this GIFFile object
         /// </summary>
-        public bool Loaded = false;
+        public bool Loaded { get; private set; }
 
         /// <summary>
         /// Whether the GIF file is playing
@@ -139,6 +139,8 @@ namespace GIF_Viewer
         /// <param name="path">The gif to load the parameters from</param>
         public void LoadFromPath(string path)
         {
+            Loaded = false;
+
             // Set the path
             GIFPath = path;
 
@@ -149,7 +151,6 @@ namespace GIF_Viewer
             if (GIFDecoded.ConsolidatedState != ErrorState.Ok)
             {
                 GIFDecoded.Dispose();
-                Loaded = false;
                 return;
             }
 
