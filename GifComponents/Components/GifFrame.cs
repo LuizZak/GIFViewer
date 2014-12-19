@@ -877,7 +877,7 @@ namespace GifComponents.Components
                     backgroundColour &= 0x00FFFFFF;
 
                     FastBitmap fastBaseImage = new FastBitmap(baseImage);
-                    fastBaseImage.LockImage();
+                    fastBaseImage.Lock();
 
                     // If the area to redraw is the whole image, utilize the fast image drawing method FastBitmap.Clear()
                     if (previousFrame._imageDescriptor.Position.X == 0 && previousFrame._imageDescriptor.Position.Y == 0 &&
@@ -897,7 +897,7 @@ namespace GifComponents.Components
                         }
                     }
 
-                    fastBaseImage.UnlockImage();
+                    fastBaseImage.Unlock();
                     break;
 
                 case DisposalMethod.RestoreToPrevious:
@@ -927,11 +927,10 @@ namespace GifComponents.Components
         /// </param>
         private static Bitmap CreateBitmap(Bitmap baseImage, int[] pixels)
         {
-            FastBitmap fastBaseImage = new FastBitmap(baseImage);
-
-            fastBaseImage.LockImage();
-            fastBaseImage.CopyFromArray(pixels, true);
-            fastBaseImage.UnlockImage();
+            using (FastBitmap fastBitmap = baseImage.FastLock())
+            {
+                fastBitmap.CopyFromArray(pixels, true);
+            }
 
             return baseImage;
         }
