@@ -21,12 +21,12 @@
 // only to have created a derived work.
 #endregion
 
-using System;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using GIF_Viewer.GifComponents.Enums;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
     /// <summary>
     /// The header section of a Graphics Interchange Format stream.
@@ -42,8 +42,8 @@ namespace GifComponents.Components
     /// </remarks>
     public class GifHeader : GifComponent
     {
-        private string _signature;
-        private string _gifVersion;
+        private readonly string _signature;
+        private readonly string _gifVersion;
 
         #region constructor( logical properties )
         /// <summary>
@@ -64,13 +64,14 @@ namespace GifComponents.Components
             if (_signature != "GIF")
             {
                 string errorInfo = "Bad signature: " + _signature;
-                ErrorState status = ErrorState.BadSignature;
+                const ErrorState status = ErrorState.BadSignature;
                 SetStatus(status, errorInfo);
             }
         }
         #endregion
 
-        #region public constructor( Stream )
+        #region constructor( Stream, bool )
+
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -79,22 +80,6 @@ namespace GifComponents.Components
         /// GifHeader.
         /// </param>
         public GifHeader(Stream inputStream)
-            : this(inputStream, false) { }
-        #endregion
-
-        #region constructor( Stream, bool )
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="inputStream">
-        /// A <see cref="System.IO.Stream"/> containing the data to create the
-        /// GifHeader.
-        /// </param>
-        /// <param name="xmlDebugging">
-        /// A boolean value indicating whether or not an XML document should be 
-        /// created showing how the GIF stream was decoded.
-        /// </param>
-        public GifHeader(Stream inputStream, bool xmlDebugging)
         {
 
             StringBuilder sb = new StringBuilder();
@@ -124,7 +109,7 @@ namespace GifComponents.Components
             if (_signature != "GIF")
             {
                 string errorInfo = "Bad signature: " + _signature;
-                ErrorState status = ErrorState.BadSignature;
+                const ErrorState status = ErrorState.BadSignature;
                 SetStatus(status, errorInfo);
             }
         }

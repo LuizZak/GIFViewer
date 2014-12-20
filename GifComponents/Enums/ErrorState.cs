@@ -24,7 +24,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace GifComponents
+namespace GIF_Viewer.GifComponents.Enums
 {
 	/// <summary>
 	/// The error state of a GIF data stream, or of one of the components of

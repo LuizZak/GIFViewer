@@ -160,10 +160,7 @@ namespace GIF_Viewer
             }
 
             if (info.UpdateAvailable)
-                if (info.IsUpdateRequired)
-                    e.Result = UpdateStatus.UpdateRequired;
-                else
-                    e.Result = UpdateStatus.UpdateAvailable;
+                e.Result = info.IsUpdateRequired ? UpdateStatus.UpdateRequired : UpdateStatus.UpdateAvailable;
             else
                 e.Result = UpdateStatus.NoUpdateAvailable;
         }

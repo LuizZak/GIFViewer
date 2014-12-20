@@ -21,9 +21,7 @@
 // only to have created a derived work.
 #endregion
 
-using System;
-
-namespace GifComponents
+namespace GIF_Viewer.GifComponents.Enums
 {
 	/// <summary>
 	/// Enumeration of strategies for including colour tables when encoding 

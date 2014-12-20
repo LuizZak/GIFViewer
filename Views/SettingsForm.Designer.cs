@@ -1,4 +1,4 @@
-﻿namespace GIF_Viewer
+﻿namespace GIF_Viewer.Views
 {
     partial class SettingsForm
     {
@@ -29,8 +29,6 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SettingsForm));
-            this.btn_ok = new System.Windows.Forms.Button();
-            this.btn_cancel = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.lbl_keyframeReach = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
@@ -47,33 +45,13 @@
             this.lbl_bufferMemory = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.tb_bufferMemory = new System.Windows.Forms.TrackBar();
+            this.btn_ok = new System.Windows.Forms.Button();
+            this.btn_cancel = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeReach)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeMemory)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_bufferMemory)).BeginInit();
             this.SuspendLayout();
-            // 
-            // btn_ok
-            // 
-            this.btn_ok.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_ok.Location = new System.Drawing.Point(360, 250);
-            this.btn_ok.Name = "btn_ok";
-            this.btn_ok.Size = new System.Drawing.Size(83, 30);
-            this.btn_ok.TabIndex = 0;
-            this.btn_ok.Text = "&Ok";
-            this.btn_ok.UseVisualStyleBackColor = true;
-            this.btn_ok.Click += new System.EventHandler(this.btn_ok_Click);
-            // 
-            // btn_cancel
-            // 
-            this.btn_cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btn_cancel.Location = new System.Drawing.Point(449, 250);
-            this.btn_cancel.Name = "btn_cancel";
-            this.btn_cancel.Size = new System.Drawing.Size(83, 30);
-            this.btn_cancel.TabIndex = 1;
-            this.btn_cancel.Text = "&Cancel";
-            this.btn_cancel.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
@@ -245,6 +223,34 @@
             this.tb_bufferMemory.Size = new System.Drawing.Size(378, 45);
             this.tb_bufferMemory.TabIndex = 0;
             this.tb_bufferMemory.Scroll += new System.EventHandler(this.tb_bufferMemory_Scroll);
+            // 
+            // btn_ok
+            // 
+            this.btn_ok.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_ok.Image = global::GIF_Viewer.Properties.Resources.action_check;
+            this.btn_ok.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btn_ok.Location = new System.Drawing.Point(360, 250);
+            this.btn_ok.Name = "btn_ok";
+            this.btn_ok.Size = new System.Drawing.Size(83, 30);
+            this.btn_ok.TabIndex = 0;
+            this.btn_ok.Text = "&Ok";
+            this.btn_ok.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btn_ok.UseVisualStyleBackColor = true;
+            this.btn_ok.Click += new System.EventHandler(this.btn_ok_Click);
+            // 
+            // btn_cancel
+            // 
+            this.btn_cancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
+            this.btn_cancel.Image = global::GIF_Viewer.Properties.Resources.action_delete1;
+            this.btn_cancel.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btn_cancel.Location = new System.Drawing.Point(449, 250);
+            this.btn_cancel.Name = "btn_cancel";
+            this.btn_cancel.Size = new System.Drawing.Size(83, 30);
+            this.btn_cancel.TabIndex = 1;
+            this.btn_cancel.Text = "&Cancel";
+            this.btn_cancel.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btn_cancel.UseVisualStyleBackColor = true;
             // 
             // SettingsForm
             // 

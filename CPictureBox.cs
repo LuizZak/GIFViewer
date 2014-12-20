@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace GIF_Viewer
@@ -30,39 +31,39 @@ namespace GIF_Viewer
         protected override void OnPaintBackground(PaintEventArgs pevent)
         {
             // Clear the panel:
-            pevent.Graphics.Clear(this.BackColor);
+            pevent.Graphics.Clear(BackColor);
 
             // Return if the background image is null or if the paint message is set to be ignored
-            if (this.BackgroundImage == null || _Paint == false)
+            if (BackgroundImage == null || _Paint == false)
                 return;
 
-            pevent.Graphics.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.Half;
+            pevent.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
 
             // Switch the drawing quality depending on the current settings:
             switch (Quality)
             {
                 // Low:
                 case 1:
-                    pevent.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
-                    pevent.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+                    pevent.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+                    pevent.Graphics.SmoothingMode = SmoothingMode.None;
                     break;
 
                 // Medium:
                 case 2:
-                    pevent.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Low;
-                    pevent.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                    pevent.Graphics.InterpolationMode = InterpolationMode.Low;
+                    pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                     break;
 
                 // High
                 case 3:
-                    pevent.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    pevent.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                    pevent.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    pevent.Graphics.SmoothingMode = SmoothingMode.HighQuality;
                     break;
             }
 
             // Draw it manually:
             CalculateRectangle();
-            pevent.Graphics.DrawImage(this.BackgroundImage, rectangle);
+            pevent.Graphics.DrawImage(BackgroundImage, _rectangle);
         }
 
         /// <summary>
@@ -74,32 +75,32 @@ namespace GIF_Viewer
         {
             SizeF size2 = BackgroundImage.Size;
 
-            Rectangle bounds = this.ClientRectangle;
+            Rectangle bounds = ClientRectangle;
 
-            rectangle.X = 0;
-            rectangle.Y = 0;
+            _rectangle.X = 0;
+            _rectangle.Y = 0;
 
-            float widthRatio = ((float)bounds.Width) / (size2.Width);
-            float heightRatio = ((float)bounds.Height) / (size2.Height);
+            float widthRatio = bounds.Width / size2.Width;
+            float heightRatio = bounds.Height / size2.Height;
 
             if (widthRatio >= heightRatio)
             {
-                rectangle.Height = bounds.Height;
-                rectangle.Width = (int)((size2.Width * heightRatio) + 0.5f);
+                _rectangle.Height = bounds.Height;
+                _rectangle.Width = (int)((size2.Width * heightRatio) + 0.5f);
 
                 if (bounds.X >= 0)
                 {
-                    rectangle.X = (bounds.Width - rectangle.Width) / 2;
+                    _rectangle.X = (bounds.Width - _rectangle.Width) / 2;
                 }
             }
             else
             {
-                rectangle.Width = bounds.Width;
-                rectangle.Height = (int)((size2.Height * widthRatio) + 0.5f);
+                _rectangle.Width = bounds.Width;
+                _rectangle.Height = (int)((size2.Height * widthRatio) + 0.5f);
 
                 if (bounds.Y >= 0)
                 {
-                    rectangle.Y = (bounds.Height - rectangle.Height) / 2;
+                    _rectangle.Y = (bounds.Height - _rectangle.Height) / 2;
                 }
             }
         } 
@@ -132,6 +133,6 @@ namespace GIF_Viewer
         /// <summary>
         /// Stored rectangle used on each rectangle calculation
         /// </summary>
-        Rectangle rectangle;
+        Rectangle _rectangle;
     }
 }

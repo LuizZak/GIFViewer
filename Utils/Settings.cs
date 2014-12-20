@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-
-using GIF_Viewer;
 
 namespace GIF_Viewer.Utils
 {
@@ -17,61 +13,50 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// The settings object
         /// </summary>
-        private static Settings settings;
+        private static Settings _settings;
 
         /// <summary>
         /// Gets an instance of the Settings class
         /// </summary>
         public static Settings Instance
         {
-            get
-            {
-                if(settings == null)
-                    settings = new Settings();
-
-                return settings;
-            }
+            get { return _settings ?? (_settings = new Settings()); }
         }
 
         /// <summary>
         /// The maximum allowed memory for buffers
         /// </summary>
-        private int maxBufferMemory;
+        private int _maxBufferMemory;
 
         /// <summary>
         /// The maximum allowed memory for keyframes
         /// </summary>
-        private int maxKeyframeMemory;
+        private int _maxKeyframeMemory;
 
         /// <summary>
         /// The maximum number of frames allowed to track back until a keyframe before the operation is ignored and the current frame is drawn incomplete
         /// </summary>
-        private int maxKeyframeReach;
-
-        /// <summary>
-        /// Programs to display on the program's context menu
-        /// </summary>
-        private Dictionary<string, string> programs;
+        private int _maxKeyframeReach;
 
         /// <summary>
         /// The settings file handler
         /// </summary>
-        private Stream IniFile;
+        private Stream _iniFile;
 
         /// <summary>
         /// The maximum allowed memory for buffers
         /// </summary>
-        public int MaxBufferMemory { get { return this.maxBufferMemory; } set { this.maxBufferMemory = Math.Min(512, Math.Max(5, value)); } }
+        public int MaxBufferMemory { get { return _maxBufferMemory; } set { _maxBufferMemory = Math.Min(512, Math.Max(5, value)); } }
 
         /// <summary>
         /// The maximum allowed memory for keyframes
         /// </summary>
-        public int MaxKeyframeMemory { get { return this.maxKeyframeMemory; } set { this.maxKeyframeMemory = Math.Min(512, Math.Max(5, value)); } }
+        public int MaxKeyframeMemory { get { return _maxKeyframeMemory; } set { _maxKeyframeMemory = Math.Min(512, Math.Max(5, value)); } }
 
         /// <summary>
         /// The maximum number of frames allowed to track back until a keyframe before the operation is ignored and the current frame is drawn incomplete
         /// </summary>
-        public int MaxKeyframeReach { get { return this.maxKeyframeReach; } set { this.maxKeyframeReach = Math.Min(100, Math.Max(1, value)); } }
+        public int MaxKeyframeReach { get { return _maxKeyframeReach; } set { _maxKeyframeReach = Math.Min(100, Math.Max(1, value)); } }
 
         /// <summary>
         /// Whether to ignore .gif file association checks when the program starts
@@ -81,18 +66,18 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// Gets the programs to display on the program's context menu
         /// </summary>
-        public Dictionary<string, string> Programs { get { return this.programs; } set { this.programs = value; } }
+        public Dictionary<string, string> Programs { get; set; }
 
         /// <summary>
         /// Private constructor
         /// </summary>
         private Settings()
         {
-            maxBufferMemory = 50;
-            maxKeyframeMemory = 30;
-            maxKeyframeReach = 10;
+            _maxBufferMemory = 50;
+            _maxKeyframeMemory = 30;
+            _maxKeyframeReach = 10;
             DontAskAssociate = false;
-            programs = new Dictionary<string, string>();
+            Programs = new Dictionary<string, string>();
 
             LoadSettings();
         }
@@ -103,9 +88,9 @@ namespace GIF_Viewer.Utils
         public void LoadSettings()
         {
             // Close the current .ini file
-            if (IniFile != null)
+            if (_iniFile != null)
             {
-                IniFile.Close();
+                _iniFile.Close();
             }
 
             // Set the filename:
@@ -115,16 +100,9 @@ namespace GIF_Viewer.Utils
             Programs = new Dictionary<string, string>();
 
             // No settings file, leave it blank:
-            if (!File.Exists(fileName))
-            {
-                IniFile = File.Create(fileName);
-            }
-            else
-            {
-                // Read the settings:
-                IniFile = File.Open(fileName, FileMode.Open);
-            }
-            StreamReader reader = new StreamReader(IniFile);
+            _iniFile = !File.Exists(fileName) ? File.Create(fileName) : File.Open(fileName, FileMode.Open);
+
+            StreamReader reader = new StreamReader(_iniFile);
 
             // Temp definitions:
             string line;
@@ -136,6 +114,9 @@ namespace GIF_Viewer.Utils
             {
                 line = reader.ReadLine(); // Get a line
 
+                if (line == null)
+                    break;
+
                 // If the program should ask the user about the .gif file association on startup:
                 if (line == "[DontAskAssociate]")
                 {
@@ -144,19 +125,19 @@ namespace GIF_Viewer.Utils
                 // Memory settings
                 else if ((line == "[MaxBufferMemory]" || line == "[MaxKeyframeMemory]" || line == "[MaxKeyframeReach]") && !reader.EndOfStream)
                 {
-                    int value = 0;
+                    int value;
                     if (int.TryParse(reader.ReadLine(), out value))
                     {
                         switch (line)
                         {
                             case "[MaxBufferMemory]":
-                                this.MaxBufferMemory = value;
+                                MaxBufferMemory = value;
                                 break;
                             case "[MaxKeyframeMemory]":
-                                this.MaxKeyframeMemory = value;
+                                MaxKeyframeMemory = value;
                                 break;
                             case "[MaxKeyframeReach]":
-                                this.MaxKeyframeReach = value;
+                                MaxKeyframeReach = value;
                                 break;
                         }
                     }
@@ -164,7 +145,7 @@ namespace GIF_Viewer.Utils
                 // A program:
                 else if (line.Contains("="))
                 {
-                    programName = line.Split('=')[0].Substring(1, line.IndexOf("=") - 2); // Reads off the screen name
+                    programName = line.Split('=')[0].Substring(1, line.IndexOf("=", StringComparison.Ordinal) - 2); // Reads off the screen name
                     programPath = line.Split('=')[1].Substring(1, line.Split('=')[1].LastIndexOf('"') - 1); // Reads off the program's path
 
                     Programs.Add(programName, programPath); // Add this program to thye program's list
@@ -182,15 +163,15 @@ namespace GIF_Viewer.Utils
 
             if (File.Exists(fileName))
             {
-                IniFile.Close();
+                _iniFile.Close();
                 File.Delete(fileName);
             }
 
             // If no settings file exists, create one!
-            IniFile = File.Create(fileName);
+            _iniFile = File.Create(fileName);
 
             // Opens a stream to write the settings down:
-            StreamWriter writer = new StreamWriter(IniFile);
+            StreamWriter writer = new StreamWriter(_iniFile);
 
             // Iterate through the programs, and write down one at a time
             foreach (string k in Programs.Keys)

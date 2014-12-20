@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
-
-using GifComponents;
-
+using GIF_Viewer.GifComponents;
+using GIF_Viewer.GifComponents.Enums;
 using GIF_Viewer.Utils;
 
 namespace GIF_Viewer
@@ -12,21 +9,21 @@ namespace GIF_Viewer
     /// <summary>
     /// Represents a GIF file
     /// </summary>
-    public class GIFFile : IDisposable
+    public class GifFile : IDisposable
     {
         /// <summary>
         /// Path to the GIF file
         /// </summary>
-        public string GIFPath = "";
+        public string GifPath = "";
         /// <summary>
         /// Image object representing the current GIF
         /// </summary>
-        public Image GIF;
+        public Image Gif;
 
         /// <summary>
         /// The decoder holding the information about the currently loaded .gif file
         /// </summary>
-        private GifDecoder GIFDecoded;
+        private GifDecoder _gifDecoded;
 
         /// <summary>
         /// Whether there is a GIF file currently loaded on this GIFFile object
@@ -42,14 +39,14 @@ namespace GIF_Viewer
         /// </summary>
         public int FrameCount
         {
-            get { return this.frameCount; }
+            get { return _frameCount; }
         }
         /// <summary>
         /// Gets or sets the current frame being displayed
         /// </summary>
         public int CurrentFrame
         {
-            get { return this.currentFrame; }
+            get { return _currentFrame; }
             set { SetCurrentFrame(value); }
         }
         /// <summary>
@@ -61,61 +58,61 @@ namespace GIF_Viewer
         /// </summary>
         public int CurrentInterval
         {
-            get { return this.currentInterval; }
+            get { return _currentInterval; }
         }
         /// <summary>
         /// Whether the GIF file should loop
         /// </summary>
-        public bool CanLoop = false;
+        public bool CanLoop;
 
         /// <summary>
         /// Gets the Width of this GIF file
         /// </summary>
         public int Width
         {
-            get { return width; }
+            get { return _width; }
         }
         /// <summary>
         /// Gets the Height of this GIF file
         /// </summary>
         public int Height
         {
-            get { return height; }
+            get { return _height; }
         }
 
         /// <summary>
         /// The Width of this GIF file
         /// </summary>
-        private int width;
+        private int _width;
         /// <summary>
         /// The Height of this GIF file
         /// </summary>
-        private int height;
+        private int _height;
 
         /// <summary>
         /// Current frame interval (in milliseconds)
         /// </summary>
-        private int currentInterval;
+        private int _currentInterval;
 
         /// <summary>
         /// Ammount of frames on this gif
         /// </summary>
-        private int frameCount;
+        private int _frameCount;
 
         /// <summary>
         /// The current frame being displayed
         /// </summary>
-        private int currentFrame;
+        private int _currentFrame;
 
         /// <summary>
         /// Disposes of this GIF file
         /// </summary>
         public void Dispose()
         {
-            GIF.Dispose();
-            GIFDecoded.Dispose();
+            Gif.Dispose();
+            _gifDecoded.Dispose();
 
-            GIFDecoded = null;
+            _gifDecoded = null;
         }
 
         /// <summary>
@@ -123,14 +120,14 @@ namespace GIF_Viewer
         /// </summary>
         public void ApplyMemorySettings()
         {
-            if (this.GIFDecoded == null || !this.Loaded)
+            if (_gifDecoded == null || !Loaded)
                 return;
 
-            this.GIFDecoded.MaxMemoryForBuffer    = Settings.Instance.MaxBufferMemory * 1024 * 1024;
-            this.GIFDecoded.MaxMemoryForKeyframes = Settings.Instance.MaxKeyframeMemory * 1024 * 1024;
-            this.GIFDecoded.MaxKeyframeReach = Settings.Instance.MaxKeyframeReach;
+            _gifDecoded.MaxMemoryForBuffer    = Settings.Instance.MaxBufferMemory * 1024 * 1024;
+            _gifDecoded.MaxMemoryForKeyframes = Settings.Instance.MaxKeyframeMemory * 1024 * 1024;
+            _gifDecoded.MaxKeyframeReach = Settings.Instance.MaxKeyframeReach;
 
-            this.GIFDecoded.ApplyMemoryFields();
+            _gifDecoded.ApplyMemoryFields();
         }
 
         /// <summary>
@@ -142,41 +139,41 @@ namespace GIF_Viewer
             Loaded = false;
 
             // Set the path
-            GIFPath = path;
+            GifPath = path;
 
             // Decode the gif file
-            GIFDecoded = new GifComponents.GifDecoder(path);
-            GIFDecoded.Decode();
+            _gifDecoded = new GifDecoder(path);
+            _gifDecoded.Decode();
 
-            if (GIFDecoded.ConsolidatedState != ErrorState.Ok)
+            if (_gifDecoded.ConsolidatedState != ErrorState.Ok)
             {
-                GIFDecoded.Dispose();
+                _gifDecoded.Dispose();
                 return;
             }
 
             // Get information from the gif file
-            width = GIFDecoded.LogicalScreenDescriptor.LogicalScreenSize.Width;
-            height = GIFDecoded.LogicalScreenDescriptor.LogicalScreenSize.Height;
+            _width = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Width;
+            _height = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Height;
 
-            currentFrame = 0;
-            frameCount = GIFDecoded.FrameCount;
+            _currentFrame = 0;
+            _frameCount = _gifDecoded.FrameCount;
 
             // Get frame intervals
-            Intervals = new int[frameCount];
-            for (int i = 0; i < frameCount; i++)
+            Intervals = new int[_frameCount];
+            for (int i = 0; i < _frameCount; i++)
             {
-                Intervals[i] = GIFDecoded.GetDelayForFrame(i) * 10;
+                Intervals[i] = _gifDecoded.GetDelayForFrame(i) * 10;
             }
 
             // Get whether this GIF loops over:
-            CanLoop = (GIFDecoded.NetscapeExtension != null && GIFDecoded.NetscapeExtension.LoopCount == 0);
+            CanLoop = (_gifDecoded.NetscapeExtension != null && _gifDecoded.NetscapeExtension.LoopCount == 0);
 
             // Force load of the first frame
-            Image img = GIFDecoded[0].TheImage;
+            Image img = _gifDecoded[0].TheImage;
 
-            GIF = new Bitmap(img.Width, img.Height);
+            Gif = new Bitmap(img.Width, img.Height);
 
-            GIF_Viewer.Utils.FastBitmap.CopyPixels((Bitmap)GIFDecoded[currentFrame].TheImage, (Bitmap)GIF);
+            FastBitmap.CopyPixels((Bitmap)_gifDecoded[_currentFrame].TheImage, (Bitmap)Gif);
 
             Loaded = true;
 
@@ -208,12 +205,12 @@ namespace GIF_Viewer
         /// <param name="currentFrame">The new current frame</param>
         public void SetCurrentFrame(int currentFrame)
         {
-            if (this.currentFrame == currentFrame)
+            if (_currentFrame == currentFrame)
                 return;
 
-            this.currentFrame = currentFrame;
-            this.currentInterval = Intervals[currentFrame];
-            GIF_Viewer.Utils.FastBitmap.CopyPixels((Bitmap)GIFDecoded[currentFrame].TheImage, (Bitmap)GIF);
+            _currentFrame = currentFrame;
+            _currentInterval = Intervals[currentFrame];
+            FastBitmap.CopyPixels((Bitmap)_gifDecoded[currentFrame].TheImage, (Bitmap)Gif);
         }
 
         /// <summary>
@@ -222,7 +219,7 @@ namespace GIF_Viewer
         /// <returns>The frame count of this Gif file</returns>
         public int GetFrameCount()
         {
-            return frameCount;
+            return _frameCount;
         }
     }
 }

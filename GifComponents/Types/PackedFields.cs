@@ -23,7 +23,7 @@
 
 using System;
 
-namespace GifComponents
+namespace GIF_Viewer.GifComponents.Types
 {
 	/// <summary>
 	/// Represents a byte of data in a GIF data stream which contains a number

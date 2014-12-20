@@ -23,12 +23,10 @@
 
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.IO;
+using System.Linq;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
     /// <summary>
     /// A global or local colour table which forms part of a GIF data stream.
@@ -36,10 +34,12 @@ namespace GifComponents.Components
     public class ColourTable : GifComponent
     {
         #region declarations
+        
         /// <summary>
         /// The colours in the colour table in INT form
         /// </summary>
-        private Collection<int> _intColours;
+        private readonly Collection<int> _intColours;
+
         #endregion
 
         #region constructors
@@ -52,24 +52,11 @@ namespace GifComponents.Components
         {
             _intColours = new Collection<int>();
         }
-        #endregion
 
-        #region constructor( Stream, int )
-        /// <summary>
-        /// Reads and returns a colour table from the supplied input stream.
-        /// </summary>
-        /// <param name="inputStream">
-        /// The input stream to read.
-        /// </param>
-        /// <param name="numberOfColours">
-        /// The number of colours the colour table is expected to contain.
-        /// </param>
-        public ColourTable(Stream inputStream, int numberOfColours)
-            : this(inputStream, numberOfColours, false)
-        { }
         #endregion
 
         #region constructor( Stream, int, bool )
+
         /// <summary>
         /// Reads and returns a colour table from the supplied input stream.
         /// </summary>
@@ -79,12 +66,8 @@ namespace GifComponents.Components
         /// <param name="numberOfColours">
         /// The number of colours the colour table is expected to contain.
         /// </param>
-        /// <param name="xmlDebugging">
-        /// Whether or not to create debug XML
-        /// </param>
         public ColourTable(Stream inputStream,
-                            int numberOfColours,
-                            bool xmlDebugging)
+                            int numberOfColours)
         {
             string message
                 = "The number of colours must be between 0 and 256. "
@@ -104,8 +87,7 @@ namespace GifComponents.Components
 
             int bytesExpected = numberOfColours * 3; // expected length of Colour table
             byte[] buffer = new byte[bytesExpected];
-            int bytesRead = 0;
-            bytesRead = inputStream.Read(buffer, 0, buffer.Length);
+            int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
             int coloursRead = bytesRead / 3;
 
             int i = 0;
@@ -113,9 +95,9 @@ namespace GifComponents.Components
             _intColours = new Collection<int>();
             while (i < coloursRead)
             {
-                int r = ((int)buffer[j++]) & 0xff;
-                int g = ((int)buffer[j++]) & 0xff;
-                int b = ((int)buffer[j++]) & 0xff;
+                int r = (buffer[j++]) & 0xff;
+                int g = (buffer[j++]) & 0xff;
+                int b = (buffer[j++]) & 0xff;
                 _intColours.Add(((255) << 24) | (r << 16) | (g << 8) | b);
                 i++;
             }
@@ -127,18 +109,16 @@ namespace GifComponents.Components
         #region properties
 
         #region Colours property
+        
         public int[] IntColours
         {
-            get
-            {
-                int[] colours = new int[Length];
-                this._intColours.CopyTo(colours, 0);
-                return colours;
-            }
+            get { return _intColours.ToArray(); }
         }
+
         #endregion
 
         #region Length property
+
         /// <summary>
         /// Gets the number of colours in the colour table.
         /// </summary>
@@ -146,9 +126,11 @@ namespace GifComponents.Components
         {
             get { return _intColours.Count; }
         }
+
         #endregion
 
         #region SizeBits property
+
         /// <summary>
         /// Gets the number of bits required to hold the length of the colour
         /// table, minus 1.
@@ -181,18 +163,18 @@ namespace GifComponents.Components
                         return 1;
 
                     default:
-                        string message
-                            = "The colour table size is not an exact power of "
-                            + "2. Did you forget to call the Pad() method?";
+                        const string message = "The colour table size is not an exact power of 2. Did you forget to call the Pad() method?";
                         throw new InvalidOperationException(message);
                 }
             }
         }
+
         #endregion
 
         #endregion
 
         #region indexer
+
         /// <summary>
         /// Gets or sets the colour at the specified index in the colour table.
         /// </summary>
@@ -212,18 +194,22 @@ namespace GifComponents.Components
                 _intColours[index] = value;
             }
         }
+
         #endregion
 
         #region methods
 
         #region public Add method
+
         public void Add(int colourToAdd)
         {
             _intColours.Add(colourToAdd);
         }
+
         #endregion
 
         #region public WriteToStream method
+
         /// <summary>
         /// Writes this component to the supplied output stream.
         /// </summary>
@@ -237,9 +223,11 @@ namespace GifComponents.Components
                 WriteByte(c, outputStream);
             }
         }
+
         #endregion
 
         #region private ValidateIndex method
+
         private void ValidateIndex(int index)
         {
             if (index >= _intColours.Count || index < 0)
@@ -250,6 +238,7 @@ namespace GifComponents.Components
                 throw new ArgumentOutOfRangeException("index", message);
             }
         }
+
         #endregion
 
         #endregion

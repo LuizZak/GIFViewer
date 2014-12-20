@@ -47,17 +47,17 @@
 #endregion
 
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using GIF_Viewer.GifComponents.Components;
+using GIF_Viewer.GifComponents.Enums;
 
-using GifComponents.Components;
-
-namespace GifComponents
+namespace GIF_Viewer.GifComponents
 {
     /// <summary>
     /// Class GifDecoder - Decodes a GIF file into one or more frames and 
@@ -95,7 +95,7 @@ namespace GifComponents
         /// <summary>
         /// A reference to the last frame that had a disposal mode of NoDisposal
         /// </summary>
-        private GifFrame lastNoDisposalFrame;
+        private GifFrame _lastNoDisposalFrame;
 
         /// <summary>
         /// The delay for each frame, in hundredths of a second
@@ -121,11 +121,6 @@ namespace GifComponents
         /// The frames which make up the GIF file.
         /// </summary>
         private Collection<GifFrame> _frames;
-
-        /// <summary>
-        /// A list of frames that should not be unloaded from memory because they are used as keyframes
-        /// </summary>
-        private List<GifFrame> _keyFrames;
 
         /// <summary>
         /// The frames that are currently loaded. This queue is used to unload frames after a long period
@@ -158,10 +153,9 @@ namespace GifComponents
         private int _maxKeyframeReach;
 
         /// <summary>
-        /// Holds the <see cref="System.IO.Stream"/> from which the GIF is being
-        /// read.
+        /// Holds the <see cref="System.IO.Stream"/> from which the GIF is being read.
         /// </summary>
-        private Stream _stream;
+        private readonly Stream _stream;
 
         /// <summary>
         /// Reads a GIF file from specified file/URL source  
@@ -169,10 +163,6 @@ namespace GifComponents
         /// </summary>
         /// <param name="fileName">
         /// Path or URL of image file.
-        /// </param>
-        /// <param name="xmlDebugging">
-        /// A boolean value indicating whether or not an XML document should be 
-        /// created showing how the GIF stream was decoded.
         /// </param>
         /// <exception cref="ArgumentNullException">
         /// The supplied filename is null.
@@ -186,10 +176,6 @@ namespace GifComponents
         /// <param name="inputStream">
         /// A stream to read the GIF data from.
         /// </param>
-        /// <param name="xmlDebugging">
-        /// A boolean value indicating whether or not an XML document should be 
-        /// created showing how the GIF stream was decoded.
-        /// </param>
         public GifDecoder(Stream inputStream)
         {
             if (inputStream == null)
@@ -199,7 +185,7 @@ namespace GifComponents
 
             if (inputStream.CanRead == false)
             {
-                string message = "The supplied stream cannot be read";
+                const string message = "The supplied stream cannot be read";
                 throw new ArgumentException(message, "inputStream");
             }
 
@@ -210,14 +196,12 @@ namespace GifComponents
             _stream = new MemoryStream();
             int bytesRead = 0;
             long copyLength = inputStream.Length;
-            byte[] buffer;
-            buffer = new byte[copyLength];
+            byte[] buffer = new byte[copyLength];
             if (copyLength > 0)
             {
-                int count = 0;
                 while (bytesRead < copyLength)
                 {
-                    count = inputStream.Read(buffer, (int)bytesRead, (int)(copyLength - bytesRead));
+                    var count = inputStream.Read(buffer, bytesRead, (int)(copyLength - bytesRead));
                     if (count == 0)
                     {
                         break;
@@ -247,7 +231,6 @@ namespace GifComponents
         public void Decode()
         {
             _frameDelays = new List<int>();
-            _keyFrames = new List<GifFrame>();
             _loadedFrames = new Queue<GifFrame>();
             _frames = new Collection<GifFrame>();
             _applicationExtensions = new Collection<ApplicationExtension>();
@@ -355,7 +338,7 @@ namespace GifComponents
             get { return _maxMemoryForBuffer; }
             set
             {
-                this._maxMemoryForBuffer = value;
+                _maxMemoryForBuffer = value;
                 ApplyMemoryFields();
             }
         }
@@ -365,10 +348,10 @@ namespace GifComponents
         /// </summary>
         public int MaxMemoryForKeyframes
         {
-            get { return this._maxMemoryForKeyframes; }
+            get { return _maxMemoryForKeyframes; }
             set
             {
-                this._maxMemoryForKeyframes = value;
+                _maxMemoryForKeyframes = value;
                 ApplyMemoryFields();
             }
         }
@@ -459,10 +442,9 @@ namespace GifComponents
         {
             get
             {
-                ApplicationExtension[] appExts
-                    = new ApplicationExtension[_applicationExtensions.Count];
+                ApplicationExtension[] appExts = new ApplicationExtension[_applicationExtensions.Count];
                 _applicationExtensions.CopyTo(appExts, 0);
-                return appExts; ;
+                return appExts;
             }
         }
         #endregion
@@ -519,11 +501,11 @@ namespace GifComponents
             // read GIF file content blocks
             bool done = false;
             GraphicControlExtension lastGce = null;
-            string message; // for error conditions
             while (!done/* && ConsolidatedState == ErrorState.Ok */)
             {
                 int code = Read(inputStream);
 
+                string message; // for error conditions
                 switch (code)
                 {
 
@@ -617,6 +599,7 @@ namespace GifComponents
         #endregion
 
         #region private AddFrame method
+
         /// <summary>
         /// Reads a frame from the input stream and adds it to the collection
         /// of frames.
@@ -637,27 +620,22 @@ namespace GifComponents
             }
 
             // Setup the frame delay
-            if (lastGce == null)
-            {
-                _frameDelays.Add(0);
-            }
-            else
-            {
-                _frameDelays.Add(lastGce.DelayTime);
-            }
+            _frameDelays.Add(lastGce == null ? 0 : lastGce.DelayTime);
 
-            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, lastNoDisposalFrame, _header, _frames.Count);
-
-            if (lastGce == null || lastGce.DisposalMethod == DisposalMethod.DoNotDispose || lastGce.DisposalMethod == DisposalMethod.NotSpecified)
+            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, _lastNoDisposalFrame, _header, _frames.Count);
+            if (lastGce == null || lastGce.DisposalMethod == DisposalMethod.DoNotDispose ||
+                lastGce.DisposalMethod == DisposalMethod.NotSpecified)
             {
-                lastNoDisposalFrame = frame;
+                _lastNoDisposalFrame = frame;
             }
 
             _frames.Add(frame);
         }
+
         #endregion
 
         #region private WriteToStream method
+
         /// <summary>
         /// Throws a NotSupportedException.
         /// GifDecoders are only intended to read from, and decode streams, not 
@@ -668,11 +646,11 @@ namespace GifComponents
         /// </param>
         public override void WriteToStream(Stream outputStream)
         {
-            string message
-                = "This method is not implemented because a GifDecoder should not "
-                + "be written to a stream. It is meant for reading streams!";
+            const string message =
+                "This method is not implemented because a GifDecoder should not be written to a stream. It is meant for reading streams!";
             throw new NotSupportedException(message);
         }
+
         #endregion
 
         #endregion

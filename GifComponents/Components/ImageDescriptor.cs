@@ -21,11 +21,11 @@
 // only to have created a derived work.
 #endregion
 
-using System;
 using System.Drawing;
 using System.IO;
+using GIF_Viewer.GifComponents.Types;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
 	/// <summary>
 	/// Describes a single image within a Graphics Interchange Format data 
@@ -56,12 +56,14 @@ namespace GifComponents.Components
 	public class ImageDescriptor : GifComponent
 	{
 		#region declarations
-		private Point _position;
+		
+        private Point _position;
 		private Size _size;
-		private bool _hasLocalColourTable;
-		private bool _isInterlaced;
-		private bool _isSorted;
-		private int _localColourTableSizeBits;
+		private readonly bool _hasLocalColourTable;
+		private readonly bool _isInterlaced;
+		private readonly bool _isSorted;
+		private readonly int _localColourTableSizeBits;
+
 		#endregion
 		
 		#region constructor
@@ -157,7 +159,7 @@ namespace GifComponents.Components
 		/// </summary>
 		public bool HasLocalColourTable
 		{
-			get { return _hasLocalColourTable;; }
+			get { return _hasLocalColourTable; }
 		}
 		#endregion
 		

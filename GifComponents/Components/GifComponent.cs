@@ -27,10 +27,11 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Xml;
+using GIF_Viewer.GifComponents.Enums;
+using GIF_Viewer.GifComponents.Types;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
 	/// <summary>
 	/// The base class for a component of a Graphics Interchange File data 
@@ -40,30 +41,12 @@ namespace GifComponents.Components
 	public abstract class GifComponent : IDisposable
 	{
 		#region declarations
+
 		/// <summary>
 		/// The status of this component, consisting of its error state and any
 		/// associated error messages.
 		/// </summary>
 		private GifComponentStatus _status;
-		
-		/// <summary>
-		/// Set to true to store information in _debugXml about how the GIF
-		/// stream was decoded. Set to false for production use.
-		/// </summary>
-		private bool _xmlDebugging;
-		
-		/// <summary>
-		/// An <see cref="XmlTextWriter"/> which is used to write an XML 
-		/// document showing how the GIF stream was decoded.
-		/// For debugging use only.
-		/// </summary>
-		private System.Xml.XmlWriter _debugXmlWriter;
-		
-		/// <summary>
-		/// Holds a stream of XML showing how the GIF stream was decoded.
-		/// For debugging use only.
-		/// </summary>
-		private Stream _debugXmlStream;
 		
 		#endregion
 		
@@ -163,98 +146,93 @@ namespace GifComponents.Components
 		#endregion
 		
 		#region ConsolidatedState property
-		/// <summary>
-		/// Gets the combined error states of this component and all its child
-		/// components.
-		/// </summary>
-		/// <remarks>
-		/// This property uses reflection to inspect the runtime type of the
-		/// current instance and performs a bitwise or of the ErrorStates of
-		/// the current instance and of any GifComponents within it.
-		/// </remarks>
-		[Category( "Status" )]
-		[Description( "Gets the combined error states of this component and " +
-		              "all its child components." )]
-		public ErrorState ConsolidatedState
-		{
-			get
-			{
-				ErrorState state = this.ErrorState;
-				GifComponent component;
-				GifComponent[] componentArray;
-				PropertyInfo[] properties = this.GetType().GetProperties();
-				foreach( PropertyInfo property in properties )
-				{
-					// We don't want to inspect the ConsolidatedState property
-					// else we get a StackOverflowException.
-					if( property.Name == "ConsolidatedState" )
-					{
-						continue;
-					}
-					
-					// Is this property an array?
-					if( property.PropertyType.IsArray )
-					{
-						// Is this property an array of GifComponents?
-						componentArray = property.GetValue( this, null ) 
-							as GifComponent[];
-						if( componentArray != null )
-						{
-							// It's an array of GifComponents, so inspect
-							// their ConsolidatedState properties.
-							foreach( GifComponent c in componentArray )
-							{
-								state |= c.ConsolidatedState;
-							}
-						}
-						continue;
-					}
 
-					// Is this property an indexer?
-					if( property.GetIndexParameters().Length > 0 )
-					{
-						// it's probably an indexer, so ignore it
-						continue;
-					}
-					
-					// Is this property of a type derived from GifComponent?
-					if( property.PropertyType.IsSubclassOf( typeof( GifComponent ) ) )
-					{
-						// Yes, so it also has a ConsolidatedState property
-						component = property.GetValue( this, null ) as GifComponent;
-						if( component != null )
-						{
-							state |= component.ConsolidatedState;
-						}
-						continue;
-					}
-					
-					// Is this property a generic type?
-					if( property.PropertyType.IsGenericType )
-					{
-						IEnumerable objectCollection
-							= property.GetValue( this, null )
-							as IEnumerable;
-						if( objectCollection != null )
-						{
-							// Yes, it's IEnumerable, so iterate through its members
-							foreach( object o in objectCollection )
-							{
-								GifComponent c = o as GifComponent;
-								if( c != null )
-								{
-									state |= c.ConsolidatedState;
-								}
-							}
-						}
-						continue;
-					}
+	    /// <summary>
+	    /// Gets the combined error states of this component and all its child
+	    /// components.
+	    /// </summary>
+	    /// <remarks>
+	    /// This property uses reflection to inspect the runtime type of the
+	    /// current instance and performs a bitwise or of the ErrorStates of
+	    /// the current instance and of any GifComponents within it.
+	    /// </remarks>
+	    [Category("Status")]
+	    [Description("Gets the combined error states of this component and all its child components.")]
+	    public ErrorState ConsolidatedState
+	    {
+	        get
+	        {
+	            ErrorState state = ErrorState;
+	            PropertyInfo[] properties = GetType().GetProperties();
+	            foreach (PropertyInfo property in properties)
+	            {
+	                // We don't want to inspect the ConsolidatedState property
+	                // else we get a StackOverflowException.
+	                if (property.Name == "ConsolidatedState")
+	                {
+	                    continue;
+	                }
 
-				}
-				return state;
-			}
-		}
-		#endregion
+	                // Is this property an array?
+	                if (property.PropertyType.IsArray)
+	                {
+	                    // Is this property an array of GifComponents?
+	                    var componentArray = property.GetValue(this, null) as GifComponent[];
+	                    if (componentArray != null)
+	                    {
+	                        // It's an array of GifComponents, so inspect
+	                        // their ConsolidatedState properties.
+	                        foreach (GifComponent c in componentArray)
+	                        {
+	                            state |= c.ConsolidatedState;
+	                        }
+	                    }
+	                    continue;
+	                }
+
+	                // Is this property an indexer?
+	                if (property.GetIndexParameters().Length > 0)
+	                {
+	                    // it's probably an indexer, so ignore it
+	                    continue;
+	                }
+
+	                // Is this property of a type derived from GifComponent?
+	                if (property.PropertyType.IsSubclassOf(typeof (GifComponent)))
+	                {
+	                    // Yes, so it also has a ConsolidatedState property
+	                    var component = property.GetValue(this, null) as GifComponent;
+	                    if (component != null)
+	                    {
+	                        state |= component.ConsolidatedState;
+	                    }
+	                    continue;
+	                }
+
+	                // Is this property a generic type?
+	                if (property.PropertyType.IsGenericType)
+	                {
+	                    IEnumerable objectCollection = property.GetValue(this, null) as IEnumerable;
+	                    if (objectCollection != null)
+	                    {
+	                        // Yes, it's IEnumerable, so iterate through its members
+	                        foreach (object o in objectCollection)
+	                        {
+	                            GifComponent c = o as GifComponent;
+	                            if (c != null)
+	                            {
+	                                state |= c.ConsolidatedState;
+	                            }
+	                        }
+	                    }
+	                }
+
+	            }
+	            return state;
+	        }
+	    }
+
+	    #endregion
 		
 		#region ErrorMessage property
 		/// <summary>
@@ -311,19 +289,21 @@ namespace GifComponents.Components
 		#region public methods
 		
 		#region override ToString method
-		/// <summary>
-		/// Gets a string representation of the error status of this component
-		/// and its subcomponents.
-		/// </summary>
-		/// <returns>
-		/// A string representation of the error status of this component and
-		/// its subcomponents.
-		/// </returns>
-		public override string ToString()
-		{
-			return this.ConsolidatedState.ToString();
-		}
-		#endregion
+
+	    /// <summary>
+	    /// Gets a string representation of the error status of this component
+	    /// and its subcomponents.
+	    /// </summary>
+	    /// <returns>
+	    /// A string representation of the error status of this component and
+	    /// its subcomponents.
+	    /// </returns>
+	    public override string ToString()
+	    {
+	        return ConsolidatedState.ToString();
+	    }
+
+	    #endregion
 		
 		#region public TestState method
 		/// <summary>
@@ -386,63 +366,67 @@ namespace GifComponents.Components
 		#region methods for reading the GIF stream
 		
 		#region protected static Read method
-		/// <summary>
-		/// Reads a single byte from the input stream and advances the position
-		/// within the stream by one byte, or returns -1 if at the end of the
-		/// stream.
-		/// </summary>
-		/// <param name="inputStream">
-		/// The input stream to read.
-		/// </param>
-		/// <returns>
-		/// The unsigned byte, cast to an Int32, or -1 if at the end of the 
-		/// stream.
-		/// </returns>
-		protected static int Read( Stream inputStream ) 
-		{
-			if( inputStream == null )
-			{
-				throw new ArgumentNullException( "inputStream" );
-			}
 
-            return inputStream.ReadByte();
-		}
-		#endregion
+	    /// <summary>
+	    /// Reads a single byte from the input stream and advances the position
+	    /// within the stream by one byte, or returns -1 if at the end of the
+	    /// stream.
+	    /// </summary>
+	    /// <param name="inputStream">
+	    /// The input stream to read.
+	    /// </param>
+	    /// <returns>
+	    /// The unsigned byte, cast to an Int32, or -1 if at the end of the 
+	    /// stream.
+	    /// </returns>
+	    protected static int Read(Stream inputStream)
+	    {
+	        if (inputStream == null)
+	        {
+	            throw new ArgumentNullException("inputStream");
+	        }
+
+	        return inputStream.ReadByte();
+	    }
+
+	    #endregion
 
 		#region protected static ReadShort method
-		/// <summary>
-		/// Reads next 16-bit value, least significant byte first, and advances 
-		/// the position within the stream by two bytes.
-		/// </summary>
-		/// <param name="inputStream">
-		/// The input stream to read.
-		/// </param>
-		/// <returns>
-		/// The next two bytes in the stream, cast to an Int32, or -1 if at the 
-		/// end of the stream.
-		/// </returns>
-		protected static int ReadShort( Stream inputStream )
-		{
-			// Least significant byte is first in the stream
-			int leastSignificant = Read( inputStream );
-			
-			// Most significant byte is next - shift its value left by 8 bits
-			int mostSignificant = Read( inputStream ) << 8;
-			
-			// Use bitwise or to combine them to a short return value
-			int returnValue = leastSignificant | mostSignificant;
-			
-			// Ensure the return value is -1 if the end of stream has been 
-			// reached (if the first byte wasn't the end of stream then we'd
-			// get a different negative number instead).
-			if( returnValue < 0 )
-			{
-				returnValue = -1;
-			}
-			
-			return returnValue;
-		}
-		#endregion
+
+	    /// <summary>
+	    /// Reads next 16-bit value, least significant byte first, and advances 
+	    /// the position within the stream by two bytes.
+	    /// </summary>
+	    /// <param name="inputStream">
+	    /// The input stream to read.
+	    /// </param>
+	    /// <returns>
+	    /// The next two bytes in the stream, cast to an Int32, or -1 if at the 
+	    /// end of the stream.
+	    /// </returns>
+	    protected static int ReadShort(Stream inputStream)
+	    {
+	        // Least significant byte is first in the stream
+	        int leastSignificant = Read(inputStream);
+
+	        // Most significant byte is next - shift its value left by 8 bits
+	        int mostSignificant = Read(inputStream) << 8;
+
+	        // Use bitwise or to combine them to a short return value
+	        int returnValue = leastSignificant | mostSignificant;
+
+	        // Ensure the return value is -1 if the end of stream has been 
+	        // reached (if the first byte wasn't the end of stream then we'd
+	        // get a different negative number instead).
+	        if (returnValue < 0)
+	        {
+	            returnValue = -1;
+	        }
+
+	        return returnValue;
+	    }
+
+	    #endregion
 
 		#region protected SkipBlocks method
 		/// <summary>
@@ -474,36 +458,37 @@ namespace GifComponents.Components
 		#region methods for writing the GIF stream
 		
 		#region protected static WriteString method
-		/// <summary>
-		/// Writes the supplied string to the supplied output stream
-		/// </summary>
-		/// <param name="textToWrite">
-		/// The string to be written to the output stream
-		/// </param>
-		/// <param name="outputStream">
-		/// The stream to write the string to.
-		/// </param>
-		protected static void WriteString( String textToWrite, 
-		                                   Stream outputStream )
-		{
-			if( outputStream == null )
-			{
-				throw new ArgumentNullException( "outputStream" );
-			}
 
-			// if textToWrite is null then write nothing
-			if( textToWrite == null )
-			{
-				return;
-			}
-			
-			char[] chars = textToWrite.ToCharArray();
-			for( int i = 0; i < chars.Length; i++ )
-			{
-				outputStream.WriteByte( (byte) chars[i] );
-			}
-		}
-		#endregion
+	    /// <summary>
+	    /// Writes the supplied string to the supplied output stream
+	    /// </summary>
+	    /// <param name="textToWrite">
+	    /// The string to be written to the output stream
+	    /// </param>
+	    /// <param name="outputStream">
+	    /// The stream to write the string to.
+	    /// </param>
+	    protected static void WriteString(String textToWrite, Stream outputStream)
+	    {
+	        if (outputStream == null)
+	        {
+	            throw new ArgumentNullException("outputStream");
+	        }
+
+	        // if textToWrite is null then write nothing
+	        if (textToWrite == null)
+	        {
+	            return;
+	        }
+
+	        char[] chars = textToWrite.ToCharArray();
+	        for (int i = 0; i < chars.Length; i++)
+	        {
+	            outputStream.WriteByte((byte)chars[i]);
+	        }
+	    }
+
+	    #endregion
 
 		#region protected static WriteShort method
 		/// <summary>

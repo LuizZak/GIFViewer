@@ -21,11 +21,12 @@
 // only to have created a derived work.
 #endregion
 
-using System;
 using System.ComponentModel;
 using System.IO;
+using GIF_Viewer.GifComponents.Enums;
+using GIF_Viewer.GifComponents.Types;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
 	/// <summary>
 	/// The Graphic Control Extension contains parameters used when processing 
@@ -44,12 +45,14 @@ namespace GifComponents.Components
 		public const int ExpectedBlockSize = 4;
 		
 		#region declarations
-		private int _blockSize;
-		private DisposalMethod _disposalMethod;
-		private bool _expectsUserInput;
-		private bool _hasTransparentColour;
-		private int _delayTime;
-		private int _transparentColourIndex;
+
+		private readonly int _blockSize;
+		private readonly DisposalMethod _disposalMethod;
+		private readonly bool _expectsUserInput;
+		private readonly bool _hasTransparentColour;
+		private readonly int _delayTime;
+		private readonly int _transparentColourIndex;
+
 		#endregion
 
 		#region constructor
@@ -90,26 +93,15 @@ namespace GifComponents.Components
 		}
 		#endregion
 		
-		#region constructor( Stream )
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		/// <param name="inputStream">
-		/// The input stream to read.
-		/// </param>
-		public GraphicControlExtension( Stream inputStream )
-			: this( inputStream, false ) {}
-		#endregion
-		
 		#region constructor( Stream, bool )
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		/// <param name="inputStream">
-		/// The input stream to read.
-		/// </param>
-		/// <param name="xmlDebugging">Whether or not to create debug XML</param>
-		public GraphicControlExtension( Stream inputStream, bool xmlDebugging )
+
+	    /// <summary>
+	    /// Constructor.
+	    /// </summary>
+	    /// <param name="inputStream">
+	    /// The input stream to read.
+	    /// </param>
+	    public GraphicControlExtension( Stream inputStream )
 		{
 			_blockSize = Read( inputStream ); // block size
 			
@@ -125,7 +117,7 @@ namespace GifComponents.Components
 			
 			_delayTime = ReadShort( inputStream ); // delay in hundredths of a second
 			_transparentColourIndex = Read( inputStream ); // transparent color index
-			int blockTerminator = Read( inputStream ); // block terminator
+			Read( inputStream ); // block terminator
 		}
 		#endregion
 

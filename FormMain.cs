@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Windows.Forms;
 
 using GIF_Viewer.Views;
 using GIF_Viewer.Utils;
+
+#pragma warning disable 1587
 
 /// @title              GIF Viewer
 /// @description        Helps visualizing animated and non-animated .GIF files
@@ -147,6 +147,7 @@ using GIF_Viewer.Utils;
 /// @todo               * DONE 0.3.2b * Deal with the cross-threading issue where the animation and form threads both try to access the GIF animtion
 /// @todo               * DONE 0.3.6b * Deal with the large memory usage by using the GIF image to show the frames instead of storing them separetely
 /// 
+#pragma warning restore 1587
 namespace GIF_Viewer
 {
     /// <summary>
@@ -157,7 +158,7 @@ namespace GIF_Viewer
         /// <summary>
         /// The current GIF file being played
         /// </summary>
-        GIFFile CurrentGif;
+        GifFile CurrentGif;
 
         /// <summary>
         /// Timer used to animate the frames
@@ -167,7 +168,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Current image on the images list
         /// </summary>
-        public int currentImage = 0;
+        public int CurrentImage;
 
         /// <summary>
         /// Images contained in this folder
@@ -194,21 +195,16 @@ namespace GIF_Viewer
         /// <summary>
         /// Menu item for the Low rendering setting
         /// </summary>
-        public ToolStripMenuItem low;
+        private ToolStripMenuItem _lowQualityMenuItem;
         /// <summary>
         /// Menu item for the high rendering setting
         /// </summary>
-        public ToolStripMenuItem hig;
+        private ToolStripMenuItem _highQualityMenuItem;
 
         /// <summary>
         /// The 'Frame Extract' menu item in the right-click context menu
         /// </summary>
         public ToolStripItem FrameExtract;
-
-        /// <summary>
-        /// Generic event handler
-        /// </summary>
-        public EventHandler hand;
 
         /// <summary>
         /// Helper object used to check the file association for the .gif extension on Windows
@@ -218,7 +214,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Windows' Open File Dialog:
         /// </summary>
-        OpenFileDialog op = new OpenFileDialog();
+        readonly OpenFileDialog _op = new OpenFileDialog();
 
         /// <summary>
         /// Main entry point for this Form
@@ -228,7 +224,7 @@ namespace GIF_Viewer
         {
             InitializeComponent();
 
-            CurrentGif = new GIFFile();
+            CurrentGif = new GifFile();
 
             Images = new List<string>();
 
@@ -240,7 +236,7 @@ namespace GIF_Viewer
 
             // Create the timer
             AnimationTimer = new Timer();
-            AnimationTimer.Tick += new EventHandler(AnimationTimer_Tick);
+            AnimationTimer.Tick += AnimationTimer_Tick;
 
             try
             {
@@ -255,7 +251,7 @@ namespace GIF_Viewer
                 {
                     if (Association.GetProgram() != "\"" + Application.ExecutablePath + "\" \"%1\"")
                     {
-                        DialogResult res = MessageBox.Show(this, "Do you want to associate the .gif files to GIF Viewer? (Hit Cancel to never ask again)", "Question", MessageBoxButtons.YesNoCancel);
+                        DialogResult res = MessageBox.Show(this, @"Do you want to associate the .gif files to GIF Viewer? (Hit Cancel to never ask again)", @"Question", MessageBoxButtons.YesNoCancel);
 
                         // Change association
                         if (res == DialogResult.Yes)
@@ -269,7 +265,7 @@ namespace GIF_Viewer
                                 ErrorBox.Show("Error associating program: " + e.Message, "Error", e.StackTrace);
                             }
                         }
-                        else if (res == System.Windows.Forms.DialogResult.Cancel)
+                        else if (res == DialogResult.Cancel)
                         {
                             Settings.Instance.DontAskAssociate = true;
 
@@ -277,15 +273,14 @@ namespace GIF_Viewer
                         }
                     }
                 }
-            }
-            catch (Exception e) { }
+            } catch (Exception) { }
 
             // Load a gif file from the command line arguments
             if (args.Length > 0 && File.Exists(args[0]))
             {
                 try
                 {
-                    LoadGIF(args[0]);
+                    LoadGif(args[0]);
                 }
                 catch (Exception ex)
                 {
@@ -294,24 +289,22 @@ namespace GIF_Viewer
 
                 try
                 {
-                    LoadGIFSInFolder(Path.GetDirectoryName(args[0]));
-                }
-                catch (Exception) { }
+                    LoadGifsInFolder(Path.GetDirectoryName(args[0]));
+                } catch (Exception) { }
             }
             else
             {
-                if (CurrentGif.GIFPath == "")
+                if (CurrentGif.GifPath == "")
                 {
-                    openFile = true;
+                    _openFile = true;
                 }
             }
 
             // Register the drag 'n drop handlers
-            this.AllowDrop = true;
-            this.DragEnter += new DragEventHandler(FormMain_DragEnter);
-            this.DragDrop += new DragEventHandler(FormMain_DragDrop);
+            DragEnter += FormMain_DragEnter;
+            DragDrop += FormMain_DragDrop;
 
-            this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
         }
 
         /// <summary>
@@ -321,25 +314,27 @@ namespace GIF_Viewer
         /// <param name="e">The arguments for this event</param>
         private void Form1_Shown(object sender, EventArgs e)
         {
-            if (!openFile)
+            AllowDrop = true;
+
+            if (!_openFile)
                 return;
 
             // Asks the user for a .gif file using the OpenFileDialog object
-            op.Filter = "GIF files (*.gif)|*.gif";
+            _op.Filter = @"GIF files (*.gif)|*.gif";
 
             // The user has chosen a valid .gif file
-            if (op.ShowDialog() == DialogResult.OK)
+            if (_op.ShowDialog() == DialogResult.OK)
             {
                 try
                 {
-                    LoadGIF(op.FileName);
+                    LoadGif(_op.FileName);
                 }
                 catch (Exception ex)
                 {
                     ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
 
                     // Set the play button as an open file button:
-                    PlayBtn.Text = "&Open...";
+                    PlayBtn.Text = @"&Open...";
                     PlayBtn.Enabled = true;
 
                     return;
@@ -347,15 +342,14 @@ namespace GIF_Viewer
 
                 try
                 {
-                    LoadGIFSInFolder(Path.GetDirectoryName(op.FileName));
-                }
-                catch (Exception) { }
+                    LoadGifsInFolder(Path.GetDirectoryName(_op.FileName));
+                } catch (Exception) { }
             }
             // The user has closed the dialog
             else
             {
                 // Set the play button as an open file button:
-                PlayBtn.Text = "&Open...";
+                PlayBtn.Text = @"&Open...";
                 PlayBtn.Enabled = true;
             }
         }
@@ -364,7 +358,8 @@ namespace GIF_Viewer
         /// Loads a GIF to show from a file
         /// </summary>
         /// <param name="fileName">The .GIF filepath</param>
-        void LoadGIF(string fileName, bool resizeAndRelocate = true)
+        /// <param name="resizeAndRelocate">Whether to resize and relocate the main form window</param>
+        void LoadGif(string fileName, bool resizeAndRelocate = true)
         {
             // Stops the animation timer, if it's running
             AnimationTimer.Stop();
@@ -444,13 +439,13 @@ namespace GIF_Viewer
             lblFrame.Text = "Frame: " + (CurrentGif.CurrentFrame + 1) + "/" + CurrentGif.FrameCount;
 
             // Refresh the pictureBox with the new animation
-            pb_gif.BackgroundImage = CurrentGif.GIF;
+            pb_gif.BackgroundImage = CurrentGif.Gif;
 
             // Change the window size and location only if windowed
             if (WindowState == FormWindowState.Normal && resizeAndRelocate)
             {
                 // Set the client size
-                this.ClientSize = new Size(Math.Max(CurrentGif.Width, this.MinimumSize.Width), CurrentGif.Height + panel1.Height + 3);
+                ClientSize = new Size(Math.Max(CurrentGif.Width, MinimumSize.Width), CurrentGif.Height + panel1.Height + 3);
 
                 // Re-position the client to the center of the current screen so the content is always on the middle of the screen
                 CenterToScreen();
@@ -460,7 +455,7 @@ namespace GIF_Viewer
             lblLoading.Visible = false;
 
             // Reset the last frame reference:
-            this.lastFrame = 0;
+            _lastFrame = 0;
 
             // Start the animation timer
             if (CurrentGif.FrameCount > 1)
@@ -478,14 +473,14 @@ namespace GIF_Viewer
         /// Loads all the .GIF images from a folder into the Images list
         /// </summary>
         /// <param name="folder">the folder to search the GIFs on</param>
-        void LoadGIFSInFolder(string folder)
+        void LoadGifsInFolder(string folder)
         {
             // Load the .GIF images
             Images.Clear();
             Images.AddRange(Directory.GetFiles(folder, "*.gif"));
             
             // Locate the current .GIF image on the images list:
-            currentImage = Images.IndexOf(CurrentGif.GIFPath);
+            CurrentImage = Images.IndexOf(CurrentGif.GifPath);
 
             UpdateTitle();
         }
@@ -512,7 +507,7 @@ namespace GIF_Viewer
         /// <summary>
         /// The last frame that was renderedon the picture box
         /// </summary>
-        int lastFrame = 0;
+        int _lastFrame;
         /// <summary>
         /// Animates the current GIF
         /// </summary>
@@ -526,12 +521,12 @@ namespace GIF_Viewer
                 {
                     // Change the current frame
                     newFrame = (CurrentGif.CurrentFrame + 1) % CurrentGif.FrameCount;
-                    changeTimelineFrame(newFrame);
+                    ChangeTimelineFrame(newFrame);
                 }
 
-                if (newFrame != lastFrame)
+                if (newFrame != _lastFrame)
                 {
-                    lastFrame = newFrame;
+                    _lastFrame = newFrame;
                     // Redraw the GIF panel
                     pb_gif._Paint = false;
 
@@ -550,7 +545,7 @@ namespace GIF_Viewer
             }
             catch (Exception ex)
             {
-                trace(ex);
+                Trace(ex);
             }
         }
 
@@ -581,21 +576,21 @@ namespace GIF_Viewer
             // Quality settings:
             ToolStripItemCollection col = ((ToolStripMenuItem)cms_gifRightClick.Items.Add("Quality")).DropDownItems;
 
-            low = col.Add("Low") as ToolStripMenuItem;
-            hig = col.Add("High") as ToolStripMenuItem;
+            _lowQualityMenuItem = (ToolStripMenuItem)col.Add("Low");
+            _highQualityMenuItem = (ToolStripMenuItem)col.Add("High");
 
-            low.Click += new EventHandler(Quality_Change);
-            hig.Click += new EventHandler(Quality_Change);
+            _lowQualityMenuItem.Click += Quality_Change;
+            _highQualityMenuItem.Click += Quality_Change;
 
             if (pb_gif.Quality == 1)
-                low.Checked = true;
+                _lowQualityMenuItem.Checked = true;
             else if (pb_gif.Quality == 3)
-                hig.Checked = true;
+                _highQualityMenuItem.Checked = true;
 
             // Frame Extraction:
             FrameExtract = cms_gifRightClick.Items.Add("Extract Frames...");
 
-            FrameExtract.Click += new EventHandler(FrameExtract_Click);
+            FrameExtract.Click += FrameExtract_Click;
         }
 
         /// <summary>
@@ -617,7 +612,7 @@ namespace GIF_Viewer
         /// </summary>
         void UpdateTitle()
         {
-            Text = "GIF Viewer " + (Images.Count > 1 ? "[" + (currentImage + 1) + "/" + Images.Count + "]" : "") + " [" + CurrentGif.GIFPath + "] " + CurrentGif.Width + "x" + CurrentGif.Height;
+            Text = @"GIF Viewer " + (Images.Count > 1 ? "[" + (CurrentImage + 1) + "/" + Images.Count + "]" : "") + @" [" + CurrentGif.GifPath + @"] " + CurrentGif.Width + @"x" + CurrentGif.Height;
         }
 
         /// <summary>
@@ -625,7 +620,7 @@ namespace GIF_Viewer
         /// </summary>
         void UpdateFrameText()
         {
-            changeText("Frame: " + (CurrentGif.CurrentFrame + 1) + "/" + CurrentGif.FrameCount);
+            ChangeText("Frame: " + (CurrentGif.CurrentFrame + 1) + "/" + CurrentGif.FrameCount);
         }
 
         /// <summary>
@@ -636,35 +631,34 @@ namespace GIF_Viewer
         void FrameExtract_Click(object sender, EventArgs e)
         {
             // No animation? Skip:
-            if (CurrentGif.GIF == null)
+            if (CurrentGif.Gif == null)
                 return;
 
             // Skip if animation has only one frame:
             if (CurrentGif.FrameCount <= 1)
             {
-                MessageBox.Show(this, "Animation must have atleast 2 frames to export.", "Info", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                MessageBox.Show(this, @"Animation must have atleast 2 frames to export.", @"Info", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
 
                 return;
             }
 
             // Stop the animation so it can be loaded into the frame xtractor:
-            if (PlayBtn.Text == "&Stop")
+            if (PlayBtn.Text == @"&Stop")
                 PlayBtn_Click(this, null);
 
             // Temp path storage:
-            string path = CurrentGif.GIFPath;
+            string path = CurrentGif.GifPath;
 
             // Clear the current gif:
-            LoadGIF("");
+            LoadGif("");
 
             // Create the form and assign the Gif path:
-            FrameExtract f = new FrameExtract();
-            f.CurrentGif = CurrentGif;
+            FrameExtract f = new FrameExtract(CurrentGif);
             f.Init();
             f.ShowDialog(this);
 
             // Restore last GIF:
-            LoadGIF(path, false);
+            LoadGif(path, false);
         }
 
         /// <summary>
@@ -674,19 +668,19 @@ namespace GIF_Viewer
         /// <param name="e">The arguments for this event</param>
         void Quality_Change(object sender, EventArgs e)
         {
-            if (sender == low)
+            if (sender == _lowQualityMenuItem)
             {
                 pb_gif.Quality = 1;
 
-                low.Checked = true;
-                hig.Checked = false;
+                _lowQualityMenuItem.Checked = true;
+                _highQualityMenuItem.Checked = false;
             }
-            else if (sender == hig)
+            else if (sender == _highQualityMenuItem)
             {
                 pb_gif.Quality = 3;
 
-                low.Checked = false;
-                hig.Checked = true;
+                _lowQualityMenuItem.Checked = false;
+                _highQualityMenuItem.Checked = true;
             }
 
             pb_gif.Invalidate();
@@ -700,22 +694,22 @@ namespace GIF_Viewer
         private void FormMain_KeyDown(object sender, KeyEventArgs e)
         {
             // Seek next GIF with the Page Down key
-            if (e.KeyData == Keys.PageDown && CurrentGif.GIFPath != "" && Images.Count > 1)
+            if (e.KeyData == Keys.PageDown && CurrentGif.GifPath != "" && Images.Count > 1)
             {
-                currentImage = (currentImage + 1) % (Images.Count);
+                CurrentImage = (CurrentImage + 1) % (Images.Count);
 
-                LoadGIF(Images[currentImage]);
+                LoadGif(Images[CurrentImage]);
 
                 e.Handled = true;
                 e.SuppressKeyPress = true;
             }
 
             // Seek previous GIF with the Page Up key
-            if (e.KeyData == Keys.PageUp && CurrentGif.GIFPath != "" && Images.Count > 1)
+            if (e.KeyData == Keys.PageUp && CurrentGif.GifPath != "" && Images.Count > 1)
             {
-                currentImage = (currentImage - 1) < 0 ? currentImage = Images.Count - 1 : currentImage - 1;
+                CurrentImage = (CurrentImage - 1) < 0 ? CurrentImage = Images.Count - 1 : CurrentImage - 1;
 
-                LoadGIF(Images[currentImage]);
+                LoadGif(Images[CurrentImage]);
 
                 e.Handled = true;
                 e.SuppressKeyPress = true;
@@ -778,20 +772,20 @@ namespace GIF_Viewer
             // If the user is holding SHIFT, add the dragged files to the playlist
             if ((e.KeyState & 4) == 4)
             {
-                currentImage = (Images.Count + 1);
+                CurrentImage = (Images.Count + 1);
 
                 Images.AddRange(files);
-                LoadGIF(files[0]);
+                LoadGif(files[0]);
 
                 UpdateTitle();
             }
             else
             {
-                currentImage = 0;
+                CurrentImage = 0;
 
                 Images.Clear();
                 Images.AddRange(files);
-                LoadGIF(files[0]);
+                LoadGif(files[0]);
 
                 UpdateTitle();
             }
@@ -824,38 +818,38 @@ namespace GIF_Viewer
                 return;
 
             // Response for when the button is set to Stop the gif file
-            if (PlayBtn.Text == "&Stop")
+            if (PlayBtn.Text == @"&Stop")
             {
                 // Stop the animation timer if it's running
                 AnimationTimer.Stop();
                 CurrentGif.Playing = false;
 
-                PlayBtn.Text = "&Play";
+                PlayBtn.Text = @"&Play";
             }
             // Response for when the button is set to Play the gif file
-            else if(PlayBtn.Text == "&Play")
+            else if(PlayBtn.Text == @"&Play")
             {
                 // Restart the animation timer
                 AnimationTimer.Start();
                 CurrentGif.Playing = true;
 
-                PlayBtn.Text = "&Stop";
+                PlayBtn.Text = @"&Stop";
             }
             // Response for when the button is set to open a .gif file
-            else if (PlayBtn.Text == "&Open...")
+            else if (PlayBtn.Text == @"&Open...")
             {
-                if (op.ShowDialog() == DialogResult.OK)
+                if (_op.ShowDialog() == DialogResult.OK)
                 {
                     try
                     {
-                        LoadGIF(op.FileName);
+                        LoadGif(_op.FileName);
                     }
                     catch (Exception ex)
                     {
                         ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
 
                         // Set the play button as an open file button:
-                        PlayBtn.Text = "&Open...";
+                        PlayBtn.Text = @"&Open...";
                         PlayBtn.Enabled = true;
 
                         return;
@@ -863,14 +857,13 @@ namespace GIF_Viewer
 
                     try
                     {
-                        LoadGIFSInFolder(Path.GetDirectoryName(op.FileName));
-                    }
-                    catch (Exception) { }
+                        LoadGifsInFolder(Path.GetDirectoryName(_op.FileName));
+                    } catch (Exception) { }
                 }
                 else
                 {
                     // Set the play button as an open file button:
-                    PlayBtn.Text = "&Open...";
+                    PlayBtn.Text = @"&Open...";
                     PlayBtn.Enabled = true;
                 }
             }
@@ -897,7 +890,7 @@ namespace GIF_Viewer
         private void cms_gifRightClick_Opening(object sender, CancelEventArgs e)
         {
             // If no GIf is specified:
-            if (CurrentGif.GIF == null)
+            if (CurrentGif.Gif == null)
             {
                 // Cancel the action:
                 e.Cancel = true;
@@ -955,10 +948,9 @@ namespace GIF_Viewer
             cms_gifRightClick.Close();
 
             // Open the .gif file with another application
-            if (e.ClickedItem.Text == "Open With..." && e.ClickedItem.Tag == null)
+            if (e.ClickedItem.Text == @"Open With..." && e.ClickedItem.Tag == null)
             {
-                OpenFileDialog ofd = new OpenFileDialog();
-                ofd.Filter = "Executable files|*.exe";
+                OpenFileDialog ofd = new OpenFileDialog { Filter = @"Executable files|*.exe" };
 
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
@@ -974,8 +966,8 @@ namespace GIF_Viewer
 
                         SaveSettings();
 
-                        System.Diagnostics.Process.Start(ofd.FileName, "\"" + CurrentGif.GIFPath + "\"");
-                        this.Close();
+                        Process.Start(ofd.FileName, "\"" + CurrentGif.GifPath + "\"");
+                        Close();
                     }
                 }
 
@@ -985,7 +977,7 @@ namespace GIF_Viewer
             // If the user clicks an application but it's not available, ask whether he wants to remove it from the list of programs
             if (e.ClickedItem.Tag != null && !File.Exists(e.ClickedItem.Tag.ToString()))
             {
-                if (MessageBox.Show("Program not found. Do you want to remove it from the list?", "File not found", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                if (MessageBox.Show(@"Program not found. Do you want to remove it from the list?", @"File not found", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
                     Settings.Instance.Programs.Remove(e.ClickedItem.Text);
                     SaveSettings();
@@ -996,10 +988,12 @@ namespace GIF_Viewer
             }
 
             // Fire the program with the .gif file as an argument
-            System.Diagnostics.Process.Start(e.ClickedItem.Tag.ToString(), "\"" + CurrentGif.GIFPath + "\"");
-
-            // Close this application
-            this.Close();
+            if (e.ClickedItem.Tag != null)
+            {
+                Process.Start(e.ClickedItem.Tag.ToString(), "\"" + CurrentGif.GifPath + "\"");
+                // Close this application
+                Close();
+            }
         }
 
         /// <summary>
@@ -1024,7 +1018,7 @@ namespace GIF_Viewer
         /// Changes the current frame on the timeline to the specified ammount
         /// </summary>
         /// <param name="newValue">The new ammount to set</param>
-        public void changeTimelineFrame(int newValue)
+        public void ChangeTimelineFrame(int newValue)
         {
             tlc_timeline.CurrentFrame = newValue + 1;
         }
@@ -1033,7 +1027,7 @@ namespace GIF_Viewer
         /// Changes the lblFrame text
         /// </summary>
         /// <param name="newString">The new label to change the lblFrame to</param>
-        public void changeText(string newString)
+        public void ChangeText(string newString)
         {
             lblFrame.Text = newString;
         }
@@ -1042,36 +1036,27 @@ namespace GIF_Viewer
         /// Change the PlayBtn label
         /// </summary>
         /// <param name="newString">The new label to change the PlayBtn to</param>
-        public void changeBtnText(string newString)
+        public void ChangeBtnText(string newString)
         {
             PlayBtn.Text = newString;
-        }
-
-        /// <summary>
-        /// Method called when the Updated finds an update to this application
-        /// </summary>
-        /// <param name="status">The UpdateStatus containing information about the update</param>
-        void Update_UpdateAvaibleEvent(Update.UpdateStatus status)
-        {
-            throw new NotImplementedException();
         }
 
         /// <summary>
         /// Traces a list of objects on the debug panel
         /// </summary>
         /// <param name="obj">The list of objects to trace</param>
-        public static void trace(params object[] obj)
+        public static void Trace(params object[] obj)
         {
             foreach (object o in obj)
             {
-                System.Diagnostics.Debug.Write(o + " ");
+                Debug.Write(o + " ");
             }
-            System.Diagnostics.Debug.WriteLine("");
+            Debug.WriteLine("");
         }
 
         /// <summary>
         /// Whether to query the user for a .gif file on startup
         /// </summary>
-        bool openFile = false;
+        readonly bool _openFile;
     }
 }

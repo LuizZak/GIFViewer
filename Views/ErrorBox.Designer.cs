@@ -1,6 +1,6 @@
 ﻿namespace GIF_Viewer.Views
 {
-    partial class ErrorBox
+    sealed partial class ErrorBox
     {
         /// <summary>
         /// Required designer variable.
@@ -31,10 +31,10 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ErrorBox));
             this.lbl_error = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.btn_ok = new System.Windows.Forms.Button();
-            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.rtb_errorInfo = new System.Windows.Forms.RichTextBox();
+            this.btn_ok = new System.Windows.Forms.Button();
             this.btn_copyToClipboard = new System.Windows.Forms.Button();
+            this.pictureBox1 = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -56,26 +56,6 @@
             this.label2.TabIndex = 1;
             this.label2.Text = "Error info:";
             // 
-            // btn_ok
-            // 
-            this.btn_ok.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btn_ok.Location = new System.Drawing.Point(369, 295);
-            this.btn_ok.Name = "btn_ok";
-            this.btn_ok.Size = new System.Drawing.Size(75, 23);
-            this.btn_ok.TabIndex = 2;
-            this.btn_ok.Text = "&Ok";
-            this.btn_ok.UseVisualStyleBackColor = true;
-            this.btn_ok.Click += new System.EventHandler(this.btn_ok_Click);
-            // 
-            // pictureBox1
-            // 
-            this.pictureBox1.BackgroundImage = global::GIF_Viewer.Properties.Resources.process_stop;
-            this.pictureBox1.Location = new System.Drawing.Point(32, 44);
-            this.pictureBox1.Name = "pictureBox1";
-            this.pictureBox1.Size = new System.Drawing.Size(32, 32);
-            this.pictureBox1.TabIndex = 3;
-            this.pictureBox1.TabStop = false;
-            // 
             // rtb_errorInfo
             // 
             this.rtb_errorInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -89,15 +69,41 @@
             this.rtb_errorInfo.TabIndex = 4;
             this.rtb_errorInfo.Text = "";
             // 
+            // btn_ok
+            // 
+            this.btn_ok.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btn_ok.Image = global::GIF_Viewer.Properties.Resources.action_check;
+            this.btn_ok.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btn_ok.Location = new System.Drawing.Point(369, 295);
+            this.btn_ok.Name = "btn_ok";
+            this.btn_ok.Size = new System.Drawing.Size(75, 23);
+            this.btn_ok.TabIndex = 2;
+            this.btn_ok.Text = "&Ok";
+            this.btn_ok.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btn_ok.UseVisualStyleBackColor = true;
+            this.btn_ok.Click += new System.EventHandler(this.btn_ok_Click);
+            // 
             // btn_copyToClipboard
             // 
+            this.btn_copyToClipboard.Image = global::GIF_Viewer.Properties.Resources.edit_paste;
+            this.btn_copyToClipboard.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btn_copyToClipboard.Location = new System.Drawing.Point(15, 295);
             this.btn_copyToClipboard.Name = "btn_copyToClipboard";
-            this.btn_copyToClipboard.Size = new System.Drawing.Size(113, 23);
+            this.btn_copyToClipboard.Size = new System.Drawing.Size(125, 23);
             this.btn_copyToClipboard.TabIndex = 5;
             this.btn_copyToClipboard.Text = "Copy to Clipboard";
+            this.btn_copyToClipboard.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btn_copyToClipboard.UseVisualStyleBackColor = true;
             this.btn_copyToClipboard.Click += new System.EventHandler(this.btn_copyToClipboard_Click);
+            // 
+            // pictureBox1
+            // 
+            this.pictureBox1.BackgroundImage = global::GIF_Viewer.Properties.Resources.process_stop;
+            this.pictureBox1.Location = new System.Drawing.Point(32, 44);
+            this.pictureBox1.Name = "pictureBox1";
+            this.pictureBox1.Size = new System.Drawing.Size(32, 32);
+            this.pictureBox1.TabIndex = 3;
+            this.pictureBox1.TabStop = false;
             // 
             // ErrorBox
             // 

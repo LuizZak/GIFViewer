@@ -26,8 +26,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Text;
+using GIF_Viewer.GifComponents.Enums;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
     /// <summary>
     /// The Application Extension contains application-specific information; 
@@ -102,8 +103,6 @@ namespace GifComponents.Components
         {
             _identificationBlock = identificationBlock;
 
-            StringBuilder sb;
-
             if (_identificationBlock.Data.Length < 11)
             {
                 string message
@@ -122,7 +121,7 @@ namespace GifComponents.Components
             }
 
             // Read application identifer
-            sb = new StringBuilder();
+            var sb = new StringBuilder();
             for (int i = 0; i < 8; i++)
             {
                 sb.Append((char)_identificationBlock[i]);

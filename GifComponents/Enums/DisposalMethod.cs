@@ -21,9 +21,7 @@
 // only to have created a derived work.
 #endregion
 
-using System;
-
-namespace GifComponents
+namespace GIF_Viewer.GifComponents.Enums
 {
 	/// <summary>
 	/// Enumeration of disposal methods that can be found in a Graphic Control

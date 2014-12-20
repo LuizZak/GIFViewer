@@ -39,10 +39,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using GIF_Viewer.GifComponents.Enums;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
 	/// <summary>
 	/// The image data for a table based image consists of a sequence of 
@@ -55,311 +55,339 @@ namespace GifComponents.Components
 	/// </summary>
     public class TableBasedImageData : GifComponent
     {
-        private const int _maxStackSize = 4096; // max decoder pixel stack size
-        private const int _nullCode = -1; // indicates no previous code has been read yet
+        private const int MaxStackSize = 4096; // max decoder pixel stack size
+        private const int NullCode = -1; // indicates no previous code has been read yet
 
         /// <summary>
         /// Data blocks read from the input stream.
         /// </summary>
-        private Collection<DataBlock> _dataBlocks;
+        private readonly Collection<DataBlock> _dataBlocks;
 
         /// <summary>
         /// An array of indices to colours in the active colour table,
         /// representing the pixels of a frame in a GIF data stream.
         /// </summary>
-        private byte[] _pixelIndexes;
+        private readonly byte[] _pixelIndexes;
 
         /// <summary>
         /// Determines the initial number of bits used for LZW codes 
         /// in the image data.
         /// </summary>
-        private int _lzwMinimumCodeSize;
+        private readonly int _lzwMinimumCodeSize;
 
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        /// <param name="inputStream">
-        /// The stream from which the image data is to be read, starting with
-        /// the LZW minimum code size, and ending with a block terminator.
-        /// </param>
-        /// <param name="pixelCount">
-        /// Number of pixels in the image.
-        /// </param>
-        /// <remarks>
-        /// The input stream is read, first into the LZW minimum code size, then
-        /// into data blocks. Bytes are extracted from the data blocks into a
-        /// datum until the datum contains enough bits to form a code; this code
-        /// is then extracted from the datum and decoded into a pixel index.
-        /// Once all data has been read, or a block terminator, 
-        /// end-of-information code or error condition is encountered, any
-        /// remaining pixel indices not already populated default to zero.
-        /// </remarks>
-        public TableBasedImageData(Stream inputStream, int pixelCount)
-        {
-            #region guard against silly image sizes
-            if (pixelCount < 1)
-            {
-                string message
-                    = "The pixel count must be greater than zero. "
-                    + "Supplied value was " + pixelCount;
-                throw new ArgumentOutOfRangeException("pixelCount", message);
-            }
-            #endregion
+	    /// <summary>
+	    /// Constructor.
+	    /// </summary>
+	    /// <param name="inputStream">
+	    /// The stream from which the image data is to be read, starting with
+	    /// the LZW minimum code size, and ending with a block terminator.
+	    /// </param>
+	    /// <param name="pixelCount">
+	    /// Number of pixels in the image.
+	    /// </param>
+	    /// <remarks>
+	    /// The input stream is read, first into the LZW minimum code size, then
+	    /// into data blocks. Bytes are extracted from the data blocks into a
+	    /// datum until the datum contains enough bits to form a code; this code
+	    /// is then extracted from the datum and decoded into a pixel index.
+	    /// Once all data has been read, or a block terminator, 
+	    /// end-of-information code or error condition is encountered, any
+	    /// remaining pixel indices not already populated default to zero.
+	    /// </remarks>
+	    public TableBasedImageData(Stream inputStream, int pixelCount)
+	    {
+	        #region guard against silly image sizes
 
-            #region declare / initialise local variables
-            _pixelIndexes = new byte[pixelCount];
-            _dataBlocks = new Collection<DataBlock>();
-            int nextAvailableCode; // the next code to be added to the dictionary
-            int currentCodeSize;
-            int in_code;
-            int previousCode;
-            int code;
-            int datum = 0; // temporary storage for codes read from the input stream
-            int meaningfulBitsInDatum = 0; // number of bits of useful information held in the datum variable
-            int firstCode = 0; // first code read from the stream since last clear code
-            int indexInDataBlock = 0;
-            int pixelIndex = 0;
+	        if (pixelCount < 1)
+	        {
+	            string message
+	                = "The pixel count must be greater than zero. "
+	                  + "Supplied value was " + pixelCount;
+	            throw new ArgumentOutOfRangeException("pixelCount", message);
+	        }
 
-            // number of bytes still to be extracted from the current data block
-            int bytesToExtract = 0;
+	        #endregion
 
-            short[] prefix = new short[_maxStackSize];
-            byte[] suffix = new byte[_maxStackSize];
-            Stack<byte> pixelStack = new Stack<byte>();
-            #endregion
+	        #region declare / initialise local variables
 
-            //  Initialize GIF data stream decoder.
-            _lzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
-            int clearCode = ClearCode;
-            nextAvailableCode = clearCode + 2;
-            previousCode = _nullCode;
-            currentCodeSize = InitialCodeSize;
+	        _pixelIndexes = new byte[pixelCount];
+	        _dataBlocks = new Collection<DataBlock>();
+	        int nextAvailableCode; // the next code to be added to the dictionary
+	        int currentCodeSize;
+	        int in_code;
+	        int previousCode;
+	        int code;
+	        int datum = 0; // temporary storage for codes read from the input stream
+	        int meaningfulBitsInDatum = 0; // number of bits of useful information held in the datum variable
+	        int firstCode = 0; // first code read from the stream since last clear code
+	        int indexInDataBlock = 0;
+	        int pixelIndex;
 
-            #region guard against LZW code size being too large
-            if (clearCode >= _maxStackSize)
-            {
-                string message
-                    = "LZW minimum code size: " + _lzwMinimumCodeSize
-                    + ". Clear code: " + clearCode
-                    + ". Max stack size: " + _maxStackSize;
-                SetStatus(ErrorState.LzwMinimumCodeSizeTooLarge, message);
-                return;
-            }
-            #endregion
+	        // number of bytes still to be extracted from the current data block
+	        int bytesToExtract = 0;
 
-            // TODO: what are prefix and suffix and why are we initialising them like this?
-            for (code = 0; code < clearCode; code++)
-            {
-                prefix[code] = 0;
-                suffix[code] = (byte)code;
-            }
+	        short[] prefix = new short[MaxStackSize];
+	        byte[] suffix = new byte[MaxStackSize];
+	        Stack<byte> pixelStack = new Stack<byte>();
 
-            #region decode LZW image data
+	        #endregion
 
-            // Initialise block to an empty data block. This will be overwritten
-            // first time through the loop with a data block read from the input
-            // stream.
-            DataBlock block = new DataBlock(0, new byte[0]);
+	        //  Initialize GIF data stream decoder.
+	        _lzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
+	        int clearCode = ClearCode;
+	        nextAvailableCode = clearCode + 2;
+	        previousCode = NullCode;
+	        currentCodeSize = InitialCodeSize;
 
-            for (pixelIndex = 0; pixelIndex < pixelCount; )
-            {
-                if (pixelStack.Count == 0)
-                {
-                    // There are no pixels in the stack at the moment, so...
-                    #region get some pixels and put them on the stack
-                    if (meaningfulBitsInDatum < currentCodeSize)
-                    {
-                        // Then we don't have enough bits in the datum to make
-                        // a code; we need to get some more from the current
-                        // data block, or we may need to read another data
-                        // block from the input stream
-                        #region get another byte from the current data block
-                        if (bytesToExtract == 0)
-                        {
-                            // Then we've extracted all the bytes from the 
-                            // current data block, so...
+	        #region guard against LZW code size being too large
 
-                            #region	read the next data block from the stream
-                            block = ReadDataBlock(inputStream);
-                            bytesToExtract = block.ActualBlockSize;
+	        if (clearCode >= MaxStackSize)
+	        {
+	            string message
+	                = "LZW minimum code size: " + _lzwMinimumCodeSize
+	                  + ". Clear code: " + clearCode
+	                  + ". Max stack size: " + MaxStackSize;
+	            SetStatus(ErrorState.LzwMinimumCodeSizeTooLarge, message);
+	            return;
+	        }
 
-                            // Point to the first byte in the new data block
-                            indexInDataBlock = 0;
+	        #endregion
 
-                            if (block.TestState(ErrorState.DataBlockTooShort))
-                            {
-                                // then we've reached the end of the stream
-                                // prematurely
-                                break;
-                            }
+	        // TODO: what are prefix and suffix and why are we initialising them like this?
+	        for (code = 0; code < clearCode; code++)
+	        {
+	            prefix[code] = 0;
+	            suffix[code] = (byte)code;
+	        }
 
-                            if (bytesToExtract == 0)
-                            {
-                                // then it's a block terminator, end of the
-                                // image data (this is a data block other than
-                                // the first one)
-                                break;
-                            }
-                            #endregion
-                        }
-                        // Append the contents of the current byte in the data 
-                        // block to the beginning of the datum
-                        int newDatum = block[indexInDataBlock] << meaningfulBitsInDatum;
-                        datum += newDatum;
+	        #region decode LZW image data
 
-                        // so we've now got 8 more bits of information in the
-                        // datum.
-                        meaningfulBitsInDatum += 8;
+	        // Initialise block to an empty data block. This will be overwritten
+	        // first time through the loop with a data block read from the input
+	        // stream.
+	        DataBlock block = new DataBlock(0, new byte[0]);
 
-                        // Point to the next byte in the data block
-                        indexInDataBlock++;
+	        for (pixelIndex = 0; pixelIndex < pixelCount;)
+	        {
+	            if (pixelStack.Count == 0)
+	            {
+	                // There are no pixels in the stack at the moment, so...
 
-                        // We've one less byte still to read from the data block
-                        // now.
-                        bytesToExtract--;
+	                #region get some pixels and put them on the stack
 
-                        // and carry on reading through the data block
-                        continue;
-                        #endregion
-                    }
+	                if (meaningfulBitsInDatum < currentCodeSize)
+	                {
+	                    // Then we don't have enough bits in the datum to make
+	                    // a code; we need to get some more from the current
+	                    // data block, or we may need to read another data
+	                    // block from the input stream
 
-                    #region get the next code from the datum
-                    // Get the least significant bits from the read datum, up
-                    // to the maximum allowed by the current code size.
-                    code = datum & GetMaximumPossibleCode(currentCodeSize);
+	                    #region get another byte from the current data block
 
-                    // Drop the bits we've just extracted from the datum.
-                    datum >>= currentCodeSize;
+	                    if (bytesToExtract == 0)
+	                    {
+	                        // Then we've extracted all the bytes from the 
+	                        // current data block, so...
 
-                    // Reduce the count of meaningful bits held in the datum
-                    meaningfulBitsInDatum -= currentCodeSize;
-                    #endregion
+	                        #region	read the next data block from the stream
 
-                    #region interpret the code
+	                        block = ReadDataBlock(inputStream);
+	                        bytesToExtract = block.ActualBlockSize;
 
-                    #region end of information?
-                    if (code == EndOfInformation)
-                    {
-                        // We've reached an explicit marker for the end of the
-                        // image data.
-                        break;
-                    }
-                    #endregion
+	                        // Point to the first byte in the new data block
+	                        indexInDataBlock = 0;
 
-                    #region code not in dictionary?
-                    if (code > nextAvailableCode)
-                    {
-                        // We expect the code to be either one which is already
-                        // in the dictionary, or the next available one to be
-                        // added. If it's neither of these then abandon 
-                        // processing of the image data.
-                        string message
-                            = "Next available code: " + nextAvailableCode
-                            + ". Last code read from input stream: " + code;
-                        SetStatus(ErrorState.CodeNotInDictionary, message);
-                        break;
-                    }
-                    #endregion
+	                        if (block.TestState(ErrorState.DataBlockTooShort))
+	                        {
+	                            // then we've reached the end of the stream
+	                            // prematurely
+	                            break;
+	                        }
 
-                    #region clear code?
-                    if (code == clearCode)
-                    {
-                        // We can get a clear code at any point in the image
-                        // data, this is an instruction to reset the decoder
-                        // and empty the dictionary of codes.
-                        currentCodeSize = InitialCodeSize;
-                        nextAvailableCode = ClearCode + 2;
-                        previousCode = _nullCode;
+	                        if (bytesToExtract == 0)
+	                        {
+	                            // then it's a block terminator, end of the
+	                            // image data (this is a data block other than
+	                            // the first one)
+	                            break;
+	                        }
 
-                        // Carry on reading from the input stream.
-                        continue;
-                    }
-                    #endregion
+	                        #endregion
+	                    }
+	                    // Append the contents of the current byte in the data 
+	                    // block to the beginning of the datum
+	                    int newDatum = block[indexInDataBlock] << meaningfulBitsInDatum;
+	                    datum += newDatum;
 
-                    #region first code since last clear code?
-                    if (previousCode == _nullCode)
-                    {
-                        // This is the first code read since the start of the
-                        // image data or the most recent clear code.
-                        // There's no previously read code in memory yet, so
-                        // get the pixel index for the current code and add it
-                        // to the stack.
-                        pixelStack.Push(suffix[code]);
-                        previousCode = code;
-                        firstCode = code;
+	                    // so we've now got 8 more bits of information in the
+	                    // datum.
+	                    meaningfulBitsInDatum += 8;
 
-                        // and carry on to the next pixel
-                        continue;
-                    }
-                    #endregion
+	                    // Point to the next byte in the data block
+	                    indexInDataBlock++;
 
-                    in_code = code;
-                    if (code == nextAvailableCode)
-                    {
-                        pixelStack.Push((byte)firstCode);
-                        code = previousCode;
-                    }
+	                    // We've one less byte still to read from the data block
+	                    // now.
+	                    bytesToExtract--;
 
-                    while (code > clearCode)
-                    {
-                        pixelStack.Push(suffix[code]);
-                        code = prefix[code];
-                    }
+	                    // and carry on reading through the data block
+	                    continue;
 
-                    #endregion
+	                    #endregion
+	                }
 
-                    firstCode = ((int)suffix[code]) & 0xff;
+	                #region get the next code from the datum
 
-                    #region add a new string to the string table
-                    if (nextAvailableCode >= _maxStackSize)
-                    {
-                        // TESTME: constructor - next available code >- _maxStackSize
-                        break;
-                    }
-                    pixelStack.Push((byte)firstCode);
-                    prefix[nextAvailableCode] = (short)previousCode;
-                    suffix[nextAvailableCode] = (byte)firstCode;
-                    nextAvailableCode++;
-                    #endregion
+	                // Get the least significant bits from the read datum, up
+	                // to the maximum allowed by the current code size.
+	                code = datum & GetMaximumPossibleCode(currentCodeSize);
 
-                    #region do we need to increase the code size?
-                    if ((nextAvailableCode
-                         & GetMaximumPossibleCode(currentCodeSize))
-                       == 0)
-                    {
-                        // We've reached the largest code possible for this size
-                        if (nextAvailableCode < _maxStackSize)
-                        {
-                            // so increase the code size by 1
-                            currentCodeSize++;
-                        }
-                    }
-                    #endregion
+	                // Drop the bits we've just extracted from the datum.
+	                datum >>= currentCodeSize;
 
-                    previousCode = in_code;
-                    #endregion
-                }
+	                // Reduce the count of meaningful bits held in the datum
+	                meaningfulBitsInDatum -= currentCodeSize;
 
-                // Pop all the pixels currently on the stack off, and add them
-                // to the return value.
-                _pixelIndexes[pixelIndex] = pixelStack.Pop();
-                pixelIndex++;
-            }
+	                #endregion
 
-            #endregion
+	                #region interpret the code
 
-            #region check input stream contains enough data to fill the image
-            if (pixelIndex < pixelCount)
-            {
-                string message
-                    = "Expected pixel count: " + pixelCount
-                    + ". Actual pixel count: " + pixelIndex;
-                SetStatus(ErrorState.TooFewPixelsInImageData, message);
-            }
-            #endregion
-        }
+	                #region end of information?
 
-        /// <summary>
+	                if (code == EndOfInformation)
+	                {
+	                    // We've reached an explicit marker for the end of the
+	                    // image data.
+	                    break;
+	                }
+
+	                #endregion
+
+	                #region code not in dictionary?
+
+	                if (code > nextAvailableCode)
+	                {
+	                    // We expect the code to be either one which is already
+	                    // in the dictionary, or the next available one to be
+	                    // added. If it's neither of these then abandon 
+	                    // processing of the image data.
+	                    string message
+	                        = "Next available code: " + nextAvailableCode
+	                          + ". Last code read from input stream: " + code;
+	                    SetStatus(ErrorState.CodeNotInDictionary, message);
+	                    break;
+	                }
+
+	                #endregion
+
+	                #region clear code?
+
+	                if (code == clearCode)
+	                {
+	                    // We can get a clear code at any point in the image
+	                    // data, this is an instruction to reset the decoder
+	                    // and empty the dictionary of codes.
+	                    currentCodeSize = InitialCodeSize;
+	                    nextAvailableCode = ClearCode + 2;
+	                    previousCode = NullCode;
+
+	                    // Carry on reading from the input stream.
+	                    continue;
+	                }
+
+	                #endregion
+
+	                #region first code since last clear code?
+
+	                if (previousCode == NullCode)
+	                {
+	                    // This is the first code read since the start of the
+	                    // image data or the most recent clear code.
+	                    // There's no previously read code in memory yet, so
+	                    // get the pixel index for the current code and add it
+	                    // to the stack.
+	                    pixelStack.Push(suffix[code]);
+	                    previousCode = code;
+	                    firstCode = code;
+
+	                    // and carry on to the next pixel
+	                    continue;
+	                }
+
+	                #endregion
+
+	                in_code = code;
+	                if (code == nextAvailableCode)
+	                {
+	                    pixelStack.Push((byte)firstCode);
+	                    code = previousCode;
+	                }
+
+	                while (code > clearCode)
+	                {
+	                    pixelStack.Push(suffix[code]);
+	                    code = prefix[code];
+	                }
+
+	                #endregion
+
+	                firstCode = (suffix[code]) & 0xff;
+
+	                #region add a new string to the string table
+
+	                if (nextAvailableCode >= MaxStackSize)
+	                {
+	                    // TESTME: constructor - next available code >- _maxStackSize
+	                    break;
+	                }
+	                pixelStack.Push((byte)firstCode);
+	                prefix[nextAvailableCode] = (short)previousCode;
+	                suffix[nextAvailableCode] = (byte)firstCode;
+	                nextAvailableCode++;
+
+	                #endregion
+
+	                #region do we need to increase the code size?
+
+	                if ((nextAvailableCode & GetMaximumPossibleCode(currentCodeSize)) == 0)
+	                {
+	                    // We've reached the largest code possible for this size
+	                    if (nextAvailableCode < MaxStackSize)
+	                    {
+	                        // so increase the code size by 1
+	                        currentCodeSize++;
+	                    }
+	                }
+
+	                #endregion
+
+	                previousCode = in_code;
+
+	                #endregion
+	            }
+
+	            // Pop all the pixels currently on the stack off, and add them
+	            // to the return value.
+	            _pixelIndexes[pixelIndex] = pixelStack.Pop();
+	            pixelIndex++;
+	        }
+
+	        #endregion
+
+	        #region check input stream contains enough data to fill the image
+
+	        if (pixelIndex < pixelCount)
+	        {
+	            string message
+	                = "Expected pixel count: " + pixelCount
+	                  + ". Actual pixel count: " + pixelIndex;
+	            SetStatus(ErrorState.TooFewPixelsInImageData, message);
+	        }
+
+	        #endregion
+	    }
+
+	    /// <summary>
         /// Gets the data blocks as read from the input stream.
         /// </summary>
         public DataBlock[] DataBlocks
@@ -444,10 +472,6 @@ namespace GifComponents.Components
             _dataBlocks.Add(block);
             return block;
         }
-        private static DataBlock ReadDataBlockStatic(Stream inputStream)
-        {
-            return new DataBlock(inputStream);
-        }
 
         /// <summary>
         /// Returns the size of a table-based image data section on the given stream.
@@ -458,14 +482,13 @@ namespace GifComponents.Components
         public static long GetDataSizeOnStream(Stream inputStream)
         {
             long startStreamPosition = inputStream.Position;
-            long endStreamPosition = 0;
 
             //  Initialize GIF data stream decoder.
             Read(inputStream);
             //ReadDataBlockStatic(inputStream);
             SkipBlocksStatic(inputStream);
 
-            endStreamPosition = inputStream.Position;
+            var endStreamPosition = inputStream.Position;
             inputStream.Position = startStreamPosition;
 
             return endStreamPosition - startStreamPosition;

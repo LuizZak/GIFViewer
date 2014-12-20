@@ -25,8 +25,10 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using GIF_Viewer.GifComponents.Enums;
+using GIF_Viewer.GifComponents.Types;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
     /// <summary>
     /// The Logical Screen Descriptor component of a Graphics Interchange Format
@@ -48,15 +50,15 @@ namespace GifComponents.Components
     {
         #region declarations
         private Size _screenSize;
-        private bool _hasGlobalColourTable;
-        private int _colourResolution;
-        private bool _gctIsSorted;
-        private int _gctSizeBits;
-        private int _backgroundColourIndex;
-        private int _pixelAspectRatio;
+        private readonly bool _hasGlobalColourTable;
+        private readonly int _colourResolution;
+        private readonly bool _gctIsSorted;
+        private readonly int _gctSizeBits;
+        private readonly int _backgroundColourIndex;
+        private readonly int _pixelAspectRatio;
 
-        private const int _byteMax = byte.MaxValue;
-        private const int _uShortMax = ushort.MaxValue;
+        private const int ByteMax = byte.MaxValue;
+        private const int UShortMax = ushort.MaxValue;
         #endregion
 
         #region constructor( logical properties )
@@ -125,19 +127,19 @@ namespace GifComponents.Components
                                         int pixelAspectRatio)
         {
             #region validation
-            if (logicalScreenSize.Width > _uShortMax)
+            if (logicalScreenSize.Width > UShortMax)
             {
                 string message
                     = "Logical screen width cannot be more than "
-                    + _uShortMax + ". "
+                    + UShortMax + ". "
                     + "Supplied value: " + logicalScreenSize.Width;
                 throw new ArgumentException(message, "logicalScreenSize");
             }
-            if (logicalScreenSize.Height > _uShortMax)
+            if (logicalScreenSize.Height > UShortMax)
             {
                 string message
                     = "Logical screen height cannot be more than "
-                    + _uShortMax + ". "
+                    + UShortMax + ". "
                     + "Supplied value: " + logicalScreenSize.Height;
                 throw new ArgumentException(message, "logicalScreenSize");
             }
@@ -156,19 +158,19 @@ namespace GifComponents.Components
                 throw new ArgumentException(message,
                                              "globalColourTableSizeBits");
             }
-            if (backgroundColourIndex > _byteMax)
+            if (backgroundColourIndex > ByteMax)
             {
                 string message
                     = "Background colour index cannot be more than "
-                    + _byteMax + ". "
+                    + ByteMax + ". "
                     + "Supplied value: " + backgroundColourIndex;
                 throw new ArgumentException(message, "backgroundColourIndex");
             }
-            if (pixelAspectRatio > _byteMax)
+            if (pixelAspectRatio > ByteMax)
             {
                 string message
                     = "Pixel aspect ratio cannot be more than "
-                    + _byteMax + ". "
+                    + ByteMax + ". "
                     + "Supplied value: " + pixelAspectRatio;
                 throw new ArgumentException(message, "pixelAspectRatio");
             }

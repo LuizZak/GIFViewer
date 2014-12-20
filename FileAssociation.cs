@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.IO;
 using Microsoft.Win32;
 
 namespace GIF_Viewer
@@ -11,9 +8,9 @@ namespace GIF_Viewer
     /// </summary>
     public class FileAssociation
     {
-        public string Extension = "";
+        public string Extension;
 
-        public string CurrentProgram = "";
+        public string CurrentProgram;
 
         public RegistryKey ExtensionKey;
         public RegistryKey OpenWithKey;
@@ -24,12 +21,18 @@ namespace GIF_Viewer
 
             ExtensionKey = Registry.ClassesRoot.CreateSubKey(extension);
 
+            if (ExtensionKey == null)
+                return;
+
             string originalKey = (string)ExtensionKey.GetValue(null);
 
             if (originalKey != null)
             {
                 ExtensionKey = Registry.ClassesRoot.OpenSubKey(originalKey);
             }
+
+            if (ExtensionKey == null)
+                return;
 
             RegistryKey shell = ExtensionKey.OpenSubKey("shell");
 
@@ -75,18 +78,22 @@ namespace GIF_Viewer
         {
             RegistryKey applications = Registry.ClassesRoot.OpenSubKey("Applications");
 
-            RegistryKey app = applications.OpenSubKey(System.IO.Path.GetFileName(programPath));
-
-            if (app != null)
+            if (applications != null && programPath != null)
             {
-                RegistryKey temp = app.OpenSubKey("shell");
+                string fileName = Path.GetFileName(programPath);
+                RegistryKey app = applications.OpenSubKey(fileName);
 
-                if (temp != null)
-                    temp = temp.OpenSubKey("Open");
-                if (temp != null)
-                    temp = temp.OpenSubKey("command");
-                if (temp != null)
-                    return (string)temp.GetValue(null);
+                if (app != null)
+                {
+                    RegistryKey temp = app.OpenSubKey("shell");
+
+                    if (temp != null)
+                        temp = temp.OpenSubKey("Open");
+                    if (temp != null)
+                        temp = temp.OpenSubKey("command");
+                    if (temp != null)
+                        return (string)temp.GetValue(null);
+                }
             }
 
             return null;
@@ -110,23 +117,28 @@ namespace GIF_Viewer
                 else
                 {
                     command = OpenWithKey.CreateSubKey("command");
-                    command.SetValue(null, programPath);
+
+                    if (command != null)
+                    {
+                        command.SetValue(null, programPath);
+                    }
                 }
             }
             else
             {
                 RegistryKey shell = ExtensionKey.OpenSubKey("shell", true);
 
-                if (shell == null)
-                {
-                    shell = ExtensionKey.CreateSubKey("shell", RegistryKeyPermissionCheck.ReadWriteSubTree);
+                if (shell != null) return;
+                shell = ExtensionKey.CreateSubKey("shell", RegistryKeyPermissionCheck.ReadWriteSubTree);
 
+                if (shell != null)
                     OpenWithKey = shell.CreateSubKey("Open", RegistryKeyPermissionCheck.ReadWriteSubTree);
 
-                    RegistryKey command = OpenWithKey.CreateSubKey("command", RegistryKeyPermissionCheck.ReadWriteSubTree);
+                if (OpenWithKey == null) return;
+                RegistryKey command = OpenWithKey.CreateSubKey("command", RegistryKeyPermissionCheck.ReadWriteSubTree);
 
+                if (command != null)
                     command.SetValue(null, programPath);
-                }
             }
         }
 
@@ -142,16 +154,18 @@ namespace GIF_Viewer
             // 'Applications' key:
             RegistryKey applications = Registry.ClassesRoot.OpenSubKey("Applications", true);
 
+            if (applications == null) return;
             RegistryKey app = applications.CreateSubKey(programName);
 
-            if (app != null)
-            {
-                RegistryKey temp = app.CreateSubKey("shell");
-                temp = temp.CreateSubKey("Open");
-                temp = temp.CreateSubKey("command");
+            if (app == null) return;
+            RegistryKey temp = app.CreateSubKey("shell");
+            if (temp == null) return;
+            temp = temp.CreateSubKey("Open");
+            if (temp == null) return;
+            temp = temp.CreateSubKey("command");
 
+            if (temp != null)
                 temp.SetValue(null, programPath);
-            }
         }
     }
 }

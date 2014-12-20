@@ -1,12 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Data;
 using System.Drawing;
-using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace GIF_Viewer
@@ -19,7 +12,7 @@ namespace GIF_Viewer
         /// <summary>
         /// The save path
         /// </summary>
-        public string SavePath = @"C:\";
+        public string SavePath;
 
         /// <summary>
         /// The filename (minus extension)
@@ -34,22 +27,22 @@ namespace GIF_Viewer
         /// <summary>
         /// The folder browser attached to this form
         /// </summary>
-        FolderBrowserDialog fbd = new FolderBrowserDialog();
+        readonly FolderBrowserDialog _fbd = new FolderBrowserDialog();
 
         /// <summary>
         /// List of invalid filename characters
         /// </summary>
-        char[] Invalid;
+        readonly char[] _invalid;
 
         /// <summary>
         /// Warns the user about invalid characters
         /// </summary>
-        ToolTip invalidTooltip = new ToolTip();
+        readonly ToolTip _invalidTooltip = new ToolTip();
 
         /// <summary>
         /// The text to show on the Invalid Characters Tooltip
         /// </summary>
-        string invalidText = "";
+        readonly string _invalidText;
 
         /// <summary>
         /// Initializes a new instance of the FormatForm class
@@ -64,52 +57,52 @@ namespace GIF_Viewer
             txtPath.Text = SavePath;
             txtBaseFilename.Text = FileName;
 
-            fbd.Description = "Image save location:";
+            _fbd.Description = @"Image save location:";
 
             cmbFormat.SelectedIndex = 0;
 
             // Initialize the invalid characters array
-            Invalid = new char[] { '\\', '/', ':', '*', '?', '\'', '<', '>', '|' };
-            invalidText = "In a file/folder name you cannot use any of the following characters:\n\n ";
-            foreach (char c in Invalid)
+            _invalid = new [] { '\\', '/', ':', '*', '?', '\'', '<', '>', '|' };
+            _invalidText = "In a file/folder name you cannot use any of the following characters:\n\n ";
+            foreach (char c in _invalid)
             {
-                invalidText += c + " ";
+                _invalidText += c + " ";
             }
-            invalidTooltip.IsBalloon = true;
+            _invalidTooltip.IsBalloon = true;
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            fbd.ShowDialog(this);
+            _fbd.ShowDialog(this);
 
-            txtPath.Text = fbd.SelectedPath;
-            SavePath = fbd.SelectedPath;
+            txtPath.Text = _fbd.SelectedPath;
+            SavePath = _fbd.SelectedPath;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
             DialogResult = DialogResult.OK;
 
-            this.Close();
+            Close();
         }
 
         private void txtBaseFilename_TextChanged(object sender, EventArgs e)
         {
-            this.FileName = txtBaseFilename.Text;
+            FileName = txtBaseFilename.Text;
         }
 
         private void txtBaseFilename_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if ((int)e.KeyChar == 8)
+            if (e.KeyChar == 8)
             {
                 return;
             }
 
             int index = 0;
 
-            while (index < Invalid.Length - 1)
+            while (index < _invalid.Length - 1)
             {
-                if (Invalid[index] == e.KeyChar)
+                if (_invalid[index] == e.KeyChar)
                 {
                     e.Handled = true;
 
@@ -119,7 +112,7 @@ namespace GIF_Viewer
 
                     p.Y += txtBaseFilename.Height;
 
-                    invalidTooltip.Show(invalidText, txtBaseFilename, p);
+                    _invalidTooltip.Show(_invalidText, txtBaseFilename, p);
 
                     break;
                 }
@@ -130,10 +123,10 @@ namespace GIF_Viewer
 
         private void cmbFormat_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(cmbFormat.SelectedItem.ToString().IndexOf(" ") > 0)
-                Extension = cmbFormat.SelectedItem.ToString().Substring(0, cmbFormat.SelectedItem.ToString().IndexOf(" "));
-            else
-                Extension = cmbFormat.SelectedItem.ToString();
+            string item = cmbFormat.SelectedItem.ToString();
+            int spaceIndex = item.IndexOf(" ", StringComparison.Ordinal);
+
+            Extension = spaceIndex > 0 ? item.Substring(0, spaceIndex) : item;
         }
     }
 }

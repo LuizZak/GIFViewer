@@ -25,7 +25,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.IO;
 
-namespace GifComponents.Components
+namespace GIF_Viewer.GifComponents.Components
 {
 	/// <summary>
 	/// An application extension which controls the number of times an animation
@@ -35,7 +35,7 @@ namespace GifComponents.Components
 	public class NetscapeExtension : ApplicationExtension
 	{
 		#region declarations
-		private int _loopCount;
+		private readonly int _loopCount;
 		#endregion
 		
 		#region constructor( int repeatCount )
@@ -54,60 +54,64 @@ namespace GifComponents.Components
 		#endregion
 		
 		#region constructor( ApplicationExtension )
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		/// <param name="applicationExtension">
-		/// The application extension to build the Netscape extension from.
-		/// </param>
-		public NetscapeExtension( ApplicationExtension applicationExtension )
-			: base( applicationExtension.IdentificationBlock,
-			        applicationExtension.ApplicationData )
-		{
-			#region guard against application extensions which are not Netscape extensions
-			string message;
-			if( applicationExtension.ApplicationIdentifier != "NETSCAPE" )
-			{
-				message = "The application identifier is not 'NETSCAPE' "
-						+ "therefore this application extension is not a "
-						+ "Netscape extension. Application identifier: "
-						+ applicationExtension.ApplicationIdentifier;
-				throw new ArgumentException( message, "applicationExtension" );
-			}
-			
-			if( applicationExtension.ApplicationAuthenticationCode != "2.0" )
-			{
-				message = "The application authentication code is not '2.0' "
-						+ "therefore this application extension is not a "
-						+ "Netscape extension. Application authentication code: "
-						+ applicationExtension.ApplicationAuthenticationCode;
-				throw new ArgumentException( message, "applicationExtension" );
-			}
-			#endregion
 
-			foreach( DataBlock block in ApplicationData )
-			{
-				if( block.ActualBlockSize == 0 )
-				{
-					// then we've found the block terminator
-					break;
-				}
-				// The first byte in a Netscape application extension data
-				// block should be 1. Ignore if anything else.
-				if( block.ActualBlockSize > 2 && block[0] == 1 )
-				{
-					// The loop count is held in the second and third bytes
-					// of the data block, least significant byte first.
-					int byte1 = ( (int) block[1] ) & 0xff;
-					int byte2 = ( (int) block[2] ) & 0xff;
-					
-					// String the two bytes together to make an integer,
-					// with byte 2 coming first.
-					_loopCount = (byte2 << 8) | byte1;
-				}
-			}
-		}
-		#endregion
+	    /// <summary>
+	    /// Constructor.
+	    /// </summary>
+	    /// <param name="applicationExtension">
+	    /// The application extension to build the Netscape extension from.
+	    /// </param>
+	    public NetscapeExtension(ApplicationExtension applicationExtension)
+	        : base(applicationExtension.IdentificationBlock,
+	            applicationExtension.ApplicationData)
+	    {
+	        #region guard against application extensions which are not Netscape extensions
+
+	        string message;
+	        if (applicationExtension.ApplicationIdentifier != "NETSCAPE")
+	        {
+	            message = "The application identifier is not 'NETSCAPE' "
+	                      + "therefore this application extension is not a "
+	                      + "Netscape extension. Application identifier: "
+	                      + applicationExtension.ApplicationIdentifier;
+	            throw new ArgumentException(message, "applicationExtension");
+	        }
+
+	        if (applicationExtension.ApplicationAuthenticationCode != "2.0")
+	        {
+	            message = "The application authentication code is not '2.0' "
+	                      + "therefore this application extension is not a "
+	                      + "Netscape extension. Application authentication code: "
+	                      + applicationExtension.ApplicationAuthenticationCode;
+	            throw new ArgumentException(message, "applicationExtension");
+	        }
+
+	        #endregion
+
+	        foreach (DataBlock block in ApplicationData)
+	        {
+	            if (block.ActualBlockSize == 0)
+	            {
+	                // then we've found the block terminator
+	                break;
+	            }
+	            // The first byte in a Netscape application extension data
+	            // block should be 1. Ignore if anything else.
+	            if (block.ActualBlockSize > 2 && block[0] == 1)
+	            {
+	                // The loop count is held in the second and third bytes
+	                // of the data block, least significant byte first.
+	                int byte1 = (block[1]) & 0xff;
+	                int byte2 = (block[2]) & 0xff;
+
+	                // String the two bytes together to make an integer,
+	                // with byte 2 coming first.
+	                _loopCount = (byte2 << 8) | byte1;
+	            }
+	        }
+	    }
+
+	    #endregion
 		
 		#region LoopCount property
 		/// <summary>
@@ -146,11 +150,9 @@ namespace GifComponents.Components
 			
 			byte[] terminatorData = new byte[0];
 			DataBlock terminatorBlock = new DataBlock( 0, terminatorData );
-			
-			Collection<DataBlock> appData = new Collection<DataBlock>();
-			appData.Add( repeatBlock );
-			appData.Add( terminatorBlock );
-			return appData;
+
+		    Collection<DataBlock> appData = new Collection<DataBlock> { repeatBlock, terminatorBlock };
+		    return appData;
 		}
 		#endregion
 	}

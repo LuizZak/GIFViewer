@@ -1,11 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
 using System.Media;
-using System.Text;
 using System.Windows.Forms;
 
 namespace GIF_Viewer.Views
@@ -14,17 +8,17 @@ namespace GIF_Viewer.Views
     /// A form that is used to display an error that has a field that has copiable
     /// information about the error
     /// </summary>
-    public partial class ErrorBox : Form
+    public sealed partial class ErrorBox : Form
     {
         /// <summary>
         /// Initializes a new instance of the ErrorBox
         /// </summary>
-        protected ErrorBox(string message, string caption, string copyInfo)
+        private ErrorBox(string message, string caption, string copyInfo)
         {
             InitializeComponent();
 
             lbl_error.Text = message;
-            this.Text = caption;
+            Text = caption;
             rtb_errorInfo.Text = copyInfo;
 
             SystemSounds.Hand.Play();
@@ -57,9 +51,8 @@ namespace GIF_Viewer.Views
         // 
         private void btn_ok_Click(object sender, EventArgs e)
         {
-            this.DialogResult = DialogResult.OK;
-
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 }

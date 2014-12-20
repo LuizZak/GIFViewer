@@ -1,12 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 using GIF_Viewer.Views;
@@ -22,12 +16,12 @@ namespace GIF_Viewer
         /// <summary>
         /// The GIF file that the frames will be extracted from
         /// </summary>
-        public GIFFile CurrentGif;
+        public GifFile CurrentGif;
 
         /// <summary>
         /// Whether the current GIF file is playing
         /// </summary>
-        public bool playing = true;
+        public bool Playing = true;
 
         /// <summary>
         /// Timer used to animate the frames
@@ -47,7 +41,7 @@ namespace GIF_Viewer
         /// <summary>
         /// The format form assigned to this form
         /// </summary>
-        FormatForm formatForm = new FormatForm();
+        readonly FormatForm _formatForm = new FormatForm();
 
         /// <summary>
         /// Initializes a new instance of the FrameExtract class
@@ -56,7 +50,20 @@ namespace GIF_Viewer
         {
             InitializeComponent();
 
-            this.SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the FrameExtract class with a gif to manipulate
+        /// </summary>
+        /// <param name="gif">The gif file to manipulate on this form</param>
+        public FrameExtract(GifFile gif)
+        {
+            InitializeComponent();
+
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
+
+            CurrentGif = gif;
         }
 
         /// <summary>
@@ -65,10 +72,10 @@ namespace GIF_Viewer
         public void Init()
         {
             // Create the timer
-            AnimationTimer = new System.Windows.Forms.Timer();
-            AnimationTimer.Tick += new EventHandler(AnimationTimer_Tick);
+            AnimationTimer = new Timer();
+            AnimationTimer.Tick += AnimationTimer_Tick;
 
-            LoadGIF(CurrentGif.GIFPath);
+            LoadGIF(CurrentGif.GifPath);
 
             // timelineControl1.maximum = Frames - 1;
             tlc_timeline.Minimum = 1;
@@ -89,7 +96,7 @@ namespace GIF_Viewer
         {
             Animate();
 
-            if (playing)
+            if (Playing)
             {
                 AnimationTimer.Interval = UseMinFrameInterval ? Math.Max(CurrentGif.GetIntervalForCurrentFrame(), MinFrameInterval) : CurrentGif.GetIntervalForCurrentFrame();
             }
@@ -102,19 +109,17 @@ namespace GIF_Viewer
         /// <summary>
         /// The last frame that was renderedon the picture box
         /// </summary>
-        int lastFrame = 0;
+        int _lastFrame;
         /// <summary>
         /// Animate the current GIF
         /// </summary>
-        /// <param name="sender">The object that fired this event</param>
-        /// <param name="e">The EventArgs for this event</param>
         void Animate()
         {
             try
             {
                 int newFrame = CurrentGif.CurrentFrame;
 
-                if (playing)
+                if (Playing)
                 {
                     if (Range.Y > 0)
                     {
@@ -132,7 +137,7 @@ namespace GIF_Viewer
                     }
                 }
 
-                if (newFrame != lastFrame)
+                if (newFrame != _lastFrame)
                 {
                     // Change the frame
                     cpb_preview._Paint = false;
@@ -147,7 +152,7 @@ namespace GIF_Viewer
             }
             catch (Exception ex)
             {
-                FormMain.trace(ex);
+                FormMain.Trace(ex);
             }
         }
 
@@ -188,22 +193,22 @@ namespace GIF_Viewer
             CurrentGif.LoadFromPath(fileName);
 
             // Set the caption
-            Text = "Extract Frames from [" + fileName + "] " + CurrentGif.Width + "x" + CurrentGif.Height;
+            Text = @"Extract Frames from [" + fileName + @"] " + CurrentGif.Width + @"x" + CurrentGif.Height;
 
             // Refresh the pictureBox with the new animation
-            cpb_preview.BackgroundImage = CurrentGif.GIF;
+            cpb_preview.BackgroundImage = CurrentGif.Gif;
 
             // Change the window size and location only if windowed
             if (WindowState == FormWindowState.Normal)
             {
                 // Set the client size
-                this.ClientSize = new Size(Math.Max(CurrentGif.Width, this.MinimumSize.Width), CurrentGif.Height + panel1.Height + 6);
+                ClientSize = new Size(Math.Max(CurrentGif.Width, MinimumSize.Width), CurrentGif.Height + panel1.Height + 6);
 
                 // And position
                 int px = Screen.PrimaryScreen.Bounds.Width / 2 - Width / 2;
                 int py = Screen.PrimaryScreen.Bounds.Height / 2 - Height / 2;
 
-                this.Location = new Point(px, py);
+                Location = new Point(px, py);
             }
 
             // Starts a new animation thread
@@ -223,11 +228,11 @@ namespace GIF_Viewer
             DateTime t = DateTime.Now;
 
             // Get the path and trim the leading characters:
-            string path = formatForm.SavePath.Trim(' ', '\\');
+            string path = _formatForm.SavePath.Trim(' ', '\\');
 
             // Get the filename and extension:
-            string fileName = formatForm.FileName;
-            string extension = formatForm.Extension;
+            string fileName = _formatForm.FileName;
+            string extension = _formatForm.Extension;
 
             // Get a valid imageformat to use in the savind process:
             ImageFormat format = GetFormatByString(extension);
@@ -240,7 +245,7 @@ namespace GIF_Viewer
             LoadGIF("");
 
             // Load the GIF file:
-            Image m = Image.FromFile(CurrentGif.GIFPath);
+            Image m = Image.FromFile(CurrentGif.GifPath);
 
             // Get the frame dimension to advance the frames:
             FrameDimension frameDimension = new FrameDimension(m.FrameDimensionsList[0]);
@@ -289,7 +294,7 @@ namespace GIF_Viewer
             m.Dispose();
 
             // Reload the GIF:
-            LoadGIF(CurrentGif.GIFPath);
+            LoadGIF(CurrentGif.GifPath);
         }
 
         /// <summary>
@@ -377,7 +382,7 @@ namespace GIF_Viewer
         private void btn_extract_Click(object sender, EventArgs e)
         {
             // TODO: Add the frame extract code here
-            if (formatForm.ShowDialog(this) == DialogResult.OK)
+            if (_formatForm.ShowDialog(this) == DialogResult.OK)
             {
                 ExportFrames();
             }
@@ -390,7 +395,7 @@ namespace GIF_Viewer
         /// <param name="e">The arguments for this event</param>
         private void btn_close_Click(object sender, EventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         /// <summary>
@@ -400,7 +405,7 @@ namespace GIF_Viewer
         /// <param name="newRange">The new range of the timeline control</param>
         private void tlc_timeline_RangeChangedEvent(object sender, RangeChangedEventArgs newRange)
         {
-            lastFrame = -1;
+            _lastFrame = -1;
             ChangeFrame(newRange.NewRange.X - 1);
             CurrentGif.CurrentFrame = newRange.NewRange.X - 1;
 
@@ -421,9 +426,9 @@ namespace GIF_Viewer
             // Toggle playback
             if (e.Button == MouseButtons.Left)
             {
-                playing = !playing;
+                Playing = !Playing;
 
-                if (playing)
+                if (Playing)
                 {
                     AnimationTimer.Start();
                 }
@@ -441,7 +446,7 @@ namespace GIF_Viewer
                     cpb_preview.Quality = 1;
             }
 
-            lastMouseButton = e.Button;
+            _lastMouseButton = e.Button;
         }
 
         /// <summary>
@@ -452,11 +457,11 @@ namespace GIF_Viewer
         private void cpb_preview_DoubleClick(object sender, EventArgs e)
         {
             // Toggle playback
-            if (lastMouseButton == MouseButtons.Left)
+            if (_lastMouseButton == MouseButtons.Left)
             {
-                playing = !playing;
+                Playing = !Playing;
 
-                if (playing)
+                if (Playing)
                 {
                     AnimationTimer.Start();
                 }
@@ -466,7 +471,7 @@ namespace GIF_Viewer
                 }
             }
             // Toggle quality
-            else if (lastMouseButton == MouseButtons.Right)
+            else if (_lastMouseButton == MouseButtons.Right)
             {
                 if (cpb_preview.Quality == 1)
                     cpb_preview.Quality = 3;
@@ -490,6 +495,6 @@ namespace GIF_Viewer
         /// <summary>
         /// The last mouse button that was pressed on the FrameExtract
         /// </summary>
-        MouseButtons lastMouseButton;
+        MouseButtons _lastMouseButton;
     }
 }

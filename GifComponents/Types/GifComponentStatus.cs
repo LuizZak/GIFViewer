@@ -21,10 +21,10 @@
 // only to have created a derived work.
 #endregion
 
-using System;
 using System.ComponentModel;
+using GIF_Viewer.GifComponents.Enums;
 
-namespace GifComponents
+namespace GIF_Viewer.GifComponents.Types
 {
 	/// <summary>
 	/// The status of a component in a GIF data stream which is being decoded.
@@ -35,8 +35,8 @@ namespace GifComponents
 	public class GifComponentStatus
 	{
 		#region declarations
-		private ErrorState _errorState;
-		private string _errorMessage;
+		private readonly ErrorState _errorState;
+		private readonly string _errorMessage;
 		#endregion
 		
 		#region constructor

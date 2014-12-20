@@ -1,15 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-
 using GIF_Viewer.Utils;
 
-namespace GIF_Viewer
+namespace GIF_Viewer.Views
 {
     /// <summary>
     /// Represents a form where the user can change the settings of the program
@@ -19,15 +12,15 @@ namespace GIF_Viewer
         /// <summary>
         /// Temporary buffer memory variable reference
         /// </summary>
-        private int bufferMemory;
+        private int _bufferMemory;
         /// <summary>
         /// Temporary keyframe memory variable reference
         /// </summary>
-        private int keyframeMemory;
+        private int _keyframeMemory;
         /// <summary>
         /// Temporary keyframe reach variable reference
         /// </summary>
-        private int keyframeReach;
+        private int _keyframeReach;
 
         /// <summary>
         /// Initializes a new instance of the SettingsForm class
@@ -36,17 +29,17 @@ namespace GIF_Viewer
         {
             InitializeComponent();
 
-            this.bufferMemory = Settings.Instance.MaxBufferMemory;
-            this.keyframeMemory = Settings.Instance.MaxKeyframeMemory;
-            this.keyframeReach = Settings.Instance.MaxKeyframeReach;
+            _bufferMemory = Settings.Instance.MaxBufferMemory;
+            _keyframeMemory = Settings.Instance.MaxKeyframeMemory;
+            _keyframeReach = Settings.Instance.MaxKeyframeReach;
 
-            SetTrackbarValueRelative(this.tb_bufferMemory, bufferMemory, 5, 512);
-            SetTrackbarValueRelative(this.tb_keyframeMemory, keyframeMemory, 5, 512);
-            SetTrackbarValueRelative(this.tb_keyframeReach, keyframeReach, 0, 100);
+            SetTrackbarValueRelative(tb_bufferMemory, _bufferMemory, 5, 512);
+            SetTrackbarValueRelative(tb_keyframeMemory, _keyframeMemory, 5, 512);
+            SetTrackbarValueRelative(tb_keyframeReach, _keyframeReach, 0, 100);
 
-            this.lbl_bufferMemory.Text = Settings.Instance.MaxBufferMemory + " MB";
-            this.lbl_keyframeMemory.Text = Settings.Instance.MaxKeyframeMemory + " MB";
-            this.lbl_keyframeReach.Text = Settings.Instance.MaxKeyframeReach + "";
+            lbl_bufferMemory.Text = Settings.Instance.MaxBufferMemory + @" MB";
+            lbl_keyframeMemory.Text = Settings.Instance.MaxKeyframeMemory + @" MB";
+            lbl_keyframeReach.Text = Settings.Instance.MaxKeyframeReach + "";
         }
 
         // 
@@ -54,13 +47,13 @@ namespace GIF_Viewer
         // 
         private void btn_ok_Click(object sender, EventArgs e)
         {
-            Settings.Instance.MaxBufferMemory = bufferMemory;
-            Settings.Instance.MaxKeyframeMemory = keyframeMemory;
-            Settings.Instance.MaxKeyframeReach = keyframeReach;
+            Settings.Instance.MaxBufferMemory = _bufferMemory;
+            Settings.Instance.MaxKeyframeMemory = _keyframeMemory;
+            Settings.Instance.MaxKeyframeReach = _keyframeReach;
             Settings.Instance.SaveSettings();
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         // 
@@ -68,8 +61,8 @@ namespace GIF_Viewer
         // 
         private void tb_bufferMemory_Scroll(object sender, EventArgs e)
         {
-            this.bufferMemory = GetTrackbarValueRelative(this.tb_bufferMemory, 5, 512);
-            this.lbl_bufferMemory.Text = bufferMemory + " MB";
+            _bufferMemory = GetTrackbarValueRelative(tb_bufferMemory, 5, 512);
+            lbl_bufferMemory.Text = _bufferMemory + @" MB";
         }
 
         // 
@@ -77,8 +70,8 @@ namespace GIF_Viewer
         // 
         private void tb_keyframeMemory_Scroll(object sender, EventArgs e)
         {
-            this.keyframeMemory = GetTrackbarValueRelative(this.tb_keyframeMemory, 5, 512);
-            this.lbl_keyframeMemory.Text = keyframeMemory + " MB";
+            _keyframeMemory = GetTrackbarValueRelative(tb_keyframeMemory, 5, 512);
+            lbl_keyframeMemory.Text = _keyframeMemory + @" MB";
         }
 
         // 
@@ -86,8 +79,8 @@ namespace GIF_Viewer
         // 
         private void tb_keyframeReach_Scroll(object sender, EventArgs e)
         {
-            this.keyframeReach = GetTrackbarValueRelative(this.tb_keyframeReach, 0, 100);
-            this.lbl_keyframeReach.Text = keyframeReach + "";
+            _keyframeReach = GetTrackbarValueRelative(tb_keyframeReach, 0, 100);
+            lbl_keyframeReach.Text = _keyframeReach + "";
         }
 
         /// <summary>
