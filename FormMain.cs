@@ -16,6 +16,8 @@ using GIF_Viewer.Utils;
 /// 
 /// @author             Luiz Fernando
 /// 
+/// @version 1.6.1b     Fixing opening instances of the program while one instance was previously running causing crashes on the subsequent instances.
+/// 
 /// @version 1.6.0b     Improved .gif speed when seeking frames at any point in the timeline. Utilizing code from the GifComponents (that was in turn based on NGif) open source project.
 /// @                   Fixed crash related to .gif files with very fast frame intervals.
 /// @                   Swapped the old timeline trackbar with a new more responsive timeline control.

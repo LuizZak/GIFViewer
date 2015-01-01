@@ -20,7 +20,7 @@ namespace GIF_Viewer.Utils
         /// </summary>
         public static Settings Instance
         {
-            get { return _settings ?? (_settings = new Settings()); }
+            get { return _settings ?? (_settings = new Settings(true)); }
         }
 
         /// <summary>
@@ -42,6 +42,11 @@ namespace GIF_Viewer.Utils
         /// The settings file handler
         /// </summary>
         private Stream _iniFile;
+
+        /// <summary>
+        /// Whether to release the ini stream after load/save operations
+        /// </summary>
+        private readonly bool _releaseStream;
 
         /// <summary>
         /// The maximum allowed memory for buffers
@@ -71,11 +76,13 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// Private constructor
         /// </summary>
-        private Settings()
+        /// <param name="releaseStream">Whether to release the ini steam after load/save operations</param>
+        private Settings(bool releaseStream)
         {
             _maxBufferMemory = 50;
             _maxKeyframeMemory = 30;
             _maxKeyframeReach = 10;
+            _releaseStream = releaseStream;
             DontAskAssociate = false;
             Programs = new Dictionary<string, string>();
 
@@ -150,6 +157,11 @@ namespace GIF_Viewer.Utils
 
                     Programs.Add(programName, programPath); // Add this program to thye program's list
                 }
+            }
+
+            if (_releaseStream)
+            {
+                _iniFile.Close();
             }
         }
 
