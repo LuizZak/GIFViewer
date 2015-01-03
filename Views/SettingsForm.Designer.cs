@@ -47,10 +47,13 @@
             this.tb_bufferMemory = new System.Windows.Forms.TrackBar();
             this.btn_ok = new System.Windows.Forms.Button();
             this.btn_cancel = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.cb_allowMultipleInstances = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeReach)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeMemory)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_bufferMemory)).BeginInit();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -73,9 +76,9 @@
             this.groupBox1.Controls.Add(this.lbl_bufferMemory);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.tb_bufferMemory);
-            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Location = new System.Drawing.Point(12, 72);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(520, 232);
+            this.groupBox1.Size = new System.Drawing.Size(520, 225);
             this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Memory";
@@ -229,7 +232,7 @@
             this.btn_ok.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btn_ok.Image = global::GIF_Viewer.Properties.Resources.action_check;
             this.btn_ok.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btn_ok.Location = new System.Drawing.Point(360, 250);
+            this.btn_ok.Location = new System.Drawing.Point(360, 303);
             this.btn_ok.Name = "btn_ok";
             this.btn_ok.Size = new System.Drawing.Size(83, 30);
             this.btn_ok.TabIndex = 0;
@@ -244,7 +247,7 @@
             this.btn_cancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btn_cancel.Image = global::GIF_Viewer.Properties.Resources.action_delete1;
             this.btn_cancel.ImageAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btn_cancel.Location = new System.Drawing.Point(449, 250);
+            this.btn_cancel.Location = new System.Drawing.Point(449, 303);
             this.btn_cancel.Name = "btn_cancel";
             this.btn_cancel.Size = new System.Drawing.Size(83, 30);
             this.btn_cancel.TabIndex = 1;
@@ -252,13 +255,36 @@
             this.btn_cancel.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btn_cancel.UseVisualStyleBackColor = true;
             // 
+            // groupBox2
+            // 
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Controls.Add(this.cb_allowMultipleInstances);
+            this.groupBox2.Location = new System.Drawing.Point(12, 12);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(520, 54);
+            this.groupBox2.TabIndex = 3;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Program";
+            // 
+            // cb_allowMultipleInstances
+            // 
+            this.cb_allowMultipleInstances.AutoSize = true;
+            this.cb_allowMultipleInstances.Location = new System.Drawing.Point(18, 24);
+            this.cb_allowMultipleInstances.Name = "cb_allowMultipleInstances";
+            this.cb_allowMultipleInstances.Size = new System.Drawing.Size(137, 17);
+            this.cb_allowMultipleInstances.TabIndex = 0;
+            this.cb_allowMultipleInstances.Text = "Allow multiple instances";
+            this.cb_allowMultipleInstances.UseVisualStyleBackColor = true;
+            // 
             // SettingsForm
             // 
             this.AcceptButton = this.btn_ok;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btn_cancel;
-            this.ClientSize = new System.Drawing.Size(544, 292);
+            this.ClientSize = new System.Drawing.Size(544, 345);
+            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btn_cancel);
             this.Controls.Add(this.btn_ok);
@@ -273,6 +299,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeReach)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeMemory)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_bufferMemory)).EndInit();
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -297,5 +325,7 @@
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TrackBar tb_keyframeReach;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.CheckBox cb_allowMultipleInstances;
     }
 }

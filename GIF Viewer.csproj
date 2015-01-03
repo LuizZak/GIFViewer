@@ -48,6 +48,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -59,6 +60,7 @@
     <LangVersion>default</LangVersion>
     <DebugSymbols>true</DebugSymbols>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup>
     <ManifestCertificateThumbprint>8C319EE68B90AD1C369C575E3128F83553B57839</ManifestCertificateThumbprint>
@@ -86,6 +88,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -114,22 +117,22 @@
     <Compile Include="FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
-    <Compile Include="FormatForm.cs">
+    <Compile Include="Views\FormatForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FormatForm.Designer.cs">
+    <Compile Include="Views\FormatForm.Designer.cs">
       <DependentUpon>FormatForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrameExtract.cs">
+    <Compile Include="Views\FrameExtract.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrameExtract.Designer.cs">
+    <Compile Include="Views\FrameExtract.Designer.cs">
       <DependentUpon>FrameExtract.cs</DependentUpon>
     </Compile>
-    <Compile Include="FrameExtractorHelp.cs">
+    <Compile Include="Views\FrameExtractorHelp.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="FrameExtractorHelp.Designer.cs">
+    <Compile Include="Views\FrameExtractorHelp.Designer.cs">
       <DependentUpon>FrameExtractorHelp.cs</DependentUpon>
     </Compile>
     <Compile Include="GifComponents\Components\ApplicationExtension.cs" />
@@ -174,13 +177,13 @@
     <EmbeddedResource Include="FormMain.resx">
       <DependentUpon>FormMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FormatForm.resx">
+    <EmbeddedResource Include="Views\FormatForm.resx">
       <DependentUpon>FormatForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrameExtract.resx">
+    <EmbeddedResource Include="Views\FrameExtract.resx">
       <DependentUpon>FrameExtract.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FrameExtractorHelp.resx">
+    <EmbeddedResource Include="Views\FrameExtractorHelp.resx">
       <DependentUpon>FrameExtractorHelp.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">

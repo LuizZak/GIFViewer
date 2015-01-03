@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace GIF_Viewer
+namespace GIF_Viewer.Views
 {
     /// <summary>
     /// Class representing the help window that pops up when the user clicks the help button on the Frame Extract dialog

@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace GIF_Viewer
+namespace GIF_Viewer.Views
 {
     /// <summary>
     /// Specifies an interface where the user can choose the save path and file format for a frame extract form

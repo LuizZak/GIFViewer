@@ -40,6 +40,8 @@ namespace GIF_Viewer.Views
             lbl_bufferMemory.Text = Settings.Instance.MaxBufferMemory + @" MB";
             lbl_keyframeMemory.Text = Settings.Instance.MaxKeyframeMemory + @" MB";
             lbl_keyframeReach.Text = Settings.Instance.MaxKeyframeReach + "";
+
+            cb_allowMultipleInstances.Checked = !Settings.Instance.SingleInstance;
         }
 
         // 
@@ -50,6 +52,7 @@ namespace GIF_Viewer.Views
             Settings.Instance.MaxBufferMemory = _bufferMemory;
             Settings.Instance.MaxKeyframeMemory = _keyframeMemory;
             Settings.Instance.MaxKeyframeReach = _keyframeReach;
+            Settings.Instance.SingleInstance = !cb_allowMultipleInstances.Checked;
             Settings.Instance.SaveSettings();
 
             DialogResult = DialogResult.OK;

@@ -3,9 +3,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
 
-using GIF_Viewer.Views;
-
-namespace GIF_Viewer
+namespace GIF_Viewer.Views
 {
     /// <summary>
     /// Frame extractor utility form

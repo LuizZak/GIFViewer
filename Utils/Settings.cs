@@ -64,6 +64,11 @@ namespace GIF_Viewer.Utils
         public int MaxKeyframeReach { get { return _maxKeyframeReach; } set { _maxKeyframeReach = Math.Min(100, Math.Max(1, value)); } }
 
         /// <summary>
+        /// Gets or sets a value specifying whether the program should allow only one instance running at the same time
+        /// </summary>
+        public bool SingleInstance { get; set; }
+
+        /// <summary>
         /// Whether to ignore .gif file association checks when the program starts
         /// </summary>
         public bool DontAskAssociate { get; set; }
@@ -111,15 +116,10 @@ namespace GIF_Viewer.Utils
 
             StreamReader reader = new StreamReader(_iniFile);
 
-            // Temp definitions:
-            string line;
-            string programName;
-            string programPath;
-            
             // Main loop:
             while (!reader.EndOfStream)
             {
-                line = reader.ReadLine(); // Get a line
+                var line = reader.ReadLine();
 
                 if (line == null)
                     break;
@@ -149,11 +149,20 @@ namespace GIF_Viewer.Utils
                         }
                     }
                 }
+                // Single instance option
+                else if ((line == "[SingleInstance]") && !reader.EndOfStream)
+                {
+                    bool value;
+                    if (bool.TryParse(reader.ReadLine(), out value))
+                    {
+                        SingleInstance = value;
+                    }
+                }
                 // A program:
                 else if (line.Contains("="))
                 {
-                    programName = line.Split('=')[0].Substring(1, line.IndexOf("=", StringComparison.Ordinal) - 2); // Reads off the screen name
-                    programPath = line.Split('=')[1].Substring(1, line.Split('=')[1].LastIndexOf('"') - 1); // Reads off the program's path
+                    var programName = line.Split('=')[0].Substring(1, line.IndexOf("=", StringComparison.Ordinal) - 2);
+                    var programPath = line.Split('=')[1].Substring(1, line.Split('=')[1].LastIndexOf('"') - 1);
 
                     Programs.Add(programName, programPath); // Add this program to thye program's list
                 }
@@ -204,6 +213,8 @@ namespace GIF_Viewer.Utils
             writer.WriteLine(MaxKeyframeMemory);
             writer.WriteLine("[MaxKeyframeReach]");
             writer.WriteLine(MaxKeyframeReach);
+            writer.WriteLine("[SingleInstance]");
+            writer.WriteLine(SingleInstance ? bool.TrueString : bool.FalseString);
 
             // Close the stream:
             writer.Close();

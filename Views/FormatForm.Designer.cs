@@ -1,4 +1,4 @@
-﻿namespace GIF_Viewer
+﻿namespace GIF_Viewer.Views
 {
     partial class FormatForm
     {
