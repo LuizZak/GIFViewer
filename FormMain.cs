@@ -16,6 +16,8 @@ using GIF_Viewer.Utils;
 /// 
 /// @author             Luiz Fernando
 /// 
+/// @version 1.6.2b     Added an option to allow only a single instance of the program to run at the same time.
+/// 
 /// @version 1.6.1b     Fixing opening instances of the program while one instance was previously running causing crashes on the subsequent instances.
 /// 
 /// @version 1.6.0b     Improved .gif speed when seeking frames at any point in the timeline. Utilizing code from the GifComponents (that was in turn based on NGif) open source project.
@@ -277,6 +279,21 @@ namespace GIF_Viewer
                 }
             } catch (Exception) { }
 
+            ProcessCommandLine(args);
+
+            // Register the drag 'n drop handlers
+            DragEnter += FormMain_DragEnter;
+            DragDrop += FormMain_DragDrop;
+
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
+        }
+
+        /// <summary>
+        /// Processes a given string of command line into this form instance
+        /// </summary>
+        /// <param name="args">The commang line to process</param>
+        public void ProcessCommandLine(string[] args)
+        {
             // Load a gif file from the command line arguments
             if (args.Length > 0 && File.Exists(args[0]))
             {
@@ -292,7 +309,10 @@ namespace GIF_Viewer
                 try
                 {
                     LoadGifsInFolder(Path.GetDirectoryName(args[0]));
-                } catch (Exception) { }
+                }
+                catch (Exception)
+                {
+                }
             }
             else
             {
@@ -301,12 +321,6 @@ namespace GIF_Viewer
                     _openFile = true;
                 }
             }
-
-            // Register the drag 'n drop handlers
-            DragEnter += FormMain_DragEnter;
-            DragDrop += FormMain_DragDrop;
-
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
         }
 
         /// <summary>
@@ -1059,6 +1073,6 @@ namespace GIF_Viewer
         /// <summary>
         /// Whether to query the user for a .gif file on startup
         /// </summary>
-        readonly bool _openFile;
+        bool _openFile;
     }
 }
