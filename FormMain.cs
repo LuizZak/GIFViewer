@@ -16,6 +16,8 @@ using GIF_Viewer.Utils;
 /// 
 /// @author             Luiz Fernando
 /// 
+/// @version 1.6.3b     Making the program store settings under the AppData folder. May fix crashes related to non-administrator users running the program.
+/// 
 /// @version 1.6.2b     Added an option to allow only a single instance of the program to run at the same time.
 /// 
 /// @version 1.6.1b     Fixing opening instances of the program while one instance was previously running causing crashes on the subsequent instances.

@@ -106,7 +106,7 @@ namespace GIF_Viewer.Utils
             }
 
             // Set the filename:
-            string fileName = Application.StartupPath + "\\settings.ini";
+            string fileName = Application.LocalUserAppDataPath + "\\settings.ini";
 
             // Clear the Programs Dictionary:
             Programs = new Dictionary<string, string>();
@@ -180,7 +180,7 @@ namespace GIF_Viewer.Utils
         public void SaveSettings()
         {
             // Try to open the settings file:
-            string fileName = Application.StartupPath + "\\settings.ini";
+            string fileName = Application.LocalUserAppDataPath + "\\settings.ini";
 
             if (File.Exists(fileName))
             {
