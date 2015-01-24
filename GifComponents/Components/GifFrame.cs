@@ -619,9 +619,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// The frame which precedes the frame before this one in the GIF stream,
         /// if present.
         /// </param>
-        private Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
+        private unsafe Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
         {
-            int[] pixelsForThisFrameInt = new int[lsd.LogicalScreenSize.Width * lsd.LogicalScreenSize.Height];
             Bitmap baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
 
             // copy each source line to the appropriate place in the destination
@@ -634,17 +633,25 @@ namespace GIF_Viewer.GifComponents.Components
             int logicalWidth = lsd.LogicalScreenSize.Width;
             int logicalHeight = lsd.LogicalScreenSize.Height;
 
+            int imageX = id.Position.X;
+            int imageY = id.Position.Y;
+            int imageWidth = id.Size.Width;
+            int imageHeight = id.Size.Height;
+
             int[] colorTableIndices = activeColourTable.IntColours;
             byte[] pixelIndices = imageData.PixelIndexes;
             int numColors = activeColourTable.Length;
 
-            for (int i = 0; i < id.Size.Height; i++)
+            var fastImageBase = baseImage.FastLock();
+            int* pointerImage = (int*)fastImageBase.Scan0;
+
+            for (int i = 0; i < imageHeight; i++)
             {
                 int pixelRowNumber = i;
                 if (id.IsInterlaced)
                 {
                     #region work out the pixel row we're setting for an interlaced image
-                    if (interlaceRowNumber >= id.Size.Height)
+                    if (interlaceRowNumber >= imageHeight)
                     {
                         pass++;
                         switch (pass)
@@ -668,18 +675,18 @@ namespace GIF_Viewer.GifComponents.Components
                 }
 
                 // Colour in the pixels for this row
-                pixelRowNumber += id.Position.Y;
+                pixelRowNumber += imageY;
                 if (pixelRowNumber < logicalHeight)
                 {
                     int k = pixelRowNumber * logicalWidth;
-                    int dx = k + id.Position.X; // start of line in dest
-                    int dlim = dx + id.Size.Width; // end of dest line
+                    int dx = k + imageX; // start of line in dest
+                    int dlim = dx + imageWidth; // end of dest line
                     if ((k + logicalWidth) < dlim)
                     {
                         // TESTME: CreateBitmap - past dest edge
                         dlim = k + logicalWidth; // past dest edge
                     }
-                    int sx = i * id.Size.Width; // start of line in source
+                    int sx = i * imageWidth; // start of line in source
                     while (dx < dlim)
                     {
                         // map color and insert in destination
@@ -687,68 +694,28 @@ namespace GIF_Viewer.GifComponents.Components
                         // Set this pixel's colour if its index isn't the 
                         // transparent colour index, or if this frame doesn't
                         // have a transparent colour.
-                        int c;
-                        if (hasTransparent && indexInColourTable == transparentColor)
+                        if (!hasTransparent || indexInColourTable != transparentColor)
                         {
-                            c = 0; // transparent pixel
-                        }
-                        else if (indexInColourTable < numColors)
-                        {
-                            c = colorTableIndices[indexInColourTable];
-                        }
-                        else
-                        {
-                            // TESTME: CreateBitmap - BadColourIndex 
-                            c = (255 << 24);
-                            string message = "Colour index: " + indexInColourTable + ", colour table length: " + activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
-                            SetStatus(ErrorState.BadColourIndex, message);
+                            if (indexInColourTable < numColors)
+                            {
+                                *(pointerImage + dx) = colorTableIndices[indexInColourTable];
+                            }
+                            else
+                            {
+                                // TESTME: CreateBitmap - BadColourIndex 
+                                *(pointerImage + dx) = (255 << 24);
+                                string message = "Colour index: " + indexInColourTable + ", colour table length: " +
+                                                 activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
+                                SetStatus(ErrorState.BadColourIndex, message);
+                            }
                         }
 
-                        pixelsForThisFrameInt[dx] = c;
                         dx++;
                     }
                 }
             }
-            return CreateBitmap(baseImage, pixelsForThisFrameInt);
-        }
 
-        /// <summary>
-        /// Sets the pixels of the decoded image.
-        /// </summary>
-        /// <param name="bitmap">
-        /// The bitmap containing the image's data
-        /// </param>
-        /// <param name="lsd">
-        /// The logical screen descriptor for the GIF stream.
-        /// </param>
-        /// <param name="id">
-        /// The image descriptor for this frame.
-        /// </param>
-        /// <param name="activeColourTable">
-        /// The colour table to use with this frame - either the global colour
-        /// table or a local colour table.
-        /// </param>
-        /// <param name="gce">
-        /// The graphic control extension, if any, which precedes this image in
-        /// the input stream.
-        /// </param>
-        /// <param name="previousFrame">
-        /// The frame which precedes this one in the GIF stream, if present.
-        /// </param>
-        /// <param name="previousFrameBut1">
-        /// The frame which precedes the frame before this one in the GIF stream,
-        /// if present.
-        /// </param>
-        private Bitmap CreateBitmap(Bitmap bitmap, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
-        {
-            Bitmap baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
-            
-            //return CreateBitmap(baseImage, pixelsForThisFrameInt);
-            Graphics g = Graphics.FromImage(baseImage);
-            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
-            g.DrawImage(bitmap, Point.Empty);
-            g.Flush();
-            g.Dispose();
+            fastImageBase.Unlock();
 
             return baseImage;
         }
@@ -850,32 +817,29 @@ namespace GIF_Viewer.GifComponents.Components
                     // Adjust transparency
                     backgroundColour &= 0x00FFFFFF;
 
+                    if (previousFrame == null)
+                        break;
+
                     using (var fastBaseImage = baseImage.FastLock())
                     {
                         // If the area to redraw is the whole image, utilize the fast image drawing method FastBitmap.Clear()
-                        if (previousFrame != null && (previousFrame._imageDescriptor.Position.X == 0 && previousFrame._imageDescriptor.Position.Y == 0 &&
-                                                      previousFrame._imageDescriptor.Size.Width == _logicalScreenDescriptor.LogicalScreenSize.Width &&
-                                                      previousFrame._imageDescriptor.Size.Width == _logicalScreenDescriptor.LogicalScreenSize.Width))
+                        if (previousFrame._imageDescriptor.Position == Point.Empty && previousFrame._imageDescriptor.Size == _logicalScreenDescriptor.LogicalScreenSize)
                         {
                             fastBaseImage.Clear(backgroundColour);
                         }
                         else
                         {
-                            if (previousFrame != null)
+                            var minY = previousFrame._imageDescriptor.Position.Y;
+                            var maxY = previousFrame._imageDescriptor.Position.Y + previousFrame._imageDescriptor.Size.Height;
+
+                            for (int y = minY; y < maxY; y++)
                             {
-                                var minY = previousFrame._imageDescriptor.Position.Y;
-                                var maxY = previousFrame._imageDescriptor.Position.Y + previousFrame._imageDescriptor.Size.Height;
+                                var minX = previousFrame._imageDescriptor.Position.X;
+                                var maxX = previousFrame._imageDescriptor.Position.X + previousFrame._imageDescriptor.Size.Width;
 
-
-                                for (int y = minY; y < maxY; y++)
+                                for (int x = minX; x < maxX; x++)
                                 {
-                                    var minX = previousFrame._imageDescriptor.Position.X;
-                                    var maxX = previousFrame._imageDescriptor.Position.X + previousFrame._imageDescriptor.Size.Width;
-
-                                    for (int x = minX; x < maxX; x++)
-                                    {
-                                        fastBaseImage.SetPixel(x, y, backgroundColour);
-                                    }
+                                    fastBaseImage.SetPixel(x, y, backgroundColour);
                                 }
                             }
                         }
@@ -892,32 +856,6 @@ namespace GIF_Viewer.GifComponents.Components
                     break;
             }
             #endregion
-
-            return baseImage;
-        }
-
-        #endregion
-
-        #region private static CreateBitmap( Bitmap, Color[] ) method
-
-        /// <summary>
-        /// Creates and returns a Bitmap of the supplied size composed of pixels
-        /// of the supplied colours, working left to right and then top to 
-        /// bottom.
-        /// </summary>
-        /// <param name="baseImage">
-        /// The image to start with; this is overpainted with the supplied 
-        /// pixels where they are not transparent.
-        /// </param>
-        /// <param name="pixels">
-        /// An array of the colours of the pixels for the bitmap to be created.
-        /// </param>
-        private static Bitmap CreateBitmap(Bitmap baseImage, int[] pixels)
-        {
-            using (FastBitmap fastBitmap = baseImage.FastLock())
-            {
-                fastBitmap.CopyFromArray(pixels, true);
-            }
 
             return baseImage;
         }

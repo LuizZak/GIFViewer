@@ -24,6 +24,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace GIF_Viewer.Utils
 {
@@ -32,6 +33,11 @@ namespace GIF_Viewer.Utils
     /// </summary>
     public unsafe class FastBitmap : IDisposable
     {
+        /// <summary>
+        /// Gets or sets a value specifying whether to use threads to speedup operations by parallelizing them into thrads
+        /// </summary>
+        public static bool UseThreads { get; set; }
+
         /// <summary>
         /// Specifies the number of bytes available per pixel of the bitmap object being manipulated
         /// </summary>
@@ -375,42 +381,102 @@ namespace GIF_Viewer.Utils
             fixed (int* source = colors)
             {
                 // ReSharper disable once InconsistentNaming
-                int* s0s = source;
-                int count = _width * _height;
-
-                if (!ignoreZeroes)
+                if (!UseThreads)
                 {
-                    // Unfold the loop
-                    const int sizeBlock = 8;
-                    int rem = count % sizeBlock;
-
-                    count /= sizeBlock;
-
-                    while (count-- > 0)
-                    {
-                        *(s0t++) = *(s0s++);
-                        *(s0t++) = *(s0s++);
-                        *(s0t++) = *(s0s++);
-                        *(s0t++) = *(s0s++);
-
-                        *(s0t++) = *(s0s++);
-                        *(s0t++) = *(s0s++);
-                        *(s0t++) = *(s0s++);
-                        *(s0t++) = *(s0s++);
-                    }
-
-                    while (rem-- > 0)
-                    {
-                        *(s0t++) = *(s0s++);
-                    }
+                    InternalCopyFromArray(source, s0t, 0, colors.Length, ignoreZeroes);
                 }
                 else
                 {
-                    while (count-- > 0)
+                    const int threadCount = 2;
+                    int count = colors.Length;
+                    int countPerThread = count / threadCount;
+
+                    // Separate the copy into different copy operations
+                    CopyOperationSettings[] settings = new CopyOperationSettings[threadCount];
+                    Thread[] threads = new Thread[threadCount];
+
+                    for (int i = 0; i < threadCount; i++)
                     {
-                        if (*(s0s) == 0) { s0t++; s0s++; continue; }
-                        *(s0t++) = *(s0s++);
+                        int start = countPerThread * i;
+                        int length = i == (threadCount - 1) ? count - start : countPerThread;
+
+                        settings[i] = new CopyOperationSettings(source, s0t, start, length, ignoreZeroes);
+                        threads[i] = new Thread(InternalCopyFromArray);
+
+                        threads[i].Start(settings[i]);
                     }
+
+                    for (int i = 0; i < threadCount; i++)
+                    {
+                        threads[i].Join();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs a data copying routine with the specified boxed settings structure
+        /// </summary>
+        /// <param name="settings">The settings to use when copying the values over</param>
+        private void InternalCopyFromArray(object settings)
+        {
+            InternalCopyFromArray((CopyOperationSettings)settings);
+        }
+
+        /// <summary>
+        /// Performs a data copying routine with the specified settings structure
+        /// </summary>
+        /// <param name="settings">The settings to use when copying the values over</param>
+        private void InternalCopyFromArray(CopyOperationSettings settings)
+        {
+            InternalCopyFromArray(settings.Source, settings.Target, settings.StartRange, settings.Length, settings.IgnoreZeroes);
+        }
+
+        /// <summary>
+        /// Performs a data copying routine from a pointer directly to the memory location of the bitmap, starting at a given location
+        /// </summary>
+        /// <param name="source">The source pointer to copy the pixels from. This must point to the first pixel of the source image</param>
+        /// <param name="target">The target pointer to copy the pixels to. This must point to the first pixel of the target image</param>
+        /// <param name="startRange">The starting range to start copying from</param>
+        /// <param name="count">The number of pixels to copy</param>
+        /// <param name="ignoreZeroes">Whether to ignore zeroes found during the copy operation</param>
+        private void InternalCopyFromArray(int* source, int* target, int startRange, int count, bool ignoreZeroes = false)
+        {
+            int* s0s = source + startRange;
+            int* s0t = target + startRange;
+
+            if (!ignoreZeroes)
+            {
+                // Unfold the loop
+                const int sizeBlock = 8;
+                int rem = count % sizeBlock;
+
+                count /= sizeBlock;
+
+                while (count-- > 0)
+                {
+                    *(s0t++) = *(s0s++);
+                    *(s0t++) = *(s0s++);
+                    *(s0t++) = *(s0s++);
+                    *(s0t++) = *(s0s++);
+
+                    *(s0t++) = *(s0s++);
+                    *(s0t++) = *(s0s++);
+                    *(s0t++) = *(s0s++);
+                    *(s0t++) = *(s0s++);
+                }
+
+                while (rem-- > 0)
+                {
+                    *(s0t++) = *(s0s++);
+                }
+            }
+            else
+            {
+                while (count-- > 0)
+                {
+                    if (*(s0s) == 0) { s0t++; s0s++; continue; }
+                    *(s0t++) = *(s0s++);
                 }
             }
         }
@@ -644,6 +710,50 @@ namespace GIF_Viewer.Utils
             {
                 if (_fastBitmap._locked)
                     _fastBitmap.Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Settings used on threaded copy operations
+        /// </summary>
+        private struct CopyOperationSettings
+        {
+            /// <summary>
+            /// The source pointer to copy the pixels from. This must point to the first pixel of the source image
+            /// </summary>
+            public readonly int* Source;
+            /// <summary>
+            /// The target pointer to copy the pixels to. This must point to the first pixel of the target image
+            /// </summary>
+            public readonly int* Target;
+            /// <summary>
+            /// The starting range to start copying from
+            /// </summary>
+            public readonly int StartRange;
+            /// <summary>
+            /// The number of pixels to copy
+            /// </summary>
+            public readonly int Length;
+            /// <summary>
+            /// Whether to ignore zeroes found during the copy operation
+            /// </summary>
+            public readonly bool IgnoreZeroes;
+
+            /// <summary>
+            /// Initializes a new CopyOperationSettings struct
+            /// </summary>
+            /// <param name="source">The source pointer to copy the pixels from. This must point to the first pixel of the source image</param>
+            /// <param name="target">The target pointer to copy the pixels to. This must point to the first pixel of the target image</param>
+            /// <param name="startRange">The starting range to start copying from</param>
+            /// <param name="length">The number of pixels to copy</param>
+            /// <param name="ignoreZeroes">Whether to ignore zeroes found during the copy operation</param>
+            public CopyOperationSettings(int* source, int* target, int startRange, int length, bool ignoreZeroes)
+            {
+                Source = source;
+                Target = target;
+                StartRange = startRange;
+                Length = length;
+                IgnoreZeroes = ignoreZeroes;
             }
         }
     }

@@ -158,7 +158,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// </remarks>
 	    [Category("Status")]
 	    [Description("Gets the combined error states of this component and all its child components.")]
-	    public ErrorState ConsolidatedState
+	    public virtual ErrorState ConsolidatedState
 	    {
 	        get
 	        {
@@ -245,40 +245,6 @@ namespace GIF_Viewer.GifComponents.Components
 		public string ErrorMessage
 		{
 			get { return _status.ErrorMessage; }
-		}
-		#endregion
-
-		#region public DebugXml property
-		/// <summary>
-		/// Gets the XML which provides insight into how the GIF stream or 
-		/// component was interpreted by this library.
-		/// For debugging use if the GIF stream cannot be decoded.
-		/// TODO: view DebugXml in a multi-line text box in PropertyGrid
-		/// </summary>
-		[Category( "Status" )]
-		public string DebugXml
-		{
-			get 
-			{ 
-				string xml = DebugXmlReader.ReadOuterXml();
-				return xml;
-			}
-		}
-		#endregion
-		
-		#region public DebugXmlReader property
-		/// <summary>
-		/// Gets the XML which provides insight into how the GIF stream or 
-		/// component was interpreted by this library.
-		/// For debugging use if the GIF stream cannot be decoded.
-		/// </summary>
-		[Browsable( false )]
-		public XmlReader DebugXmlReader
-		{
-			get 
-			{
-                return null;
-			}
 		}
 		#endregion
 		
@@ -381,11 +347,6 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// </returns>
 	    protected static int Read(Stream inputStream)
 	    {
-	        if (inputStream == null)
-	        {
-	            throw new ArgumentNullException("inputStream");
-	        }
-
 	        return inputStream.ReadByte();
 	    }
 

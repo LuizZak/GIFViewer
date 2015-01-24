@@ -16,6 +16,8 @@ using GIF_Viewer.Utils;
 /// 
 /// @author             Luiz Fernando
 /// 
+/// @version 1.6.5b     Fixed rendering of frames incorrectly rendering black portions.
+/// 
 /// @version 1.6.3b     Making the program store settings under the AppData folder. May fix crashes related to non-administrator users running the program.
 /// 
 /// @version 1.6.2b     Added an option to allow only a single instance of the program to run at the same time.
@@ -202,6 +204,11 @@ namespace GIF_Viewer
         /// Menu item for the Low rendering setting
         /// </summary>
         private ToolStripMenuItem _lowQualityMenuItem;
+        // The quality settings menu items
+        /// <summary>
+        /// Menu item for the Medium rendering setting
+        /// </summary>
+        private ToolStripMenuItem _mediumQualityMenuItem;
         /// <summary>
         /// Menu item for the high rendering setting
         /// </summary>
@@ -595,13 +602,17 @@ namespace GIF_Viewer
             ToolStripItemCollection col = ((ToolStripMenuItem)cms_gifRightClick.Items.Add("Quality")).DropDownItems;
 
             _lowQualityMenuItem = (ToolStripMenuItem)col.Add("Low");
+            _mediumQualityMenuItem = (ToolStripMenuItem)col.Add("Medium");
             _highQualityMenuItem = (ToolStripMenuItem)col.Add("High");
 
             _lowQualityMenuItem.Click += Quality_Change;
+            _mediumQualityMenuItem.Click += Quality_Change;
             _highQualityMenuItem.Click += Quality_Change;
 
             if (pb_gif.Quality == 1)
                 _lowQualityMenuItem.Checked = true;
+            if (pb_gif.Quality == 2)
+                _mediumQualityMenuItem.Checked = true;
             else if (pb_gif.Quality == 3)
                 _highQualityMenuItem.Checked = true;
 
@@ -686,18 +697,26 @@ namespace GIF_Viewer
         /// <param name="e">The arguments for this event</param>
         void Quality_Change(object sender, EventArgs e)
         {
+            _lowQualityMenuItem.Checked = false;
+            _mediumQualityMenuItem.Checked = false;
+            _highQualityMenuItem.Checked = false;
+
             if (sender == _lowQualityMenuItem)
             {
                 pb_gif.Quality = 1;
 
                 _lowQualityMenuItem.Checked = true;
-                _highQualityMenuItem.Checked = false;
+            }
+            else if (sender == _mediumQualityMenuItem)
+            {
+                pb_gif.Quality = 2;
+
+                _mediumQualityMenuItem.Checked = true;
             }
             else if (sender == _highQualityMenuItem)
             {
                 pb_gif.Quality = 3;
 
-                _lowQualityMenuItem.Checked = false;
                 _highQualityMenuItem.Checked = true;
             }
 

@@ -22,8 +22,10 @@
 #endregion
 
 using System;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+
 using GIF_Viewer.GifComponents.Enums;
 
 namespace GIF_Viewer.GifComponents.Components
@@ -65,6 +67,7 @@ namespace GIF_Viewer.GifComponents.Components
 		#region declarations
 		
         private int _blockSize;
+        private int _dataLength;
 		private byte[] _data;
 
         #endregion
@@ -167,6 +170,7 @@ namespace GIF_Viewer.GifComponents.Components
 	        }
 
 	        _blockSize = blockSize;
+            _dataLength = data.Length;
 	        _data = data;
 	    }
 
@@ -222,7 +226,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    {
 	        get
 	        {
-	            if (index >= _data.Length)
+                if (index >= _dataLength)
 	            {
 	                string message = "Supplied index: " + index + ". Array length: " + _data.Length;
 	                throw new ArgumentOutOfRangeException("index", message);
@@ -232,6 +236,25 @@ namespace GIF_Viewer.GifComponents.Components
 	    }
 
 	    #endregion
+
+        /// <summary>
+        /// Gets the combined error states of this component and all its child
+        /// components.
+        /// </summary>
+        /// <remarks>
+        /// This property uses reflection to inspect the runtime type of the
+        /// current instance and performs a bitwise or of the ErrorStates of
+        /// the current instance and of any GifComponents within it.
+        /// </remarks>
+        [Category("Status")]
+        [Description("Gets the combined error states of this component and all its child components.")]
+        public override ErrorState ConsolidatedState
+        {
+            get
+            {
+                return ErrorState;
+            }
+        }
 		
 		#region public WriteToStream method
 

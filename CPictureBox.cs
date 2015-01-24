@@ -32,6 +32,8 @@ namespace GIF_Viewer
         {
             // Clear the panel:
             pevent.Graphics.Clear(BackColor);
+            pevent.Graphics.CompositingMode = CompositingMode.SourceOver;
+            pevent.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
 
             // Return if the background image is null or if the paint message is set to be ignored
             if (BackgroundImage == null || _Paint == false)
@@ -50,14 +52,14 @@ namespace GIF_Viewer
 
                 // Medium:
                 case 2:
-                    pevent.Graphics.InterpolationMode = InterpolationMode.Low;
-                    pevent.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    pevent.Graphics.InterpolationMode = InterpolationMode.High;
+                    pevent.Graphics.SmoothingMode = SmoothingMode.None;
                     break;
 
                 // High
                 case 3:
                     pevent.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                    pevent.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+                    pevent.Graphics.SmoothingMode = SmoothingMode.None;
                     break;
             }
 
