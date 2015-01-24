@@ -16,9 +16,8 @@ using GIF_Viewer.Utils;
 /// 
 /// @author             Luiz Fernando
 /// 
-/// @version 1.6.5b     Fixed rendering of frames incorrectly rendering black portions.
-/// 
 /// @version 1.6.3b     Making the program store settings under the AppData folder. May fix crashes related to non-administrator users running the program.
+///                     Optimizing decoding process of gif files slightly.
 /// 
 /// @version 1.6.2b     Added an option to allow only a single instance of the program to run at the same time.
 /// 

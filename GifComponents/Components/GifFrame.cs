@@ -676,42 +676,39 @@ namespace GIF_Viewer.GifComponents.Components
 
                 // Colour in the pixels for this row
                 pixelRowNumber += imageY;
-                if (pixelRowNumber < logicalHeight)
-                {
-                    int k = pixelRowNumber * logicalWidth;
-                    int dx = k + imageX; // start of line in dest
-                    int dlim = dx + imageWidth; // end of dest line
-                    if ((k + logicalWidth) < dlim)
-                    {
-                        // TESTME: CreateBitmap - past dest edge
-                        dlim = k + logicalWidth; // past dest edge
-                    }
-                    int sx = i * imageWidth; // start of line in source
-                    while (dx < dlim)
-                    {
-                        // map color and insert in destination
-                        int indexInColourTable = pixelIndices[sx++];
-                        // Set this pixel's colour if its index isn't the 
-                        // transparent colour index, or if this frame doesn't
-                        // have a transparent colour.
-                        if (!hasTransparent || indexInColourTable != transparentColor)
-                        {
-                            if (indexInColourTable < numColors)
-                            {
-                                *(pointerImage + dx) = colorTableIndices[indexInColourTable];
-                            }
-                            else
-                            {
-                                // TESTME: CreateBitmap - BadColourIndex 
-                                *(pointerImage + dx) = (255 << 24);
-                                string message = "Colour index: " + indexInColourTable + ", colour table length: " +
-                                                 activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
-                                SetStatus(ErrorState.BadColourIndex, message);
-                            }
-                        }
+                if (pixelRowNumber >= logicalHeight)
+                    continue;
 
-                        dx++;
+                int k = pixelRowNumber * logicalWidth;
+                int dx = k + imageX; // start of line in dest
+                int dlim = dx + imageWidth; // end of dest line
+                if ((k + logicalWidth) < dlim)
+                {
+                    // TESTME: CreateBitmap - past dest edge
+                    dlim = k + logicalWidth; // past dest edge
+                }
+                int sx = i * imageWidth; // start of line in source
+                while (dx < dlim)
+                {
+                    // map color and insert in destination
+                    int indexInColourTable = pixelIndices[sx++];
+                    // Set this pixel's colour if its index isn't the transparent colour index, or if this frame doesn't have a transparent colour.
+                    if (!hasTransparent || indexInColourTable != transparentColor)
+                    {
+                        if (indexInColourTable < numColors)
+                        {
+                            *(pointerImage + dx) = colorTableIndices[indexInColourTable];
+                        }
+                        else
+                        {
+                            // TESTME: CreateBitmap - BadColourIndex 
+                            *(pointerImage + dx) = (255 << 24);
+                            string message = "Colour index: " + indexInColourTable + ", colour table length: " + activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
+                            SetStatus(ErrorState.BadColourIndex, message);
+                        }
                     }
+
+                    dx++;
                 }
             }
 
@@ -817,7 +814,7 @@ namespace GIF_Viewer.GifComponents.Components
                     // Adjust transparency
                     backgroundColour &= 0x00FFFFFF;
 
-                    if (previousFrame == null)
+                    if (previousFrame == null || previousFrame._imageDescriptor == null)
                         break;
 
                     using (var fastBaseImage = baseImage.FastLock())

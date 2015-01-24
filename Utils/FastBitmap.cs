@@ -380,7 +380,6 @@ namespace GIF_Viewer.Utils
 
             fixed (int* source = colors)
             {
-                // ReSharper disable once InconsistentNaming
                 if (!UseThreads)
                 {
                     InternalCopyFromArray(source, s0t, 0, colors.Length, ignoreZeroes);
@@ -442,6 +441,7 @@ namespace GIF_Viewer.Utils
         /// <param name="ignoreZeroes">Whether to ignore zeroes found during the copy operation</param>
         private void InternalCopyFromArray(int* source, int* target, int startRange, int count, bool ignoreZeroes = false)
         {
+            // ReSharper disable once InconsistentNaming
             int* s0s = source + startRange;
             int* s0t = target + startRange;
 

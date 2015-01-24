@@ -137,9 +137,7 @@ namespace GIF_Viewer.GifComponents.Components
 
 	        if (bytesRead < blockSize)
 	        {
-	            string message
-	                = "Supplied block size: " + blockSize
-	                  + ". Actual block size: " + bytesRead;
+	            string message = "Supplied block size: " + blockSize + ". Actual block size: " + bytesRead;
 	            SetStatus(ErrorState.DataBlockTooShort, message);
 	        }
 	    }
@@ -155,17 +153,14 @@ namespace GIF_Viewer.GifComponents.Components
 	            throw new ArgumentNullException("data");
 	        }
 
-	        string message
-	            = "Supplied block size: " + blockSize
-	              + ". Actual block size: " + data.Length;
-
 	        if (blockSize > data.Length)
 	        {
+                string message = "Supplied block size: " + blockSize + ". Actual block size: " + data.Length;
 	            SetStatus(ErrorState.DataBlockTooShort, message);
 	        }
-
-	        if (blockSize < data.Length)
+	        else if (blockSize < data.Length)
 	        {
+                string message = "Supplied block size: " + blockSize + ". Actual block size: " + data.Length;
 	            SetStatus(ErrorState.DataBlockTooLong, message);
 	        }
 

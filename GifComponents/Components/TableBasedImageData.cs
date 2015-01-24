@@ -59,11 +59,6 @@ namespace GIF_Viewer.GifComponents.Components
         private const int NullCode = -1; // indicates no previous code has been read yet
 
         /// <summary>
-        /// Data blocks read from the input stream.
-        /// </summary>
-        private readonly Collection<DataBlock> _dataBlocks;
-
-        /// <summary>
         /// An array of indices to colours in the active colour table,
         /// representing the pixels of a frame in a GIF data stream.
         /// </summary>
@@ -111,7 +106,6 @@ namespace GIF_Viewer.GifComponents.Components
 	        #region declare / initialise local variables
 
 	        _pixelIndexes = new byte[pixelCount];
-	        _dataBlocks = new Collection<DataBlock>();
 	        int nextAvailableCode; // the next code to be added to the dictionary
 	        int currentCodeSize;
 	        int in_code;
@@ -139,14 +133,14 @@ namespace GIF_Viewer.GifComponents.Components
 	        previousCode = NullCode;
 	        currentCodeSize = InitialCodeSize;
 
+            // Cached local values
+	        int endOfInformation = (clearCode) + 1;
+
 	        #region guard against LZW code size being too large
 
 	        if (clearCode >= MaxStackSize)
 	        {
-	            string message
-	                = "LZW minimum code size: " + _lzwMinimumCodeSize
-	                  + ". Clear code: " + clearCode
-	                  + ". Max stack size: " + MaxStackSize;
+	            string message = "LZW minimum code size: " + _lzwMinimumCodeSize + ". Clear code: " + clearCode + ". Max stack size: " + MaxStackSize;
 	            SetStatus(ErrorState.LzwMinimumCodeSizeTooLarge, message);
 	            return;
 	        }
@@ -166,15 +160,14 @@ namespace GIF_Viewer.GifComponents.Components
 	        // first time through the loop with a data block read from the input
 	        // stream.
 	        DataBlock block = new DataBlock(0, new byte[0]);
+	        var array = block.Data;
 
 	        for (pixelIndex = 0; pixelIndex < pixelCount;)
 	        {
                 if(pixelStack.Count > 0)
                 {
-                    // Pop all the pixels currently on the stack off, and add them
-	                // to the return value.                    
+                    // Pop all the pixels currently on the stack off, and add them to the return value.
                     _pixelIndexes[pixelIndex++] = pixelStack.Pop();
-
                     continue;
                 }
 
@@ -198,6 +191,7 @@ namespace GIF_Viewer.GifComponents.Components
 	                    #region	read the next data block from the stream
 
 	                    block = ReadDataBlock(inputStream);
+	                    array = block.Data;
 	                    bytesToExtract = block.ActualBlockSize;
 
 	                    // Point to the first byte in the new data block
@@ -222,7 +216,7 @@ namespace GIF_Viewer.GifComponents.Components
 	                }
 	                // Append the contents of the current byte in the data 
 	                // block to the beginning of the datum
-	                int newDatum = block[indexInDataBlock] << meaningfulBitsInDatum;
+                    int newDatum = array[indexInDataBlock] << meaningfulBitsInDatum;
 	                datum += newDatum;
 
 	                // so we've now got 8 more bits of information in the
@@ -260,7 +254,8 @@ namespace GIF_Viewer.GifComponents.Components
 
 	            #region end of information?
 
-	            if (code == EndOfInformation)
+	            //if (code == EndOfInformation)
+                if (code == endOfInformation)
 	            {
 	                // We've reached an explicit marker for the end of the
 	                // image data.
@@ -294,7 +289,7 @@ namespace GIF_Viewer.GifComponents.Components
 	                // data, this is an instruction to reset the decoder
 	                // and empty the dictionary of codes.
 	                currentCodeSize = InitialCodeSize;
-	                nextAvailableCode = ClearCode + 2;
+	                nextAvailableCode = clearCode + 2;
 	                previousCode = NullCode;
 
 	                // Carry on reading from the input stream.
@@ -337,9 +332,9 @@ namespace GIF_Viewer.GifComponents.Components
 
 	            #endregion
 
-	            firstCode = (suffix[code]) & 0xff;
+                firstCode = suffix[code];
 
-	            #region add a new string to the string table
+	            #region add a new code to the code table
 
 	            if (nextAvailableCode >= MaxStackSize)
 	            {
@@ -386,19 +381,6 @@ namespace GIF_Viewer.GifComponents.Components
 
 	        #endregion
 	    }
-
-	    /// <summary>
-        /// Gets the data blocks as read from the input stream.
-        /// </summary>
-        public DataBlock[] DataBlocks
-        {
-            get
-            {
-                DataBlock[] blocks = new DataBlock[_dataBlocks.Count];
-                _dataBlocks.CopyTo(blocks, 0);
-                return blocks;
-            }
-        }
 
         /// <summary>
         /// Gets an array of indices to colours in the active colour table,
@@ -469,7 +451,6 @@ namespace GIF_Viewer.GifComponents.Components
         private DataBlock ReadDataBlock(Stream inputStream)
         {
             DataBlock block = new DataBlock(inputStream);
-            _dataBlocks.Add(block);
             return block;
         }
 
