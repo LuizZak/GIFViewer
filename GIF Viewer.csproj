@@ -163,7 +163,7 @@
     <Compile Include="Views\SettingsForm.Designer.cs">
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="TimelineControl.cs">
+    <Compile Include="Controls\TimelineControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Update.cs" />

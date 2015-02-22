@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows.Forms;
+using GIF_Viewer.Controls;
 
 namespace GIF_Viewer.Views
 {

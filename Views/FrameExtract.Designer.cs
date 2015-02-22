@@ -1,4 +1,6 @@
-﻿namespace GIF_Viewer.Views
+﻿using GIF_Viewer.Controls;
+
+namespace GIF_Viewer.Views
 {
     partial class FrameExtract
     {
@@ -34,7 +36,7 @@
             this.btn_close = new System.Windows.Forms.Button();
             this.btn_help = new System.Windows.Forms.Button();
             this.btn_extract = new System.Windows.Forms.Button();
-            this.tlc_timeline = new GIF_Viewer.TimelineControl();
+            this.tlc_timeline = new TimelineControl();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.cpb_preview = new GIF_Viewer.CPictureBox();
             this.panel1.SuspendLayout();
@@ -107,7 +109,7 @@
             this.tlc_timeline.Size = new System.Drawing.Size(440, 28);
             this.tlc_timeline.TabIndex = 0;
             this.tlc_timeline.Text = "timelineControl1";
-            this.tlc_timeline.RangeChanged += new GIF_Viewer.TimelineControl.RangeChangedEventHandler(this.tlc_timeline_RangeChangedEvent);
+            this.tlc_timeline.RangeChanged += new TimelineControl.RangeChangedEventHandler(this.tlc_timeline_RangeChangedEvent);
             // 
             // cpb_preview
             // 

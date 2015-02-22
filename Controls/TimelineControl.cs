@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-namespace GIF_Viewer
+namespace GIF_Viewer.Controls
 {
     /// <summary>
     /// Describes a timeline control with two knobs,
@@ -572,6 +572,10 @@ namespace GIF_Viewer
         {
             base.OnMouseDown(e);
 
+            var findForm = FindForm();
+            if (findForm != null)
+                findForm.ActiveControl = this;
+            Select();
             Focus();
 
             if (!Enabled)
@@ -1093,6 +1097,59 @@ namespace GIF_Viewer
         }
 
         /// <summary>
+        /// OnKeyDown event called whenever the user presses a keyboard key while the control is the active control of the form
+        /// </summary>
+        /// <param name="e">The EventArgs for this event</param>
+        protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
+        {
+            // Seek GIF timeline
+            switch (e.KeyData)
+            {
+                case Keys.Left:
+                case Keys.Right:
+                    e.IsInputKey = true;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// OnKeyDown event called whenever the user presses a keyboard key while the control is the active control of the form
+        /// </summary>
+        /// <param name="e">The EventArgs for this event</param>
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            // Seek GIF timeline
+            if (e.KeyData == Keys.Left)
+            {
+                if (CurrentFrame > Minimum)
+                {
+                    ChangeFrame(CurrentFrame - 1);
+                }
+                else
+                {
+                    ChangeFrame(Maximum - 1);
+                }
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+            else if (e.KeyData == Keys.Right)
+            {
+                if (CurrentFrame < Maximum)
+                {
+                    ChangeFrame(CurrentFrame + 1);
+                }
+                else
+                {
+                    ChangeFrame(Minimum);
+                }
+
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+            }
+        }
+
+        /// <summary>
         /// OnEnabledChanged event called whenever the Enabled property is changed
         /// </summary>
         /// <param name="e">The EventArgs for this event</param>
@@ -1169,6 +1226,9 @@ namespace GIF_Viewer
         /// <param name="newFrame">The new frame to display</param>
         public void ChangeFrame(int newFrame)
         {
+            // Clamp the value
+            newFrame = Math.Min(maximum, Math.Max(minimum, newFrame));
+
             if (currentFrame == newFrame)
                 return;
 
