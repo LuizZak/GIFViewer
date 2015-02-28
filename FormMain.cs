@@ -16,6 +16,8 @@ using GIF_Viewer.Utils;
 /// 
 /// @author             Luiz Fernando
 /// 
+/// @version 1.6.5b     Now opening another .gif file in single instance mode will move the main window instance to the front.
+/// 
 /// @version 1.6.4b     Adding extra shortcuts for navigating the images in the folder with the arrow keys, while the focus is in the image.
 /// 
 /// @version 1.6.3b     Making the program store settings under the AppData folder. May fix crashes related to non-administrator users running the program.

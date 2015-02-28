@@ -31,7 +31,11 @@ namespace GIF_Viewer
                     return;
 
                 eventArgs.BringToForeground = true;
+                form.TopMost = true;
                 form.ProcessCommandLine(eventArgs.CommandLine.ToArray());
+                form.BringToFront();
+                form.TopMost = false;
+                form.Focus();
             };
 
             applicationBase.Run(args);
