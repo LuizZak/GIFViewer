@@ -37,15 +37,15 @@ namespace GIF_Viewer
         /// <summary>
         /// Gets the ammount of frames on this gif
         /// </summary>
-        public int FrameCount => _frameCount;
+        public int FrameCount { get; private set; }
 
         /// <summary>
         /// Gets or sets the current frame being displayed
         /// </summary>
         public int CurrentFrame
         {
-            get { return _currentFrame; }
-            set { SetCurrentFrame(value); }
+            get => _currentFrame;
+            set => SetCurrentFrame(value);
         }
         /// <summary>
         /// Intervals (in ms) between each frame
@@ -64,31 +64,17 @@ namespace GIF_Viewer
         /// <summary>
         /// Gets the Width of this GIF file
         /// </summary>
-        public int Width => _width;
+        public int Width { get; private set; }
 
         /// <summary>
         /// Gets the Height of this GIF file
         /// </summary>
-        public int Height => _height;
-
-        /// <summary>
-        /// The Width of this GIF file
-        /// </summary>
-        private int _width;
-        /// <summary>
-        /// The Height of this GIF file
-        /// </summary>
-        private int _height;
+        public int Height { get; private set; }
 
         /// <summary>
         /// Current frame interval (in milliseconds)
         /// </summary>
         private int _currentInterval;
-
-        /// <summary>
-        /// Ammount of frames on this gif
-        /// </summary>
-        private int _frameCount;
 
         /// <summary>
         /// The current frame being displayed
@@ -143,15 +129,15 @@ namespace GIF_Viewer
             }
 
             // Get information from the gif file
-            _width = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Width;
-            _height = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Height;
+            Width = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Width;
+            Height = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Height;
 
             _currentFrame = 0;
-            _frameCount = _gifDecoded.FrameCount;
+            FrameCount = _gifDecoded.FrameCount;
 
             // Get frame intervals
-            Intervals = new int[_frameCount];
-            for (int i = 0; i < _frameCount; i++)
+            Intervals = new int[FrameCount];
+            for (int i = 0; i < FrameCount; i++)
             {
                 Intervals[i] = _gifDecoded.GetDelayForFrame(i) * 10;
             }
@@ -210,7 +196,7 @@ namespace GIF_Viewer
         /// <returns>The frame count of this Gif file</returns>
         public int GetFrameCount()
         {
-            return _frameCount;
+            return FrameCount;
         }
     }
 }

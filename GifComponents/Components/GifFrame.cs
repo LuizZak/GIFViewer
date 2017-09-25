@@ -57,7 +57,7 @@ namespace GIF_Viewer.GifComponents.Components
 
         private readonly int _index;
         private bool _keyframe;
-        private Image _image;
+        private Bitmap _image;
         private int _delay;
         private bool _expectsUserInput;
         private Point _position;
@@ -174,8 +174,8 @@ namespace GIF_Viewer.GifComponents.Components
                       "the next frame in the animation")]
         public int Delay
         {
-            get { return _delay; }
-            set { _delay = value; }
+            get => _delay;
+            set => _delay = value;
         }
         #endregion
 
@@ -186,8 +186,8 @@ namespace GIF_Viewer.GifComponents.Components
         [Description("The background colour for this frame.")]
         public Color BackgroundColour
         {
-            get { return _backgroundColour; }
-            set { _backgroundColour = value; }
+            get => _backgroundColour;
+            set => _backgroundColour = value;
         }
         #endregion
 
@@ -282,8 +282,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         public bool Keyframe
         {
-            get { return _keyframe; }
-            set { _keyframe = value; }
+            get => _keyframe;
+            set => _keyframe = value;
         }
 
         #endregion
@@ -458,10 +458,10 @@ namespace GIF_Viewer.GifComponents.Components
 
             int transparentColourIndex = _graphicControlExtension.TransparentColourIndex;
 
-            ImageDescriptor imageDescriptor = new ImageDescriptor(_inputStream);
+            var imageDescriptor = new ImageDescriptor(_inputStream);
 
             #region determine the colour table to use for this frame
-            Color backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
+            var backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
             // TODO: use backgroundColourIndex from the logical screen descriptor?
             ColourTable activeColourTable;
             if (imageDescriptor.HasLocalColourTable)
@@ -492,7 +492,7 @@ namespace GIF_Viewer.GifComponents.Components
 
             // decode pixel data
             int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
-            TableBasedImageData tbid = new TableBasedImageData(_inputStream, pixelCount);
+            var tbid = new TableBasedImageData(_inputStream, pixelCount);
             if (tbid.PixelIndexes.Length == 0)
             {
                 // TESTME: constructor - PixelIndexes.Length == 0
@@ -766,7 +766,8 @@ namespace GIF_Viewer.GifComponents.Components
             }
             else
             {
-                baseImage = new Bitmap(previousFrame._image);
+                baseImage = new Bitmap(width, height);
+                FastBitmap.CopyPixels(previousFrame._image, baseImage);
             }
 
             switch (previousDisposalMethod)

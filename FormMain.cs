@@ -19,6 +19,7 @@ using GIF_Viewer.FileExts;
 /// @author             Luiz Fernando
 /// 
 /// @version 1.7.0b     Fixed File Association strategy causing issues w/ registry access.
+/// @                   Fixed an issue w/ some Gif files that did not rendered entirely in some frames near the bottom.
 /// 
 /// @version 1.6.6b     Added a setting to customize the default minimum frame delay setting (as well as disabling it on startup).
 /// 
@@ -236,7 +237,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Windows' Open File Dialog:
         /// </summary>
-        readonly OpenFileDialog _op = new OpenFileDialog();
+        private readonly OpenFileDialog _op = new OpenFileDialog();
 
         /// <summary>
         /// Main entry point for this Form

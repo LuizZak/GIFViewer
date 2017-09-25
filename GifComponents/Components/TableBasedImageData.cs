@@ -40,6 +40,7 @@ using System;
 using System.Collections.Generic;
 
 using System.IO;
+using System.Runtime.InteropServices;
 using GIF_Viewer.GifComponents.Enums;
 
 namespace GIF_Viewer.GifComponents.Components
@@ -98,7 +99,7 @@ namespace GIF_Viewer.GifComponents.Components
                 string message
                     = "The pixel count must be greater than zero. "
                       + "Supplied value was " + pixelCount;
-                throw new ArgumentOutOfRangeException("pixelCount", message);
+                throw new ArgumentOutOfRangeException(nameof(pixelCount), message);
             }
 
             #endregion
@@ -129,6 +130,7 @@ namespace GIF_Viewer.GifComponents.Components
             //  Initialize GIF data stream decoder.
             _lzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
             int clearCode = ClearCode;
+	        int endOfInformation = EndOfInformation;
             nextAvailableCode = clearCode + 2;
             previousCode = NullCode;
             currentCodeSize = InitialCodeSize;
@@ -159,7 +161,7 @@ namespace GIF_Viewer.GifComponents.Components
             // Initialise block to an empty data block. This will be overwritten
             // first time through the loop with a data block read from the input
             // stream.
-            DataBlock block = new DataBlock(0, new byte[0]);
+            var block = new DataBlock(0, new byte[0]);
 
             for (pixelIndex = 0; pixelIndex < pixelCount;)
             {
@@ -247,8 +249,7 @@ namespace GIF_Viewer.GifComponents.Components
                     #region interpret the code
 
                     #region end of information?
-
-                    if (code == EndOfInformation)
+                    if (code == endOfInformation)
                     {
                         // We've reached an explicit marker for the end of the
                         // image data.
@@ -327,33 +328,38 @@ namespace GIF_Viewer.GifComponents.Components
 
                     firstCode = (suffix[code]) & 0xff;
 
+                    pixelStack.Push((byte)firstCode);
+
                     #region add a new string to the string table
 
-                    if (nextAvailableCode >= MaxStackSize)
+                    // This fix is based off of ImageSharp's LzwDecoder.cs:
+                    // https://github.com/SixLabors/ImageSharp/blob/8899f23c1ddf8044d4dea7d5055386f684120761/src/ImageSharp/Formats/Gif/LzwDecoder.cs
+
+                    // Fix for Gifs that have "deferred clear code" as per here :
+                    // https://bugzilla.mozilla.org/show_bug.cgi?id=55918
+                    if (nextAvailableCode < MaxStackSize)
                     {
                         // TESTME: constructor - next available code >- _maxStackSize
-                        break;
-                    }
-                    pixelStack.Push((byte)firstCode);
-                    prefix[nextAvailableCode] = (short)previousCode;
-                    suffix[nextAvailableCode] = (byte)firstCode;
-                    nextAvailableCode++;
+                        prefix[nextAvailableCode] = (short)previousCode;
+                        suffix[nextAvailableCode] = (byte)firstCode;
+                        nextAvailableCode++;
 
-                    #endregion
+                        #endregion
 
-                    #region do we need to increase the code size?
+                        #region do we need to increase the code size?
 
-                    if ((nextAvailableCode & GetMaximumPossibleCode(currentCodeSize)) == 0)
-                    {
-                        // We've reached the largest code possible for this size
-                        if (nextAvailableCode < MaxStackSize)
+                        if ((nextAvailableCode & GetMaximumPossibleCode(currentCodeSize)) == 0)
                         {
-                            // so increase the code size by 1
-                            currentCodeSize++;
+                            // We've reached the largest code possible for this size
+                            if (nextAvailableCode < MaxStackSize)
+                            {
+                                // so increase the code size by 1
+                                currentCodeSize++;
+                            }
                         }
-                    }
 
-                    #endregion
+                        #endregion
+                    }
 
                     previousCode = in_code;
 
@@ -479,5 +485,9 @@ namespace GIF_Viewer.GifComponents.Components
         {
             throw new NotImplementedException();
         }
+
+        // .NET wrapper to native call of 'memset'. Requires Microsoft Visual C++ Runtime installed
+        [DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+        public static extern IntPtr memset(IntPtr ptr, int value, UIntPtr count);
     }
 }

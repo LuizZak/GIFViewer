@@ -335,7 +335,7 @@ namespace GIF_Viewer.GifComponents
         /// </summary>
         public int MaxMemoryForBuffer
         {
-            get { return _maxMemoryForBuffer; }
+            get => _maxMemoryForBuffer;
             set
             {
                 _maxMemoryForBuffer = value;
@@ -348,7 +348,7 @@ namespace GIF_Viewer.GifComponents
         /// </summary>
         public int MaxMemoryForKeyframes
         {
-            get { return _maxMemoryForKeyframes; }
+            get => _maxMemoryForKeyframes;
             set
             {
                 _maxMemoryForKeyframes = value;
@@ -361,7 +361,7 @@ namespace GIF_Viewer.GifComponents
         /// </summary>
         public int MaxKeyframeReach
         {
-            get { return _maxKeyframeReach; }
+            get => _maxKeyframeReach;
             set
             {
                 _maxKeyframeReach = value;

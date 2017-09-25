@@ -69,18 +69,12 @@ namespace GIF_Viewer.GifComponents.Components
         public ColourTable(Stream inputStream,
                             int numberOfColours)
         {
-            string message
-                = "The number of colours must be between 0 and 256. "
-                + "Number supplied: " + numberOfColours;
-
-            if (numberOfColours < 0)
+            if (numberOfColours < 0 || numberOfColours > 256)
             {
-                throw new ArgumentOutOfRangeException(nameof(numberOfColours),
-                                                       message);
-            }
+                string message
+                    = "The number of colours must be between 0 and 256. "
+                      + "Number supplied: " + numberOfColours;
 
-            if (numberOfColours > 256)
-            {
                 throw new ArgumentOutOfRangeException(nameof(numberOfColours),
                                                        message);
             }
@@ -95,10 +89,10 @@ namespace GIF_Viewer.GifComponents.Components
             _intColours = new Collection<int>();
             while (i < coloursRead)
             {
-                int r = (buffer[j++]) & 0xff;
-                int g = (buffer[j++]) & 0xff;
-                int b = (buffer[j++]) & 0xff;
-                _intColours.Add(((255) << 24) | (r << 16) | (g << 8) | b);
+                int r = buffer[j++] & 0xff;
+                int g = buffer[j++] & 0xff;
+                int b = buffer[j++] & 0xff;
+                _intColours.Add((255 << 24) | (r << 16) | (g << 8) | b);
                 i++;
             }
         }

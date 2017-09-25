@@ -1,5 +1,8 @@
 ﻿/*
-    Pixelaria
+    FastBitmapLib
+
+    The MIT License (MIT)
+
     Copyright (C) 2013 Luiz Fernando Silva
 
     This program is free software; you can redistribute it and/or modify
@@ -24,7 +27,6 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace GIF_Viewer.Utils
 {
@@ -33,11 +35,6 @@ namespace GIF_Viewer.Utils
     /// </summary>
     public unsafe class FastBitmap : IDisposable
     {
-        /// <summary>
-        /// Gets or sets a value specifying whether to use threads to speedup operations by parallelizing them into thrads
-        /// </summary>
-        public static bool UseThreads { get; set; }
-
         /// <summary>
         /// Specifies the number of bytes available per pixel of the bitmap object being manipulated
         /// </summary>
@@ -54,39 +51,19 @@ namespace GIF_Viewer.Utils
         private BitmapData _bitmapData;
 
         /// <summary>
-        /// The stride of the bitmap
-        /// </summary>
-        private int _strideWidth;
-
-        /// <summary>
         /// The first pixel of the bitmap
         /// </summary>
         private int* _scan0;
 
         /// <summary>
-        /// Whether the current bitmap is locked
-        /// </summary>
-        private bool _locked;
-
-        /// <summary>
-        /// The width of this FastBitmap
-        /// </summary>
-        private readonly int _width;
-
-        /// <summary>
-        /// The height of this FastBitmap
-        /// </summary>
-        private readonly int _height;
-
-        /// <summary>
         /// Gets the width of this FastBitmap object
         /// </summary>
-        public int Width => _width;
+        public int Width { get; }
 
         /// <summary>
         /// Gets the height of this FastBitmap object
         /// </summary>
-        public int Height => _height;
+        public int Height { get; }
 
         /// <summary>
         /// Gets the pointer to the first pixel of the bitmap
@@ -96,12 +73,12 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// Gets the stride width of the bitmap
         /// </summary>
-        public int Stride => _strideWidth;
+        public int Stride { get; private set; }
 
         /// <summary>
         /// Gets a boolean value that states whether this FastBitmap is currently locked in memory
         /// </summary>
-        public bool Locked => _locked;
+        public bool Locked { get; private set; }
 
         /// <summary>
         /// Gets an array of 32-bit color pixel values that represent this FastBitmap
@@ -113,7 +90,7 @@ namespace GIF_Viewer.Utils
             get
             {
                 bool unlockAfter = false;
-                if (!_locked)
+                if (!Locked)
                 {
                     Lock();
                     unlockAfter = true;
@@ -150,8 +127,8 @@ namespace GIF_Viewer.Utils
 
             _bitmap = bitmap;
 
-            _width = bitmap.Width;
-            _height = bitmap.Height;
+            Width = bitmap.Width;
+            Height = bitmap.Height;
         }
 
         /// <summary>
@@ -160,7 +137,7 @@ namespace GIF_Viewer.Utils
         /// </summary>
         public void Dispose()
         {
-            if (_locked)
+            if (Locked)
             {
                 Unlock();
             }
@@ -176,7 +153,7 @@ namespace GIF_Viewer.Utils
         /// <exception cref="InvalidOperationException">The bitmap is already locked outside this fast bitmap</exception>
         public FastBitmapLocker Lock()
         {
-            if (_locked)
+            if (Locked)
             {
                 throw new InvalidOperationException("Unlock must be called before a Lock operation");
             }
@@ -193,7 +170,7 @@ namespace GIF_Viewer.Utils
         /// <exception cref="InvalidOperationException">The bitmap is already locked outside this fast bitmap</exception>
         private FastBitmapLocker Lock(ImageLockMode lockMode)
         {
-            Rectangle rect = new Rectangle(0, 0, _bitmap.Width, _bitmap.Height);
+            var rect = new Rectangle(0, 0, _bitmap.Width, _bitmap.Height);
 
             return Lock(lockMode, rect);
         }
@@ -213,9 +190,9 @@ namespace GIF_Viewer.Utils
             _bitmapData = _bitmap.LockBits(rect, lockMode, _bitmap.PixelFormat);
 
             _scan0 = (int*)_bitmapData.Scan0;
-            _strideWidth = _bitmapData.Stride / BytesPerPixel;
+            Stride = _bitmapData.Stride / BytesPerPixel;
 
-            _locked = true;
+            Locked = true;
 
             return new FastBitmapLocker(this);
         }
@@ -228,14 +205,14 @@ namespace GIF_Viewer.Utils
         /// <exception cref="System.Exception">The unlocking operation in the underlying bitmap failed</exception>
         public void Unlock()
         {
-            if (!_locked)
+            if (!Locked)
             {
                 throw new InvalidOperationException("Lock must be called before an Unlock operation");
             }
 
             _bitmap.UnlockBits(_bitmapData);
 
-            _locked = false;
+            Locked = false;
         }
 
         /// <summary>
@@ -263,7 +240,7 @@ namespace GIF_Viewer.Utils
         /// <exception cref="ArgumentOutOfRangeException">The provided coordinates are out of bounds of the bitmap</exception>
         public void SetPixel(int x, int y, int color)
         {
-            SetPixel(x, y, (uint)color);
+            SetPixel(x, y, unchecked((uint)color));
         }
 
         /// <summary>
@@ -277,21 +254,21 @@ namespace GIF_Viewer.Utils
         /// <exception cref="ArgumentOutOfRangeException">The provided coordinates are out of bounds of the bitmap</exception>
         public void SetPixel(int x, int y, uint color)
         {
-            if (!_locked)
+            if (!Locked)
             {
                 throw new InvalidOperationException("The FastBitmap must be locked before any pixel operations are made");
             }
 
-            if (x < 0 || x >= _width)
+            if (x < 0 || x >= Width)
             {
                 throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
             }
-            if (y < 0 || y >= _height)
+            if (y < 0 || y >= Height)
             {
                 throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
             }
 
-            *(uint*)(_scan0 + x + y * _strideWidth) = color;
+            *(uint*)(_scan0 + x + y * Stride) = color;
         }
 
         /// <summary>
@@ -317,21 +294,21 @@ namespace GIF_Viewer.Utils
         /// <exception cref="ArgumentOutOfRangeException">The provided coordinates are out of bounds of the bitmap</exception>
         public int GetPixelInt(int x, int y)
         {
-            if (!_locked)
+            if (!Locked)
             {
                 throw new InvalidOperationException("The FastBitmap must be locked before any pixel operations are made");
             }
 
-            if (x < 0 || x >= _width)
+            if (x < 0 || x >= Width)
             {
                 throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
             }
-            if (y < 0 || y >= _height)
+            if (y < 0 || y >= Height)
             {
                 throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
             }
 
-            return *(_scan0 + x + y * _strideWidth);
+            return *(_scan0 + x + y * Stride);
         }
 
         /// <summary>
@@ -344,21 +321,21 @@ namespace GIF_Viewer.Utils
         /// <exception cref="ArgumentOutOfRangeException">The provided coordinates are out of bounds of the bitmap</exception>
         public uint GetPixelUInt(int x, int y)
         {
-            if (!_locked)
+            if (!Locked)
             {
                 throw new InvalidOperationException("The FastBitmap must be locked before any pixel operations are made");
             }
 
-            if (x < 0 || x >= _width)
+            if (x < 0 || x >= Width)
             {
                 throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
             }
-            if (y < 0 || y >= _height)
+            if (y < 0 || y >= Height)
             {
                 throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
             }
 
-            return *((uint*)_scan0 + x + y * _strideWidth);
+            return *((uint*)_scan0 + x + y * Stride);
         }
 
         /// <summary>
@@ -369,7 +346,7 @@ namespace GIF_Viewer.Utils
         /// <param name="ignoreZeroes">Whether to ignore zeroes when copying the data</param>
         public void CopyFromArray(int[] colors, bool ignoreZeroes = false)
         {
-            if (colors.Length != _width * _height)
+            if (colors.Length != Width * Height)
             {
                 throw new ArgumentException(@"The number of colors of the given array mismatch the pixel count of the bitmap", nameof(colors));
             }
@@ -380,104 +357,44 @@ namespace GIF_Viewer.Utils
 
             fixed (int* source = colors)
             {
-                if (!UseThreads)
+                // ReSharper disable once InconsistentNaming
+                int* s0s = source;
+
+                int count = Width * Height;
+
+                if (!ignoreZeroes)
                 {
-                    InternalCopyFromArray(source, s0t, 0, colors.Length, ignoreZeroes);
+                    // Unfold the loop
+                    const int sizeBlock = 8;
+                    int rem = count % sizeBlock;
+
+                    count /= sizeBlock;
+
+                    while (count-- > 0)
+                    {
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                        *(s0t++) = *(s0s++);
+                    }
+
+                    while (rem-- > 0)
+                    {
+                        *(s0t++) = *(s0s++);
+                    }
                 }
                 else
                 {
-                    const int threadCount = 2;
-                    int count = colors.Length;
-                    int countPerThread = count / threadCount;
-
-                    // Separate the copy into different copy operations
-                    CopyOperationSettings[] settings = new CopyOperationSettings[threadCount];
-                    Thread[] threads = new Thread[threadCount];
-
-                    for (int i = 0; i < threadCount; i++)
+                    while (count-- > 0)
                     {
-                        int start = countPerThread * i;
-                        int length = i == (threadCount - 1) ? count - start : countPerThread;
-
-                        settings[i] = new CopyOperationSettings(source, s0t, start, length, ignoreZeroes);
-                        threads[i] = new Thread(InternalCopyFromArray);
-
-                        threads[i].Start(settings[i]);
+                        if (*(s0s) == 0) { s0t++; s0s++; continue; }
+                        *(s0t++) = *(s0s++);
                     }
-
-                    for (int i = 0; i < threadCount; i++)
-                    {
-                        threads[i].Join();
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Performs a data copying routine with the specified boxed settings structure
-        /// </summary>
-        /// <param name="settings">The settings to use when copying the values over</param>
-        private void InternalCopyFromArray(object settings)
-        {
-            InternalCopyFromArray((CopyOperationSettings)settings);
-        }
-
-        /// <summary>
-        /// Performs a data copying routine with the specified settings structure
-        /// </summary>
-        /// <param name="settings">The settings to use when copying the values over</param>
-        private void InternalCopyFromArray(CopyOperationSettings settings)
-        {
-            InternalCopyFromArray(settings.Source, settings.Target, settings.StartRange, settings.Length, settings.IgnoreZeroes);
-        }
-
-        /// <summary>
-        /// Performs a data copying routine from a pointer directly to the memory location of the bitmap, starting at a given location
-        /// </summary>
-        /// <param name="source">The source pointer to copy the pixels from. This must point to the first pixel of the source image</param>
-        /// <param name="target">The target pointer to copy the pixels to. This must point to the first pixel of the target image</param>
-        /// <param name="startRange">The starting range to start copying from</param>
-        /// <param name="count">The number of pixels to copy</param>
-        /// <param name="ignoreZeroes">Whether to ignore zeroes found during the copy operation</param>
-        private void InternalCopyFromArray(int* source, int* target, int startRange, int count, bool ignoreZeroes = false)
-        {
-            // ReSharper disable once InconsistentNaming
-            int* s0s = source + startRange;
-            // ReSharper disable once InconsistentNaming
-            int* s0t = target + startRange;
-
-            if (!ignoreZeroes)
-            {
-                // Unfold the loop
-                const int sizeBlock = 8;
-                int rem = count % sizeBlock;
-
-                count /= sizeBlock;
-
-                while (count-- > 0)
-                {
-                    *(s0t++) = *(s0s++);
-                    *(s0t++) = *(s0s++);
-                    *(s0t++) = *(s0s++);
-                    *(s0t++) = *(s0s++);
-
-                    *(s0t++) = *(s0s++);
-                    *(s0t++) = *(s0s++);
-                    *(s0t++) = *(s0s++);
-                    *(s0t++) = *(s0s++);
-                }
-
-                while (rem-- > 0)
-                {
-                    *(s0t++) = *(s0s++);
-                }
-            }
-            else
-            {
-                while (count-- > 0)
-                {
-                    if (*(s0s) == 0) { s0t++; s0s++; continue; }
-                    *(s0t++) = *(s0s++);
                 }
             }
         }
@@ -498,14 +415,14 @@ namespace GIF_Viewer.Utils
         public void Clear(int color)
         {
             bool unlockAfter = false;
-            if (!_locked)
+            if (!Locked)
             {
                 Lock();
                 unlockAfter = true;
             }
 
             // Clear all the pixels
-            int count = _width * _height;
+            int count = Width * Height;
             int* curScan = _scan0;
 
             // Defines the ammount of assignments that the main while() loop is performing per loop.
@@ -553,8 +470,8 @@ namespace GIF_Viewer.Utils
                 throw new ArgumentException(@"Copying regions across the same bitmap is not supported", nameof(source));
             }
 
-            Rectangle srcBitmapRect = new Rectangle(0, 0, source.Width, source.Height);
-            Rectangle destBitmapRect = new Rectangle(0, 0, _width, _height);
+            var srcBitmapRect = new Rectangle(0, 0, source.Width, source.Height);
+            var destBitmapRect = new Rectangle(0, 0, Width, Height);
 
             // Check if the rectangle configuration doesn't generate invalid states or does not affect the target image
             if (srcRect.Width <= 0 || srcRect.Height <= 0 || destRect.Width <= 0 || destRect.Height <= 0 ||
@@ -570,8 +487,8 @@ namespace GIF_Viewer.Utils
 
             destBitmapRect = Rectangle.Intersect(destRect, destBitmapRect);
 
-            // Clipt the source bitmap region yet again here
-            srcBitmapRect = Rectangle.Intersect(srcBitmapRect, new Rectangle(-destRect.X + srcRect.X, -destRect.Y + srcRect.Y, _width, _height));
+            // Clip the source bitmap region yet again here
+            srcBitmapRect = Rectangle.Intersect(srcBitmapRect, new Rectangle(-destRect.X + srcRect.X, -destRect.Y + srcRect.Y, Width, Height));
 
             // Calculate the rectangle containing the maximum possible area that is supposed to be affected by the copy region operation
             int copyWidth = Math.Min(srcBitmapRect.Width, destBitmapRect.Width);
@@ -586,10 +503,11 @@ namespace GIF_Viewer.Utils
             int destStartX = destBitmapRect.Left;
             int destStartY = destBitmapRect.Top;
 
-            using (FastBitmap fastSource = source.FastLock())
+            using (var fastSource = source.FastLock())
             {
                 ulong strideWidth = (ulong)copyWidth * BytesPerPixel;
 
+                // Perform copies of whole pixel rows
                 for (int y = 0; y < copyHeight; y++)
                 {
                     int destX = destStartX;
@@ -598,8 +516,8 @@ namespace GIF_Viewer.Utils
                     int srcX = srcStartX;
                     int srcY = srcStartY + y;
 
-                    long offsetSrc = (srcX + srcY * fastSource._strideWidth);
-                    long offsetDest = (destX + destY * _strideWidth);
+                    long offsetSrc = (srcX + srcY * fastSource.Stride);
+                    long offsetDest = (destX + destY * Stride);
 
                     memcpy(_scan0 + offsetDest, fastSource._scan0 + offsetSrc, strideWidth);
                 }
@@ -613,15 +531,21 @@ namespace GIF_Viewer.Utils
         /// <param name="source">The bitmap to copy the pixels from</param>
         /// <param name="target">The bitmap to copy the pixels to</param>
         /// <returns>Whether the copy proceedure was successful</returns>
+        /// <exception cref="ArgumentException">The provided source and target bitmaps are the same</exception>
         public static bool CopyPixels(Bitmap source, Bitmap target)
         {
+            if (source == target)
+            {
+                throw new ArgumentException(@"Copying pixels across the same bitmap is not supported", nameof(source));
+            }
+
             if (source.Width != target.Width || source.Height != target.Height || source.PixelFormat != target.PixelFormat)
                 return false;
 
             using (FastBitmap fastSource = source.FastLock(),
-                              fastTarget = target.FastLock())
+                fastTarget = target.FastLock())
             {
-                memcpy(fastTarget.Scan0, fastSource.Scan0, (ulong)(fastSource.Height * fastSource._strideWidth * BytesPerPixel));
+                memcpy(fastTarget.Scan0, fastSource.Scan0, (ulong)(fastSource.Height * fastSource.Stride * BytesPerPixel));
             }
 
             return true;
@@ -660,12 +584,49 @@ namespace GIF_Viewer.Utils
         /// <exception cref="ArgumentException">The provided source and target bitmaps are the same bitmap</exception>
         public static void CopyRegion(Bitmap source, Bitmap target, Rectangle srcRect, Rectangle destRect)
         {
-            FastBitmap fastTarget = new FastBitmap(target);
+            var srcBitmapRect = new Rectangle(0, 0, source.Width, source.Height);
+            var destBitmapRect = new Rectangle(0, 0, target.Width, target.Height);
 
-            using (fastTarget.Lock())
+            // If the copy operation results in an entire copy, use CopyPixels instead
+            if (srcBitmapRect == srcRect && destBitmapRect == destRect && srcBitmapRect == destBitmapRect)
+            {
+                CopyPixels(source, target);
+                return;
+            }
+
+            using (var fastTarget = target.FastLock())
             {
                 fastTarget.CopyRegion(source, srcRect, destRect);
             }
+        }
+
+        /// <summary>
+        /// Returns a bitmap that is a slice of the original provided 32bpp Bitmap.
+        /// The region must have a width and a height > 0, and must lie inside the source bitmap's area
+        /// </summary>
+        /// <param name="source">The source bitmap to slice</param>
+        /// <param name="region">The region of the source bitmap to slice</param>
+        /// <returns>A Bitmap that represents the rectangle region slice of the source bitmap</returns>
+        /// <exception cref="ArgumentException">The provided bimap is not 32bpp</exception>
+        /// <exception cref="ArgumentException">The provided region is invalid</exception>
+        public static Bitmap SliceBitmap(Bitmap source, Rectangle region)
+        {
+            if (region.Width <= 0 || region.Height <= 0)
+            {
+                throw new ArgumentException(@"The provided region must have a width and a height > 0", nameof(region));
+            }
+
+            var sliceRectangle = Rectangle.Intersect(new Rectangle(Point.Empty, source.Size), region);
+
+            if (sliceRectangle.IsEmpty)
+            {
+                throw new ArgumentException(@"The provided region must not lie outside of the bitmap's region completely", nameof(region));
+            }
+
+            var slicedBitmap = new Bitmap(sliceRectangle.Width, sliceRectangle.Height);
+            CopyRegion(source, slicedBitmap, sliceRectangle, new Rectangle(0, 0, sliceRectangle.Width, sliceRectangle.Height));
+
+            return slicedBitmap;
         }
 
         // .NET wrapper to native call of 'memcpy'. Requires Microsoft Visual C++ Runtime installed
@@ -706,52 +667,8 @@ namespace GIF_Viewer.Utils
             /// </summary>
             public void Dispose()
             {
-                if (_fastBitmap._locked)
+                if (_fastBitmap.Locked)
                     _fastBitmap.Unlock();
-            }
-        }
-
-        /// <summary>
-        /// Settings used on threaded copy operations
-        /// </summary>
-        private struct CopyOperationSettings
-        {
-            /// <summary>
-            /// The source pointer to copy the pixels from. This must point to the first pixel of the source image
-            /// </summary>
-            public readonly int* Source;
-            /// <summary>
-            /// The target pointer to copy the pixels to. This must point to the first pixel of the target image
-            /// </summary>
-            public readonly int* Target;
-            /// <summary>
-            /// The starting range to start copying from
-            /// </summary>
-            public readonly int StartRange;
-            /// <summary>
-            /// The number of pixels to copy
-            /// </summary>
-            public readonly int Length;
-            /// <summary>
-            /// Whether to ignore zeroes found during the copy operation
-            /// </summary>
-            public readonly bool IgnoreZeroes;
-
-            /// <summary>
-            /// Initializes a new CopyOperationSettings struct
-            /// </summary>
-            /// <param name="source">The source pointer to copy the pixels from. This must point to the first pixel of the source image</param>
-            /// <param name="target">The target pointer to copy the pixels to. This must point to the first pixel of the target image</param>
-            /// <param name="startRange">The starting range to start copying from</param>
-            /// <param name="length">The number of pixels to copy</param>
-            /// <param name="ignoreZeroes">Whether to ignore zeroes found during the copy operation</param>
-            public CopyOperationSettings(int* source, int* target, int startRange, int length, bool ignoreZeroes)
-            {
-                Source = source;
-                Target = target;
-                StartRange = startRange;
-                Length = length;
-                IgnoreZeroes = ignoreZeroes;
             }
         }
     }
@@ -768,10 +685,21 @@ namespace GIF_Viewer.Utils
         /// <returns>A locked FastBitmap</returns>
         public static FastBitmap FastLock(this Bitmap bitmap)
         {
-            FastBitmap fast = new FastBitmap(bitmap);
+            var fast = new FastBitmap(bitmap);
             fast.Lock();
 
             return fast;
+        }
+
+        /// <summary>
+        /// Returns a deep clone of this Bitmap object, with all the data copied over.
+        /// After a deep clone, the new bitmap is completely independent from the original
+        /// </summary>
+        /// <param name="bitmap">The bitmap to clone</param>
+        /// <returns>A deep clone of this Bitmap object, with all the data copied over</returns>
+        public static Bitmap DeepClone(this Bitmap bitmap)
+        {
+            return bitmap.Clone(new Rectangle(0, 0, bitmap.Width, bitmap.Height), bitmap.PixelFormat);
         }
     }
 }
