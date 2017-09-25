@@ -48,17 +48,29 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// The maximum allowed memory for buffers
         /// </summary>
-        public int MaxBufferMemory { get { return _maxBufferMemory; } set { _maxBufferMemory = Math.Min(512, Math.Max(5, value)); } }
+        public int MaxBufferMemory
+        {
+            get => _maxBufferMemory;
+            set => _maxBufferMemory = Math.Min(512, Math.Max(5, value));
+        }
 
         /// <summary>
         /// The maximum allowed memory for keyframes
         /// </summary>
-        public int MaxKeyframeMemory { get { return _maxKeyframeMemory; } set { _maxKeyframeMemory = Math.Min(512, Math.Max(5, value)); } }
+        public int MaxKeyframeMemory
+        {
+            get => _maxKeyframeMemory;
+            set => _maxKeyframeMemory = Math.Min(512, Math.Max(5, value));
+        }
 
         /// <summary>
         /// The maximum number of frames allowed to track back until a keyframe before the operation is ignored and the current frame is drawn incomplete
         /// </summary>
-        public int MaxKeyframeReach { get { return _maxKeyframeReach; } set { _maxKeyframeReach = Math.Min(100, Math.Max(1, value)); } }
+        public int MaxKeyframeReach
+        {
+            get => _maxKeyframeReach;
+            set => _maxKeyframeReach = Math.Min(100, Math.Max(1, value));
+        }
 
         /// <summary>
         /// Gets or sets a value specifying whether the program should allow only one instance running at the same time

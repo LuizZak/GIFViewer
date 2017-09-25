@@ -95,7 +95,7 @@ namespace GIF_Viewer.Controls
         [Description("The current playing frame on the timeline")]
         public int CurrentFrame
         {
-            get { return currentFrame; }
+            get => currentFrame;
             set
             {
                 // Invalidate last playhead position:
@@ -114,8 +114,8 @@ namespace GIF_Viewer.Controls
         [Browsable(false)]
         public Knob FirstKnob
         {
-            get { return firstKnob; }
-            protected set { firstKnob = value; }
+            get => firstKnob;
+            protected set => firstKnob = value;
         }
 
         /// <summary>
@@ -124,8 +124,8 @@ namespace GIF_Viewer.Controls
         [Browsable(false)]
         public Knob SecondKnob
         {
-            get { return secondKnob; }
-            protected set { secondKnob = value; }
+            get => secondKnob;
+            protected set => secondKnob = value;
         }
 
         /// <summary>
@@ -134,7 +134,7 @@ namespace GIF_Viewer.Controls
         [Browsable(false)]
         public Point Range
         {
-            get { return GetRange(); }
+            get => GetRange();
             set
             {
                 if (value == GetRange())
@@ -166,7 +166,7 @@ namespace GIF_Viewer.Controls
         [Description("The minimum value on the available range")]
         public int Minimum
         {
-            get { return minimum; }
+            get => minimum;
             set
             {
                 // Don't update if the values are the same
@@ -208,7 +208,7 @@ namespace GIF_Viewer.Controls
         [Description("The maximum value on the available range")]
         public int Maximum
         {
-            get { return maximum; }
+            get => maximum;
             set
             {
                 // Don't update if the values are the same
@@ -251,7 +251,7 @@ namespace GIF_Viewer.Controls
         [Description("The height of the timeline in pixels")]
         public int TimelineHeight
         {
-            get { return timelineHeight; }
+            get => timelineHeight;
             set { if (timelineHeight != value) { timelineHeight = value; Invalidate(); } }
         }
 
@@ -264,7 +264,7 @@ namespace GIF_Viewer.Controls
         [Description("The control's X scroll")]
         public double ScrollX
         {
-            get { return scrollX; }
+            get => scrollX;
             set { if (Math.Abs(scrollX - value) > float.Epsilon) { scrollX = value; Invalidate(); } }
         }
 
@@ -277,7 +277,7 @@ namespace GIF_Viewer.Controls
         [Description("The control's Width scale modifier")]
         public double ScrollScaleWidth
         {
-            get { return scrollScaleWidth; }
+            get => scrollScaleWidth;
             set { if (Math.Abs(scrollScaleWidth - value) > float.Epsilon) { value = value < 0 ? 0.1f : value; scrollScaleWidth = value; Invalidate(); } }
         }
 
@@ -290,7 +290,7 @@ namespace GIF_Viewer.Controls
         [Description("The behavior type of this timeline")]
         public TimelineBehaviorType BehaviorType
         {
-            get { return behaviorType; }
+            get => behaviorType;
             set { if (behaviorType != value) { behaviorType = value; Invalidate(); } }
         }
 
@@ -303,7 +303,7 @@ namespace GIF_Viewer.Controls
         [Description("The frame display type of this timeline")]
         public TimelineFrameDisplayType FrameDisplayType
         {
-            get { return frameDisplayType; }
+            get => frameDisplayType;
             set { if (frameDisplayType != value) { frameDisplayType = value; Invalidate(); } }
         }
 
@@ -316,7 +316,7 @@ namespace GIF_Viewer.Controls
         [Description("Whether to display the frame under the mouse when it hovers over the control")]
         public bool DisplayFrameUnderMouse
         {
-            get { return displayFrameUnderMouse; }
+            get => displayFrameUnderMouse;
             set
             {
                 if (displayFrameUnderMouse != value)
@@ -337,8 +337,8 @@ namespace GIF_Viewer.Controls
         [Description("Whether to disable selection of frames that are out of range")]
         public bool DisableFrameSelectionOutOfRange
         {
-            get { return disableFrameSelectionOutOfRange; }
-            set { disableFrameSelectionOutOfRange = value; }
+            get => disableFrameSelectionOutOfRange;
+            set => disableFrameSelectionOutOfRange = value;
         }
 
         /// <summary>
@@ -1404,7 +1404,7 @@ namespace GIF_Viewer.Controls
         /// <summary>
         /// The new range
         /// </summary>
-        public Point NewRange { get; private set; }
+        public Point NewRange { get; }
 
         /// <summary>
         /// Initializes a new instance of the RangeChangedEventArgs class
@@ -1424,12 +1424,12 @@ namespace GIF_Viewer.Controls
         /// <summary>
         /// The new frame selected
         /// </summary>
-        public int NewFrame { get; private set; }
+        public int NewFrame { get; }
 
         /// <summary>
         /// The previous frame selected
         /// </summary>
-        public int OldFrame { get; private set; }
+        public int OldFrame { get; }
 
         /// <summary>
         /// Whether to cancel this event and not modify the frame
@@ -1483,8 +1483,8 @@ namespace GIF_Viewer.Controls
         /// </summary>
         public int Offset
         {
-            get { return offset; }
-            set { offset = Math.Max(0, Math.Min(parent.Maximum - parent.Minimum, value)); }
+            get => offset;
+            set => offset = Math.Max(0, Math.Min(parent.Maximum - parent.Minimum, value));
         }
 
         /// <summary>
@@ -1492,7 +1492,7 @@ namespace GIF_Viewer.Controls
         /// </summary>
         public int Value
         {
-            get { return value; }
+            get => value;
             set { this.value = Math.Max(parent.Minimum, Math.Min(parent.Maximum, value)); Update(); }
         }
 
@@ -1501,8 +1501,8 @@ namespace GIF_Viewer.Controls
         /// </summary>
         public TimelineControl Parent
         {
-            get { return parent; }
-            protected set { parent = value; }
+            get => parent;
+            protected set => parent = value;
         }
 
         /// <summary>
@@ -1510,8 +1510,8 @@ namespace GIF_Viewer.Controls
         /// </summary>
         public double X
         {
-            get { return x; }
-            set { x = value; }
+            get => x;
+            set => x = value;
         }
 
         /// <summary>
@@ -1524,11 +1524,8 @@ namespace GIF_Viewer.Controls
         /// </summary>
         public PointF DrawOffset
         {
-            get { return drawOffset; }
-            set
-            {
-                drawOffset = value;
-            }
+            get => drawOffset;
+            set => drawOffset = value;
         }
 
         /// <summary>
@@ -1640,7 +1637,7 @@ namespace GIF_Viewer.Controls
         /// <returns>The real X component of this knob, adjusted for the parent TimelineControl's scale</returns>
         public double GetRealX()
         {
-            return ((double)(value - parent.Minimum) / Math.Max(parent.Maximum - parent.Minimum, 1)) * ((parent.Width * parent.ScrollScaleWidth) - KnobThickness - 1) - parent.ScrollX;
+            return (double)(value - parent.Minimum) / Math.Max(parent.Maximum - parent.Minimum, 1) * (parent.Width * parent.ScrollScaleWidth - KnobThickness - 1) - parent.ScrollX;
         }
 
         /// <summary>
