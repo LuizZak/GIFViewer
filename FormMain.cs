@@ -5,9 +5,11 @@ using System.IO;
 using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
+
 using GIF_Viewer.Controls;
 using GIF_Viewer.Views;
 using GIF_Viewer.Utils;
+using GIF_Viewer.FileExts;
 
 #pragma warning disable 1587
 
@@ -15,6 +17,8 @@ using GIF_Viewer.Utils;
 /// @description        Helps visualizing animated and non-animated .GIF files
 /// 
 /// @author             Luiz Fernando
+/// 
+/// @version 1.7.0b     Fixed File Association strategy causing issues w/ registry access.
 /// 
 /// @version 1.6.6b     Added a setting to customize the default minimum frame delay setting (as well as disabling it on startup).
 /// 
@@ -227,7 +231,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Helper object used to check the file association for the .gif extension on Windows
         /// </summary>
-        public FileAssociation Association;
+        public GifFileAssociation Association;
 
         /// <summary>
         /// Windows' Open File Dialog:
@@ -241,7 +245,7 @@ namespace GIF_Viewer
         public FormMain(string[] args)
         {
             InitializeComponent();
-
+            
             _currentGif = new GifFile();
 
             Images = new List<string>();
@@ -262,21 +266,21 @@ namespace GIF_Viewer
                 LoadSettings();
 
                 // Read off the file association:
-                Association = new FileAssociation(".gif");
+                Association = new GifFileAssociation();
 
                 // Check .GIF file association
                 if (Association.HasWriteAccess() && !Settings.Instance.DontAskAssociate)
                 {
-                    if (Association.GetProgram() != "\"" + Application.ExecutablePath + "\" \"%1\"")
+                    if (!Association.IsAssociated())
                     {
-                        DialogResult res = MessageBox.Show(this, @"Do you want to associate the .gif files to GIF Viewer? (Hit Cancel to never ask again)", @"Question", MessageBoxButtons.YesNoCancel);
+                        var res = MessageBox.Show(this, @"Do you want to associate the .gif files to GIF Viewer? (Hit Cancel to never ask again)", @"Question", MessageBoxButtons.YesNoCancel);
 
                         // Change association
                         if (res == DialogResult.Yes)
                         {
                             try
                             {
-                                Association.SetProgram("\"" + Application.ExecutablePath + "\" \"%1\"", Path.GetFileName(Application.ExecutablePath));
+                                Association.Associate();
                             }
                             catch (Exception e)
                             {
