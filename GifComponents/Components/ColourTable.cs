@@ -75,13 +75,13 @@ namespace GIF_Viewer.GifComponents.Components
 
             if (numberOfColours < 0)
             {
-                throw new ArgumentOutOfRangeException("numberOfColours",
+                throw new ArgumentOutOfRangeException(nameof(numberOfColours),
                                                        message);
             }
 
             if (numberOfColours > 256)
             {
-                throw new ArgumentOutOfRangeException("numberOfColours",
+                throw new ArgumentOutOfRangeException(nameof(numberOfColours),
                                                        message);
             }
 
@@ -110,10 +110,7 @@ namespace GIF_Viewer.GifComponents.Components
 
         #region Colours property
         
-        public int[] IntColours
-        {
-            get { return _intColours.ToArray(); }
-        }
+        public int[] IntColours => _intColours.ToArray();
 
         #endregion
 
@@ -122,10 +119,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// Gets the number of colours in the colour table.
         /// </summary>
-        public int Length
-        {
-            get { return _intColours.Count; }
-        }
+        public int Length => _intColours.Count;
 
         #endregion
 
@@ -235,7 +229,7 @@ namespace GIF_Viewer.GifComponents.Components
                 string message
                     = "Colour table size: " + _intColours.Count
                     + ". Index: " + index;
-                throw new ArgumentOutOfRangeException("index", message);
+                throw new ArgumentOutOfRangeException(nameof(index), message);
             }
         }
 

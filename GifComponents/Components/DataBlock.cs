@@ -102,7 +102,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    {
 	        if (inputStream == null)
 	        {
-	            throw new ArgumentNullException("inputStream");
+	            throw new ArgumentNullException(nameof(inputStream));
 	        }
 
 	        int blockSize = Read(inputStream);
@@ -150,7 +150,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    {
 	        if (data == null)
 	        {
-	            throw new ArgumentNullException("data");
+	            throw new ArgumentNullException(nameof(data));
 	        }
 
 	        if (blockSize > data.Length)
@@ -179,10 +179,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// may not be if the data block was instantiated from a corrupt stream
 	    /// - check the ErrorStatus property.
 	    /// </summary>
-	    public int DeclaredBlockSize
-	    {
-	        get { return _blockSize; }
-	    }
+	    public int DeclaredBlockSize => _blockSize;
 
 	    #endregion
 		
@@ -191,10 +188,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// <summary>
 	    /// Gets the actual length of the data block.
 	    /// </summary>
-	    public int ActualBlockSize
-	    {
-	        get { return _data.Length; }
-	    }
+	    public int ActualBlockSize => _data.Length;
 
 	    #endregion
 		
@@ -205,10 +199,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// This does not include the first byte which holds the block size.
 	    /// </summary>
 	    [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
-	    public byte[] Data
-	    {
-	        get { return _data; }
-	    }
+	    public byte[] Data => _data;
 
 	    #endregion
 
@@ -224,7 +215,7 @@ namespace GIF_Viewer.GifComponents.Components
                 if (index >= _dataLength)
 	            {
 	                string message = "Supplied index: " + index + ". Array length: " + _data.Length;
-	                throw new ArgumentOutOfRangeException("index", message);
+	                throw new ArgumentOutOfRangeException(nameof(index), message);
 	            }
 	            return _data[index];
 	        }
@@ -243,15 +234,9 @@ namespace GIF_Viewer.GifComponents.Components
         /// </remarks>
         [Category("Status")]
         [Description("Gets the combined error states of this component and all its child components.")]
-        public override ErrorState ConsolidatedState
-        {
-            get
-            {
-                return ErrorState;
-            }
-        }
-		
-		#region public WriteToStream method
+        public override ErrorState ConsolidatedState => ErrorState;
+
+	    #region public WriteToStream method
 
 	    /// <summary>
 	    /// Writes this component to the supplied output stream.

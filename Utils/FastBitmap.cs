@@ -81,27 +81,27 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// Gets the width of this FastBitmap object
         /// </summary>
-        public int Width { get { return _width; } }
+        public int Width => _width;
 
         /// <summary>
         /// Gets the height of this FastBitmap object
         /// </summary>
-        public int Height { get { return _height; } }
+        public int Height => _height;
 
         /// <summary>
         /// Gets the pointer to the first pixel of the bitmap
         /// </summary>
-        public IntPtr Scan0 { get { return _bitmapData.Scan0; } }
+        public IntPtr Scan0 => _bitmapData.Scan0;
 
         /// <summary>
         /// Gets the stride width of the bitmap
         /// </summary>
-        public int Stride { get { return _strideWidth; } }
+        public int Stride => _strideWidth;
 
         /// <summary>
         /// Gets a boolean value that states whether this FastBitmap is currently locked in memory
         /// </summary>
-        public bool Locked { get { return _locked; } }
+        public bool Locked => _locked;
 
         /// <summary>
         /// Gets an array of 32-bit color pixel values that represent this FastBitmap
@@ -145,7 +145,7 @@ namespace GIF_Viewer.Utils
         {
             if (Image.GetPixelFormatSize(bitmap.PixelFormat) != 32)
             {
-                throw new ArgumentException(@"The provided bitmap must have a 32bpp depth", "bitmap");
+                throw new ArgumentException(@"The provided bitmap must have a 32bpp depth", nameof(bitmap));
             }
 
             _bitmap = bitmap;
@@ -284,11 +284,11 @@ namespace GIF_Viewer.Utils
 
             if (x < 0 || x >= _width)
             {
-                throw new ArgumentOutOfRangeException("x", @"The X component must be >= 0 and < width");
+                throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
             }
             if (y < 0 || y >= _height)
             {
-                throw new ArgumentOutOfRangeException("y", @"The Y component must be >= 0 and < height");
+                throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
             }
 
             *(uint*)(_scan0 + x + y * _strideWidth) = color;
@@ -324,11 +324,11 @@ namespace GIF_Viewer.Utils
 
             if (x < 0 || x >= _width)
             {
-                throw new ArgumentOutOfRangeException("x", @"The X component must be >= 0 and < width");
+                throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
             }
             if (y < 0 || y >= _height)
             {
-                throw new ArgumentOutOfRangeException("y", @"The Y component must be >= 0 and < height");
+                throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
             }
 
             return *(_scan0 + x + y * _strideWidth);
@@ -351,11 +351,11 @@ namespace GIF_Viewer.Utils
 
             if (x < 0 || x >= _width)
             {
-                throw new ArgumentOutOfRangeException("x", @"The X component must be >= 0 and < width");
+                throw new ArgumentOutOfRangeException(nameof(x), @"The X component must be >= 0 and < width");
             }
             if (y < 0 || y >= _height)
             {
-                throw new ArgumentOutOfRangeException("y", @"The Y component must be >= 0 and < height");
+                throw new ArgumentOutOfRangeException(nameof(y), @"The Y component must be >= 0 and < height");
             }
 
             return *((uint*)_scan0 + x + y * _strideWidth);
@@ -371,7 +371,7 @@ namespace GIF_Viewer.Utils
         {
             if (colors.Length != _width * _height)
             {
-                throw new ArgumentException(@"The number of colors of the given array mismatch the pixel count of the bitmap", "colors");
+                throw new ArgumentException(@"The number of colors of the given array mismatch the pixel count of the bitmap", nameof(colors));
             }
 
             // Simply copy the argb values array
@@ -443,6 +443,7 @@ namespace GIF_Viewer.Utils
         {
             // ReSharper disable once InconsistentNaming
             int* s0s = source + startRange;
+            // ReSharper disable once InconsistentNaming
             int* s0t = target + startRange;
 
             if (!ignoreZeroes)
@@ -549,7 +550,7 @@ namespace GIF_Viewer.Utils
             // Throw exception when trying to copy same bitmap over
             if (source == _bitmap)
             {
-                throw new ArgumentException(@"Copying regions across the same bitmap is not supported", "source");
+                throw new ArgumentException(@"Copying regions across the same bitmap is not supported", nameof(source));
             }
 
             Rectangle srcBitmapRect = new Rectangle(0, 0, source.Width, source.Height);
@@ -688,10 +689,7 @@ namespace GIF_Viewer.Utils
             /// <summary>
             /// Gets the fast bitmap instance attached to this locker
             /// </summary>
-            public FastBitmap FastBitmap
-            {
-                get { return _fastBitmap; }
-            }
+            public FastBitmap FastBitmap => _fastBitmap;
 
             /// <summary>
             /// Initializes a new instance of the FastBitmapLocker struct with an initial fast bitmap object.

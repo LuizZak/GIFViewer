@@ -18,10 +18,7 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// Gets an instance of the Settings class
         /// </summary>
-        public static Settings Instance
-        {
-            get { return _settings ?? (_settings = new Settings(true)); }
-        }
+        public static Settings Instance => _settings ?? (_settings = new Settings(true));
 
         /// <summary>
         /// The maximum allowed memory for buffers
@@ -69,6 +66,16 @@ namespace GIF_Viewer.Utils
         public bool SingleInstance { get; set; }
 
         /// <summary>
+        /// Gets or sets a value specifying whether the program should force a minimum frame delay on startup
+        /// </summary>
+        public bool SetMinimumDelayOnStartup { get; set; }
+
+        /// <summary>
+        /// The minimum delay to apply to frames
+        /// </summary>
+        public int MinimumFrameDelay { get; set; }
+
+        /// <summary>
         /// Whether to ignore .gif file association checks when the program starts
         /// </summary>
         public bool DontAskAssociate { get; set; }
@@ -89,6 +96,9 @@ namespace GIF_Viewer.Utils
             _maxKeyframeReach = 10;
             _releaseStream = releaseStream;
             DontAskAssociate = false;
+            SetMinimumDelayOnStartup = true;
+            MinimumFrameDelay = 50;
+
             Programs = new Dictionary<string, string>();
 
             LoadSettings();
@@ -100,10 +110,7 @@ namespace GIF_Viewer.Utils
         public void LoadSettings()
         {
             // Close the current .ini file
-            if (_iniFile != null)
-            {
-                _iniFile.Close();
-            }
+            _iniFile?.Close();
 
             // Set the filename:
             string fileName = Application.LocalUserAppDataPath + "\\settings.ini";
@@ -147,6 +154,20 @@ namespace GIF_Viewer.Utils
                                 MaxKeyframeReach = value;
                                 break;
                         }
+                    }
+                }
+                // Force minimum delay settings
+                else if ((line == "[SetMinimumDelay]") && !reader.EndOfStream)
+                {
+                    SetMinimumDelayOnStartup = reader.ReadLine() == bool.TrueString;
+                }
+                // Minimum delay settings
+                else if ((line == "[MinimumFrameDelay]") && !reader.EndOfStream)
+                {
+                    int value;
+                    if (int.TryParse(reader.ReadLine(), out value))
+                    {
+                        MinimumFrameDelay = Math.Min(5000, Math.Max(0, value));
                     }
                 }
                 // Single instance option
@@ -213,8 +234,15 @@ namespace GIF_Viewer.Utils
             writer.WriteLine(MaxKeyframeMemory);
             writer.WriteLine("[MaxKeyframeReach]");
             writer.WriteLine(MaxKeyframeReach);
+
             writer.WriteLine("[SingleInstance]");
-            writer.WriteLine(SingleInstance ? bool.TrueString : bool.FalseString);
+            writer.WriteLine(SingleInstance);
+
+            writer.WriteLine("[SetMinimumDelay]");
+            writer.WriteLine(SetMinimumDelayOnStartup);
+
+            writer.WriteLine("[MinimumFrameDelay]");
+            writer.WriteLine(MinimumFrameDelay);
 
             // Close the stream:
             writer.Close();

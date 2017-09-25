@@ -37,10 +37,8 @@ namespace GIF_Viewer
         /// <summary>
         /// Gets the ammount of frames on this gif
         /// </summary>
-        public int FrameCount
-        {
-            get { return _frameCount; }
-        }
+        public int FrameCount => _frameCount;
+
         /// <summary>
         /// Gets or sets the current frame being displayed
         /// </summary>
@@ -56,10 +54,8 @@ namespace GIF_Viewer
         /// <summary>
         /// Gets the current frame interval (in milliseconds)
         /// </summary>
-        public int CurrentInterval
-        {
-            get { return _currentInterval; }
-        }
+        public int CurrentInterval => _currentInterval;
+
         /// <summary>
         /// Whether the GIF file should loop
         /// </summary>
@@ -68,17 +64,12 @@ namespace GIF_Viewer
         /// <summary>
         /// Gets the Width of this GIF file
         /// </summary>
-        public int Width
-        {
-            get { return _width; }
-        }
+        public int Width => _width;
+
         /// <summary>
         /// Gets the Height of this GIF file
         /// </summary>
-        public int Height
-        {
-            get { return _height; }
-        }
+        public int Height => _height;
 
         /// <summary>
         /// The Width of this GIF file

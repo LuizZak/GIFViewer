@@ -27,7 +27,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Xml;
+
 using GIF_Viewer.GifComponents.Enums;
 using GIF_Viewer.GifComponents.Types;
 
@@ -124,11 +124,9 @@ namespace GIF_Viewer.GifComponents.Components
 		[Category( "Status" )]
 		[Description( "Gets the status of this component, consisting of its " +
 		              "error state and any associated error message." )]
-		public GifComponentStatus ComponentStatus
-		{
-			get { return _status; }
-		}
-		#endregion
+		public GifComponentStatus ComponentStatus => _status;
+
+	    #endregion
 		
 		#region ErrorState property
 		/// <summary>
@@ -139,11 +137,9 @@ namespace GIF_Viewer.GifComponents.Components
 		[Category( "Status" )]
 		[Description( "Gets the member of the Gif.Components.ErrorState " +
 		              "enumeration held within the ComponentStatus property." )]
-		public ErrorState ErrorState
-		{
-			get { return _status.ErrorState; }
-		}
-		#endregion
+		public ErrorState ErrorState => _status.ErrorState;
+
+	    #endregion
 		
 		#region ConsolidatedState property
 
@@ -242,11 +238,9 @@ namespace GIF_Viewer.GifComponents.Components
 		[Category( "Status" )]
 		[Description( "Gets any error message associated with the component's " +
 		              "error state." )]
-		public string ErrorMessage
-		{
-			get { return _status.ErrorMessage; }
-		}
-		#endregion
+		public string ErrorMessage => _status.ErrorMessage;
+
+	    #endregion
 		
 		#endregion
 		
@@ -433,7 +427,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    {
 	        if (outputStream == null)
 	        {
-	            throw new ArgumentNullException("outputStream");
+	            throw new ArgumentNullException(nameof(outputStream));
 	        }
 
 	        // if textToWrite is null then write nothing
@@ -467,7 +461,7 @@ namespace GIF_Viewer.GifComponents.Components
 		{
 			if( outputStream == null )
 			{
-				throw new ArgumentNullException( "outputStream" );
+				throw new ArgumentNullException( nameof(outputStream) );
 			}
 			
 			// Write least significant byte
@@ -493,7 +487,7 @@ namespace GIF_Viewer.GifComponents.Components
 		{
 			if( outputStream == null )
 			{
-				throw new ArgumentNullException( "outputStream" );
+				throw new ArgumentNullException( nameof(outputStream) );
 			}
 			
 			outputStream.WriteByte( Convert.ToByte( valueToWrite & 0xFF ) );

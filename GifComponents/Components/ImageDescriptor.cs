@@ -136,32 +136,26 @@ namespace GIF_Viewer.GifComponents.Components
 		/// with respect to the top-left corner of the logical screen.
 		/// Top-left corner of the logical screen is 0,0.
 		/// </summary>
-		public Point Position
-		{
-			get { return _position; }
-		}
-		#endregion
+		public Point Position => _position;
+
+	    #endregion
 
 		#region Size property
 		/// <summary>
 		/// Gets the size of the image in pixels.
 		/// </summary>
-		public Size Size
-		{
-			get { return _size; }
-		}
-		#endregion
+		public Size Size => _size;
+
+	    #endregion
 		
 		#region HasLocalColourTable property
 		/// <summary>
 		/// Gets a boolean value indicating the presence of a Local Color Table 
 		/// immediately following this Image Descriptor.
 		/// </summary>
-		public bool HasLocalColourTable
-		{
-			get { return _hasLocalColourTable; }
-		}
-		#endregion
+		public bool HasLocalColourTable => _hasLocalColourTable;
+
+	    #endregion
 		
 		#region IsInterlaced property
 		/// <summary>
@@ -169,11 +163,9 @@ namespace GIF_Viewer.GifComponents.Components
 		/// image is interlaced in a four-pass interlace pattern; see Appendix E 
 		/// for details.
 		/// </summary>
-		public bool IsInterlaced
-		{
-			get { return _isInterlaced; }
-		}
-		#endregion
+		public bool IsInterlaced => _isInterlaced;
+
+	    #endregion
 		
 		#region IsSorted property
 		/// <summary>
@@ -185,11 +177,9 @@ namespace GIF_Viewer.GifComponents.Components
 		/// of colors; the decoder may use an initial segment of the table to
 		/// render the graphic.
 		/// </summary>
-		public bool IsSorted
-		{
-			get { return _isSorted; }
-		}
-		#endregion
+		public bool IsSorted => _isSorted;
+
+	    #endregion
 		
 		#region LocalColourTableSizeBits property
 		/// <summary>
@@ -199,21 +189,17 @@ namespace GIF_Viewer.GifComponents.Components
 		/// raise 2 to the value of the field + 1. 
 		/// This value should be 0 if there is no Local Color Table specified.
 		/// </summary>
-		public int LocalColourTableSizeBits
-		{
-			get { return _localColourTableSizeBits; }
-		}
-		#endregion
+		public int LocalColourTableSizeBits => _localColourTableSizeBits;
+
+	    #endregion
 		
 		#region LocalColourTableSize property
 		/// <summary>
 		/// Gets the actual size of the local colour table.
 		/// </summary>
-		public int LocalColourTableSize
-		{
-			get { return 2 << _localColourTableSizeBits; }
-		}
-		#endregion
+		public int LocalColourTableSize => 2 << _localColourTableSizeBits;
+
+	    #endregion
 		
 		#endregion
 

@@ -35,9 +35,8 @@ namespace GIF_Viewer.GifComponents.Types
 	public class GifComponentStatus
 	{
 		#region declarations
-		private readonly ErrorState _errorState;
-		private readonly string _errorMessage;
-		#endregion
+
+	    #endregion
 		
 		#region constructor
 		/// <summary>
@@ -51,8 +50,8 @@ namespace GIF_Viewer.GifComponents.Types
 		/// </param>
 		public GifComponentStatus( ErrorState errorState, string errorMessage )
 		{
-			_errorState = errorState;
-			_errorMessage = errorMessage;
+			ErrorState = errorState;
+			ErrorMessage = errorMessage;
 		}
 		#endregion
 
@@ -61,22 +60,18 @@ namespace GIF_Viewer.GifComponents.Types
 		/// Gets a member of the GifComponents.ErrorState enumeration 
 		/// describing the error state of a component of a GIF data stream.
 		/// </summary>
-		public ErrorState ErrorState
-		{
-			get { return _errorState; }
-		}
-		#endregion
+		public ErrorState ErrorState { get; }
+
+	    #endregion
 		
 		#region ErrorMessage property
 		/// <summary>
 		/// Gets any error message associated with the status of a GIF 
 		/// component.
 		/// </summary>
-		public string ErrorMessage
-		{
-			get { return _errorMessage; }
-		}
-		#endregion
+		public string ErrorMessage { get; }
+
+	    #endregion
 
 		#region ToString method
 		/// <summary>

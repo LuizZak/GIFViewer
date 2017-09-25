@@ -122,10 +122,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("The signature which introduces the GIF stream. " +
                      "This should contain the fixed value \"GIF\".")]
-        public string Signature
-        {
-            get { return _signature; }
-        }
+        public string Signature => _signature;
+
         #endregion
 
         #region Version property
@@ -135,10 +133,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("The version of the Graphics Interchange Format used " +
                      "by the GIF stream which contains this header.")]
-        public string Version
-        {
-            get { return _gifVersion; }
-        }
+        public string Version => _gifVersion;
+
         #endregion
 
         #region public WriteToStream method

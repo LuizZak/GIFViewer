@@ -35,8 +35,8 @@ namespace GIF_Viewer.GifComponents.Components
 	public class NetscapeExtension : ApplicationExtension
 	{
 		#region declarations
-		private readonly int _loopCount;
-		#endregion
+
+	    #endregion
 		
 		#region constructor( int repeatCount )
 		/// <summary>
@@ -49,7 +49,7 @@ namespace GIF_Viewer.GifComponents.Components
 		public NetscapeExtension( int repeatCount )
 			: this( new ApplicationExtension( GetIdentificationBlock(), GetApplicationData( repeatCount ) ) )
 		{
-			_loopCount = repeatCount;
+			LoopCount = repeatCount;
 		}
 		#endregion
 		
@@ -74,7 +74,7 @@ namespace GIF_Viewer.GifComponents.Components
 	                      + "therefore this application extension is not a "
 	                      + "Netscape extension. Application identifier: "
 	                      + applicationExtension.ApplicationIdentifier;
-	            throw new ArgumentException(message, "applicationExtension");
+	            throw new ArgumentException(message, nameof(applicationExtension));
 	        }
 
 	        if (applicationExtension.ApplicationAuthenticationCode != "2.0")
@@ -83,7 +83,7 @@ namespace GIF_Viewer.GifComponents.Components
 	                      + "therefore this application extension is not a "
 	                      + "Netscape extension. Application authentication code: "
 	                      + applicationExtension.ApplicationAuthenticationCode;
-	            throw new ArgumentException(message, "applicationExtension");
+	            throw new ArgumentException(message, nameof(applicationExtension));
 	        }
 
 	        #endregion
@@ -106,7 +106,7 @@ namespace GIF_Viewer.GifComponents.Components
 
 	                // String the two bytes together to make an integer,
 	                // with byte 2 coming first.
-	                _loopCount = (byte2 << 8) | byte1;
+	                LoopCount = (byte2 << 8) | byte1;
 	            }
 	        }
 	    }
@@ -118,11 +118,9 @@ namespace GIF_Viewer.GifComponents.Components
 		/// Number of times to repeat the frames of the animation.
 		/// 0 to repeat indefinitely. -1 to not repeat.
 		/// </summary>
-		public int LoopCount
-		{
-			get { return _loopCount; }
-		}
-		#endregion
+		public int LoopCount { get; }
+
+	    #endregion
 
 		#region private static GetIdentificationBlock method
 		private static DataBlock GetIdentificationBlock()

@@ -133,7 +133,7 @@ namespace GIF_Viewer.GifComponents.Components
                     = "Logical screen width cannot be more than "
                     + UShortMax + ". "
                     + "Supplied value: " + logicalScreenSize.Width;
-                throw new ArgumentException(message, "logicalScreenSize");
+                throw new ArgumentException(message, nameof(logicalScreenSize));
             }
             if (logicalScreenSize.Height > UShortMax)
             {
@@ -141,14 +141,14 @@ namespace GIF_Viewer.GifComponents.Components
                     = "Logical screen height cannot be more than "
                     + UShortMax + ". "
                     + "Supplied value: " + logicalScreenSize.Height;
-                throw new ArgumentException(message, "logicalScreenSize");
+                throw new ArgumentException(message, nameof(logicalScreenSize));
             }
             if (colourResolution > 7)
             {
                 string message
                     = "Colour resolution cannot be more than 7. "
                     + "Supplied value: " + colourResolution;
-                throw new ArgumentException(message, "colourResolution");
+                throw new ArgumentException(message, nameof(colourResolution));
             }
             if (globalColourTableSizeBits > 7)
             {
@@ -156,7 +156,7 @@ namespace GIF_Viewer.GifComponents.Components
                     = "Global colour table size cannot be more than 7. "
                     + "Supplied value: " + globalColourTableSizeBits;
                 throw new ArgumentException(message,
-                                             "globalColourTableSizeBits");
+                                             nameof(globalColourTableSizeBits));
             }
             if (backgroundColourIndex > ByteMax)
             {
@@ -164,7 +164,7 @@ namespace GIF_Viewer.GifComponents.Components
                     = "Background colour index cannot be more than "
                     + ByteMax + ". "
                     + "Supplied value: " + backgroundColourIndex;
-                throw new ArgumentException(message, "backgroundColourIndex");
+                throw new ArgumentException(message, nameof(backgroundColourIndex));
             }
             if (pixelAspectRatio > ByteMax)
             {
@@ -172,7 +172,7 @@ namespace GIF_Viewer.GifComponents.Components
                     = "Pixel aspect ratio cannot be more than "
                     + ByteMax + ". "
                     + "Supplied value: " + pixelAspectRatio;
-                throw new ArgumentException(message, "pixelAspectRatio");
+                throw new ArgumentException(message, nameof(pixelAspectRatio));
             }
             #endregion
 
@@ -229,10 +229,8 @@ namespace GIF_Viewer.GifComponents.Components
         [Description("Width and height, in pixels, of the Logical Screen " +
                       "where the images will be rendered in the displaying " +
                       "device.")]
-        public Size LogicalScreenSize
-        {
-            get { return _screenSize; }
-        }
+        public Size LogicalScreenSize => _screenSize;
+
         #endregion
 
         #region HasGlobalColourTable property
@@ -252,10 +250,8 @@ namespace GIF_Viewer.GifComponents.Components
                       "of the Background Color Index field should be used as " +
                       "the table index of the background color. " +
                       "(This field is the most significant bit of the byte.)")]
-        public bool HasGlobalColourTable
-        {
-            get { return _hasGlobalColourTable; }
-        }
+        public bool HasGlobalColourTable => _hasGlobalColourTable;
+
         #endregion
 
         #region ColourResolution property
@@ -280,10 +276,8 @@ namespace GIF_Viewer.GifComponents.Components
                       "This value should be set to indicate the richness of the " +
                       "original palette, even if not every color from the whole " +
                       "palette is available on the source machine")]
-        public int ColourResolution
-        {
-            get { return _colourResolution; }
-        }
+        public int ColourResolution => _colourResolution;
+
         #endregion
 
         #region GlobalColourTableIsSorted property
@@ -305,10 +299,8 @@ namespace GIF_Viewer.GifComponents.Components
                      "in choosing the best subset of colors; the decoder may " +
                      "use an initial segment of the table to render the " +
                      "graphic.")]
-        public bool GlobalColourTableIsSorted
-        {
-            get { return _gctIsSorted; }
-        }
+        public bool GlobalColourTableIsSorted => _gctIsSorted;
+
         #endregion
 
         #region GlobalColourTableSizeBits property
@@ -334,20 +326,16 @@ namespace GIF_Viewer.GifComponents.Components
                      "this field according to the above formula so that " +
                      "decoders can choose the best graphics mode to display " +
                      "the stream in.")]
-        public int GlobalColourTableSizeBits
-        {
-            get { return _gctSizeBits; }
-        }
+        public int GlobalColourTableSizeBits => _gctSizeBits;
+
         #endregion
 
         #region GlobalColourTableSize property
         /// <summary>
         /// Gets the number of colours in the global colour table.
         /// </summary>
-        public int GlobalColourTableSize
-        {
-            get { return 2 << _gctSizeBits; }
-        }
+        public int GlobalColourTableSize => 2 << _gctSizeBits;
+
         #endregion
 
         #region BackgroundColourIndex property
@@ -363,10 +351,8 @@ namespace GIF_Viewer.GifComponents.Components
                       "pixels on the screen that are not covered by an image. " +
                       "If the Global Color Table Flag is set to (zero), this " +
                       "field should be zero and should be ignored.")]
-        public int BackgroundColourIndex
-        {
-            get { return _backgroundColourIndex; }
-        }
+        public int BackgroundColourIndex => _backgroundColourIndex;
+
         #endregion
 
         #region PixelAspectRatio property
@@ -394,10 +380,8 @@ namespace GIF_Viewer.GifComponents.Components
                       "The value range in this field allows specification of " +
                       "the widest pixel of 4:1 to the tallest pixel of 1:4 " +
                       "in increments of 1/64th.")]
-        public int PixelAspectRatio
-        {
-            get { return _pixelAspectRatio; }
-        }
+        public int PixelAspectRatio => _pixelAspectRatio;
+
         #endregion
 
         #endregion

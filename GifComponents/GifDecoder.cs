@@ -180,13 +180,13 @@ namespace GIF_Viewer.GifComponents
         {
             if (inputStream == null)
             {
-                throw new ArgumentNullException("inputStream");
+                throw new ArgumentNullException(nameof(inputStream));
             }
 
             if (inputStream.CanRead == false)
             {
                 const string message = "The supplied stream cannot be read";
-                throw new ArgumentException(message, "inputStream");
+                throw new ArgumentException(message, nameof(inputStream));
             }
 
             _maxMemoryForBuffer = 1024 * 1024 * 100;   // 100mb for buffering frames
@@ -376,10 +376,8 @@ namespace GIF_Viewer.GifComponents
         /// Gets the header of the GIF stream, containing the signature and
         /// version of the GIF standard used.
         /// </summary>
-        public GifHeader Header
-        {
-            get { return _header; }
-        }
+        public GifHeader Header => _header;
+
         #endregion
 
         #region Logical Screen descriptor property
@@ -407,10 +405,8 @@ namespace GIF_Viewer.GifComponents
                       "This implies that they could refer to window " +
                       "coordinates in a window-based environment or printer " +
                       "coordinates when a printer is used.")]
-        public LogicalScreenDescriptor LogicalScreenDescriptor
-        {
-            get { return _lsd; }
-        }
+        public LogicalScreenDescriptor LogicalScreenDescriptor => _lsd;
+
         #endregion
 
         #region BackgroundColour property
@@ -421,13 +417,8 @@ namespace GIF_Viewer.GifComponents
                      "This is derived using the background colour index in the " +
                      "Logical Screen Descriptor and looking up the colour " +
                      "in the Global Colour Table.")]
-        public Color BackgroundColour
-        {
-            get
-            {
-                return Color.FromArgb(_gct[_lsd.BackgroundColourIndex]);
-            }
-        }
+        public Color BackgroundColour => Color.FromArgb(_gct[_lsd.BackgroundColourIndex]);
+
         #endregion
 
         #region ApplicationExtensions property
@@ -456,10 +447,8 @@ namespace GIF_Viewer.GifComponents
         /// </summary>
         [Description("Gets the Netscape 2.0 application extension, if " +
                       "present. This contains the animation's loop count.")]
-        public NetscapeExtension NetscapeExtension
-        {
-            get { return _netscapeExtension; }
-        }
+        public NetscapeExtension NetscapeExtension => _netscapeExtension;
+
         #endregion
 
         #region Frame-related properties
@@ -467,10 +456,7 @@ namespace GIF_Viewer.GifComponents
         /// <summary>
         /// Gets the frame count for this GIF file
         /// </summary>
-        public int FrameCount
-        {
-            get { return _frames.Count; }
-        }
+        public int FrameCount => _frames.Count;
 
         #endregion
 
@@ -479,10 +465,8 @@ namespace GIF_Viewer.GifComponents
         /// Gets the global colour table for this GIF data stream, or null if the
         /// frames have local colour tables.
         /// </summary>
-        public ColourTable GlobalColourTable
-        {
-            get { return _gct; }
-        }
+        public ColourTable GlobalColourTable => _gct;
+
         #endregion
 
         #endregion
@@ -620,9 +604,9 @@ namespace GIF_Viewer.GifComponents
             }
 
             // Setup the frame delay
-            _frameDelays.Add(lastGce == null ? 0 : lastGce.DelayTime);
+            _frameDelays.Add(lastGce?.DelayTime ?? 0);
 
-            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, _lastNoDisposalFrame, _header, _frames.Count);
+            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, _lastNoDisposalFrame, _frames.Count);
             if (lastGce == null || lastGce.DisposalMethod == DisposalMethod.DoNotDispose ||
                 lastGce.DisposalMethod == DisposalMethod.NotSpecified)
             {

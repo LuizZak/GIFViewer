@@ -49,11 +49,15 @@
             this.btn_cancel = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.cb_allowMultipleInstances = new System.Windows.Forms.CheckBox();
+            this.cb_setMinimumDelay = new System.Windows.Forms.CheckBox();
+            this.nud_minimumFrameDelay = new System.Windows.Forms.NumericUpDown();
+            this.label2 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeReach)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_keyframeMemory)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tb_bufferMemory)).BeginInit();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_minimumFrameDelay)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -259,6 +263,9 @@
             // 
             this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Controls.Add(this.label2);
+            this.groupBox2.Controls.Add(this.nud_minimumFrameDelay);
+            this.groupBox2.Controls.Add(this.cb_setMinimumDelay);
             this.groupBox2.Controls.Add(this.cb_allowMultipleInstances);
             this.groupBox2.Location = new System.Drawing.Point(12, 12);
             this.groupBox2.Name = "groupBox2";
@@ -276,6 +283,42 @@
             this.cb_allowMultipleInstances.TabIndex = 0;
             this.cb_allowMultipleInstances.Text = "Allow multiple instances";
             this.cb_allowMultipleInstances.UseVisualStyleBackColor = true;
+            // 
+            // cb_setMinimumDelay
+            // 
+            this.cb_setMinimumDelay.AutoSize = true;
+            this.cb_setMinimumDelay.Location = new System.Drawing.Point(213, 24);
+            this.cb_setMinimumDelay.Name = "cb_setMinimumDelay";
+            this.cb_setMinimumDelay.Size = new System.Drawing.Size(195, 17);
+            this.cb_setMinimumDelay.TabIndex = 1;
+            this.cb_setMinimumDelay.Text = "Set minimum frame delay on startup:";
+            this.cb_setMinimumDelay.UseVisualStyleBackColor = true;
+            // 
+            // nud_minimumFrameDelay
+            // 
+            this.nud_minimumFrameDelay.Location = new System.Drawing.Point(414, 23);
+            this.nud_minimumFrameDelay.Maximum = new decimal(new int[] {
+            5000,
+            0,
+            0,
+            0});
+            this.nud_minimumFrameDelay.Name = "nud_minimumFrameDelay";
+            this.nud_minimumFrameDelay.Size = new System.Drawing.Size(69, 20);
+            this.nud_minimumFrameDelay.TabIndex = 2;
+            this.nud_minimumFrameDelay.Value = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(489, 25);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(20, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "ms";
             // 
             // SettingsForm
             // 
@@ -301,6 +344,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.tb_bufferMemory)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nud_minimumFrameDelay)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -327,5 +371,8 @@
         private System.Windows.Forms.TrackBar tb_keyframeReach;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.CheckBox cb_allowMultipleInstances;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.NumericUpDown nud_minimumFrameDelay;
+        private System.Windows.Forms.CheckBox cb_setMinimumDelay;
     }
 }

@@ -16,6 +16,8 @@ using GIF_Viewer.Utils;
 /// 
 /// @author             Luiz Fernando
 /// 
+/// @version 1.6.6b     Added a setting to customize the default minimum frame delay setting (as well as disabling it on startup).
+/// 
 /// @version 1.6.5b     Now opening another .gif file in single instance mode will move the main window instance to the front.
 /// 
 /// @version 1.6.4b     Adding extra shortcuts for navigating the images in the folder with the arrow keys, while the focus is in the image.
@@ -263,7 +265,7 @@ namespace GIF_Viewer
                 Association = new FileAssociation(".gif");
 
                 // Check .GIF file association
-                if (!Settings.Instance.DontAskAssociate)
+                if (Association.HasWriteAccess() && !Settings.Instance.DontAskAssociate)
                 {
                     if (Association.GetProgram() != "\"" + Application.ExecutablePath + "\" \"%1\"")
                     {
@@ -302,6 +304,13 @@ namespace GIF_Viewer
             DragDrop += FormMain_DragDrop;
 
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.UserPaint, true);
+            
+            // Load playback settings
+            UseMinFrameInterval = Settings.Instance.SetMinimumDelayOnStartup;
+            MinFrameInterval = Settings.Instance.MinimumFrameDelay;
+
+            cb_useMinFrameInterval.Checked = UseMinFrameInterval;
+            nud_minFrameInterval.Value = MinFrameInterval;
         }
 
         /// <summary>
@@ -1040,10 +1049,7 @@ namespace GIF_Viewer
 
             if (settings.ShowDialog(this) == DialogResult.OK)
             {
-                if (_currentGif != null)
-                {
-                    _currentGif.ApplyMemorySettings();
-                }
+                _currentGif?.ApplyMemorySettings();
             }
         }
 

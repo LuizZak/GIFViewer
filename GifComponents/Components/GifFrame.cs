@@ -61,7 +61,6 @@ namespace GIF_Viewer.GifComponents.Components
         private int _delay;
         private bool _expectsUserInput;
         private Point _position;
-        private GifHeader _header;
         private ColourTable _localColourTable;
         private GraphicControlExtension _extension;
         private ImageDescriptor _imageDescriptor;
@@ -125,15 +124,14 @@ namespace GIF_Viewer.GifComponents.Components
         /// The frame which precedes the frame before this one in the GIF stream,
         /// if present.
         /// </param>
-        /// <param name="header">The header of the GIF file</param>
         /// <param name="index">The index of this frame on the owning animation</param>
         public GifFrame(Stream inputStream, LogicalScreenDescriptor logicalScreenDescriptor,
             ColourTable globalColourTable, GraphicControlExtension graphicControlExtension, GifFrame previousFrame,
-            GifFrame previousFrameBut1, GifHeader header, int index)
+            GifFrame previousFrameBut1, int index)
         {
             if (logicalScreenDescriptor == null)
             {
-                throw new ArgumentNullException("logicalScreenDescriptor");
+                throw new ArgumentNullException(nameof(logicalScreenDescriptor));
             }
 
             if (graphicControlExtension == null)
@@ -153,7 +151,6 @@ namespace GIF_Viewer.GifComponents.Components
             _streamOffset = inputStream.Position;
             _inputStream = inputStream;
             _isImagePartial = true;
-            _header = header;
             _previousFrame = previousFrame;
             _previousFrameBut1 = previousFrameBut1;
 
@@ -296,10 +293,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// The index of this frame on the animation
         /// </summary>
-        public int Index
-        {
-            get { return _index; }
-        }
+        public int Index => _index;
 
         #region TheImage property
         /// <summary>
@@ -307,10 +301,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("The image held in this frame")]
         [Category("Set by decoder")]
-        public Image TheImage
-        {
-            get { return _image; }
-        }
+        public Image TheImage => _image;
+
         #endregion
 
         #region LocalColourTable property
@@ -319,10 +311,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("The local colour table for this frame")]
         [Category("Set by decoder")]
-        public ColourTable LocalColourTable
-        {
-            get { return _localColourTable; }
-        }
+        public ColourTable LocalColourTable => _localColourTable;
+
         #endregion
 
         #region GraphicControlExtension property
@@ -331,10 +321,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("The graphic control extension which precedes this image.")]
         [Category("Set by decoder")]
-        public GraphicControlExtension GraphicControlExtension
-        {
-            get { return _extension; }
-        }
+        public GraphicControlExtension GraphicControlExtension => _extension;
+
         #endregion
 
         #region ImageDescriptor property
@@ -346,10 +334,8 @@ namespace GIF_Viewer.GifComponents.Components
                       "size and position of the image, and flags indicating " +
                       "whether the colour table is global or local, whether " +
                       "it is sorted, and whether the image is interlaced.")]
-        public ImageDescriptor ImageDescriptor
-        {
-            get { return _imageDescriptor; }
-        }
+        public ImageDescriptor ImageDescriptor => _imageDescriptor;
+
         #endregion
 
         #endregion
@@ -571,8 +557,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         private void RecurseGraphicControlExtension()
         {
-            if (_previousFrame != null)
-                _previousFrame.RecurseGraphicControlExtension();
+            _previousFrame?.RecurseGraphicControlExtension();
 
             if (_graphicControlExtension == null)
             {
@@ -769,13 +754,13 @@ namespace GIF_Viewer.GifComponents.Components
             Bitmap baseImage;
             int width = lsd.LogicalScreenSize.Width;
             int height = lsd.LogicalScreenSize.Height;
-            int backgroundColorIndex = previousFrame == null ? lsd.BackgroundColourIndex : previousFrame._logicalScreenDescriptor.BackgroundColourIndex;
-            int transparentColorIndex = previousFrame == null ? gce.TransparentColourIndex : previousFrame._graphicControlExtension.TransparentColourIndex;
+            int backgroundColorIndex = previousFrame?._logicalScreenDescriptor.BackgroundColourIndex ?? lsd.BackgroundColourIndex;
+            int transparentColorIndex = previousFrame?._graphicControlExtension.TransparentColourIndex ?? gce.TransparentColourIndex;
             act = (previousFrame == null ? act : previousFrame._localColourTable ?? _globalColourTable);
 
             #region paint baseImage
 
-            if (previousFrame == null || previousFrame._image == null)
+            if (previousFrame?._image == null)
             {
                 baseImage = new Bitmap(width, height);
             }
@@ -814,7 +799,7 @@ namespace GIF_Viewer.GifComponents.Components
                     // Adjust transparency
                     backgroundColour &= 0x00FFFFFF;
 
-                    if (previousFrame == null || previousFrame._imageDescriptor == null)
+                    if (previousFrame?._imageDescriptor == null)
                         break;
 
                     using (var fastBaseImage = baseImage.FastLock())

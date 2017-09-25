@@ -31,7 +31,7 @@ namespace GIF_Viewer.GifComponents.Types
 	/// </summary>
 	public class PackedFields
 	{
-		private bool[] _bits;
+		private readonly bool[] _bits;
 		
 		#region default constructor
 		/// <summary>
@@ -55,12 +55,10 @@ namespace GIF_Viewer.GifComponents.Types
 		/// </param>
 		public PackedFields( int data ) : this()
 		{
-			int bitShift;
-			int bitValue;
-			for( int i = 0; i < 8; i++ )
+		    for( int i = 0; i < 8; i++ )
 			{
-				bitShift = 7 - i;
-				bitValue = (data >> bitShift) & 1; // get just this bit
+				var bitShift = 7 - i;
+				var bitValue = (data >> bitShift) & 1;
 				bool bit = bitValue == 1;
 				_bits[i] = bit;
 			}
@@ -77,11 +75,11 @@ namespace GIF_Viewer.GifComponents.Types
 			get
 			{
 				int returnValue = 0;
-				int bitValue;
-				int bitShift = 7;
+			    int bitShift = 7;
 				foreach( bool bit in _bits )
 				{
-					if( bit == true )
+				    int bitValue;
+				    if( bit )
 					{
 						bitValue = 1 << bitShift;
 					}
@@ -115,7 +113,7 @@ namespace GIF_Viewer.GifComponents.Types
 				string message 
 					= "Index must be between 0 and 7. Supplied index: "
 					+ index;
-				throw new ArgumentOutOfRangeException( "index", message );
+				throw new ArgumentOutOfRangeException( nameof(index), message );
 			}
 			_bits[index] = valueToSet;
 		}
@@ -143,7 +141,7 @@ namespace GIF_Viewer.GifComponents.Types
 				string message
 					= "Start index must be between 0 and 7. Supplied index: "
 					+ startIndex;
-				throw new ArgumentOutOfRangeException( "startIndex", message );
+				throw new ArgumentOutOfRangeException( nameof(startIndex), message );
 			}
 			
 			if( length < 1 || startIndex + length > 8 )
@@ -154,18 +152,15 @@ namespace GIF_Viewer.GifComponents.Types
 					+ length
 					+ ". Supplied start index: "
 					+ startIndex;
-				throw new ArgumentOutOfRangeException( "length", message );
+				throw new ArgumentOutOfRangeException( nameof(length), message );
 			}
 			
 			int bitShift = length - 1;
-			int bitValue;
-			int bitValueIfSet;
-			int bitIsSet;
-			for( int i = startIndex; i < startIndex + length; i++ )
+		    for( int i = startIndex; i < startIndex + length; i++ )
 			{
-				bitValueIfSet = (1 << bitShift);
-				bitValue = (valueToSet & bitValueIfSet);
-				bitIsSet = (bitValue >> bitShift);
+				var bitValueIfSet = (1 << bitShift);
+				var bitValue = (valueToSet & bitValueIfSet);
+				var bitIsSet = (bitValue >> bitShift);
 				_bits[i] = (bitIsSet == 1);
 				bitShift--;
 			}
@@ -189,7 +184,7 @@ namespace GIF_Viewer.GifComponents.Types
 				string message 
 					= "Index must be between 0 and 7. Supplied index: "
 					+ index;
-				throw new ArgumentOutOfRangeException( "index", message );
+				throw new ArgumentOutOfRangeException( nameof(index), message );
 			}
 			return _bits[index];
 		}
@@ -215,7 +210,7 @@ namespace GIF_Viewer.GifComponents.Types
 				string message
 					= "Start index must be between 0 and 7. Supplied index: "
 					+ startIndex;
-				throw new ArgumentOutOfRangeException( "startIndex", message );
+				throw new ArgumentOutOfRangeException( nameof(startIndex), message );
 			}
 			
 			if( length < 1 || startIndex + length > 8 )
@@ -226,15 +221,14 @@ namespace GIF_Viewer.GifComponents.Types
 					+ length
 					+ ". Supplied start index: "
 					+ startIndex;
-				throw new ArgumentOutOfRangeException( "length", message );
+				throw new ArgumentOutOfRangeException( nameof(length), message );
 			}
 			
 			int returnValue = 0;
 			int bitShift = length - 1;
-			int bitValue;
-			for( int i = startIndex; i < startIndex + length; i++ )
+		    for( int i = startIndex; i < startIndex + length; i++ )
 			{
-				bitValue = (_bits[i] ? 1 : 0) << bitShift;
+				var bitValue = (_bits[i] ? 1 : 0) << bitShift;
 				returnValue += bitValue;
 				bitShift--;
 			}

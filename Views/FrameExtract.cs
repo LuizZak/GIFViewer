@@ -74,7 +74,7 @@ namespace GIF_Viewer.Views
             AnimationTimer = new Timer();
             AnimationTimer.Tick += AnimationTimer_Tick;
 
-            LoadGIF(CurrentGif.GifPath);
+            LoadGif(CurrentGif.GifPath);
 
             // timelineControl1.maximum = Frames - 1;
             tlc_timeline.Minimum = 1;
@@ -170,7 +170,7 @@ namespace GIF_Viewer.Views
         /// Loads a GIF to show from a file
         /// </summary>
         /// <param name="fileName">The .GIF filepath</param>
-        void LoadGIF(string fileName)
+        void LoadGif(string fileName)
         {
             // Clear everything if the user provides an empty string:
             if (fileName == "")
@@ -241,7 +241,7 @@ namespace GIF_Viewer.Views
             range.X -= 1;
 
             // Unload the GIF from the memory, so we can work it with:
-            LoadGIF("");
+            LoadGif("");
 
             // Load the GIF file:
             Image m = Image.FromFile(CurrentGif.GifPath);
@@ -293,7 +293,7 @@ namespace GIF_Viewer.Views
             m.Dispose();
 
             // Reload the GIF:
-            LoadGIF(CurrentGif.GifPath);
+            LoadGif(CurrentGif.GifPath);
         }
 
         /// <summary>
@@ -380,7 +380,6 @@ namespace GIF_Viewer.Views
         /// <param name="e">The arguments for this event</param>
         private void btn_extract_Click(object sender, EventArgs e)
         {
-            // TODO: Add the frame extract code here
             if (_formatForm.ShowDialog(this) == DialogResult.OK)
             {
                 ExportFrames();

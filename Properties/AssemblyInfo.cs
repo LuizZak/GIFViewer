@@ -1,12 +1,11 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("GIF Viewer")]
-[assembly: AssemblyDescription("Tool for visualizing animater .gif files")]
+[assembly: AssemblyDescription("Tool for visualizing animated .gif files")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Luiz Fernando")]
 [assembly: AssemblyProduct("GIF Viewer")]

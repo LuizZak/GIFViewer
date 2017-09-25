@@ -108,7 +108,7 @@ namespace GIF_Viewer.GifComponents.Components
                 string message
                     = "The identification block should be 11 bytes long but "
                     + "is only " + _identificationBlock.Data.Length + " bytes.";
-                throw new ArgumentException(message, "identificationBlock");
+                throw new ArgumentException(message, nameof(identificationBlock));
             }
 
             if (_identificationBlock.Data.Length > 11)
@@ -149,10 +149,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("Returns a data block which identifies the application " +
                      "defining this extension.")]
-        public DataBlock IdentificationBlock
-        {
-            get { return _identificationBlock; }
-        }
+        public DataBlock IdentificationBlock => _identificationBlock;
+
         #endregion
 
         #region ApplicationIdentifier property
@@ -163,10 +161,8 @@ namespace GIF_Viewer.GifComponents.Components
         [Description("Sequence of eight printable ASCII characters used " +
                      "to identify the application owning the Application " +
                      "Extension.")]
-        public string ApplicationIdentifier
-        {
-            get { return _applicationIdentifier; }
-        }
+        public string ApplicationIdentifier => _applicationIdentifier;
+
         #endregion
 
         #region ApplicationAuthenticationCode property
@@ -182,10 +178,8 @@ namespace GIF_Viewer.GifComponents.Components
                      "An Application program may use an algorithm to compute " +
                      "a binary code that uniquely identifies it as the " +
                      "application owning the Application Extension.")]
-        public string ApplicationAuthenticationCode
-        {
-            get { return _applicationAuthenticationCode; }
-        }
+        public string ApplicationAuthenticationCode => _applicationAuthenticationCode;
+
         #endregion
 
         #region ApplicationData property
@@ -193,10 +187,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// Data specific to the application declared by the 
         /// <see cref="ApplicationIdentifier"/>
         /// </summary>
-        public Collection<DataBlock> ApplicationData
-        {
-            get { return _applicationData; }
-        }
+        public Collection<DataBlock> ApplicationData => _applicationData;
+
         #endregion
 
         #endregion

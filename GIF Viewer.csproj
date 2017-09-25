@@ -166,7 +166,6 @@
     <Compile Include="Controls\TimelineControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Update.cs" />
     <Compile Include="Utils\FastBitmap.cs" />
     <Compile Include="Views\ErrorBox.cs">
       <SubType>Form</SubType>
@@ -203,9 +202,6 @@
       <DependentUpon>SettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="GIF Viewer_1_TemporaryKey.pfx" />
-    <None Include="GIF Viewer_TemporaryKey.pfx" />
-    <None Include="OLDGIF Viewer_TemporaryKey.pfx" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

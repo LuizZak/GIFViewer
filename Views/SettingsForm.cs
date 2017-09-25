@@ -42,6 +42,9 @@ namespace GIF_Viewer.Views
             lbl_keyframeReach.Text = Settings.Instance.MaxKeyframeReach + "";
 
             cb_allowMultipleInstances.Checked = !Settings.Instance.SingleInstance;
+
+            cb_setMinimumDelay.Checked = Settings.Instance.SetMinimumDelayOnStartup;
+            nud_minimumFrameDelay.Value = Settings.Instance.MinimumFrameDelay;
         }
 
         // 
@@ -49,10 +52,15 @@ namespace GIF_Viewer.Views
         // 
         private void btn_ok_Click(object sender, EventArgs e)
         {
+            Settings.Instance.SingleInstance = !cb_allowMultipleInstances.Checked;
+
+            Settings.Instance.SetMinimumDelayOnStartup = cb_setMinimumDelay.Checked;
+            Settings.Instance.MinimumFrameDelay = (int)nud_minimumFrameDelay.Value;
+
             Settings.Instance.MaxBufferMemory = _bufferMemory;
             Settings.Instance.MaxKeyframeMemory = _keyframeMemory;
             Settings.Instance.MaxKeyframeReach = _keyframeReach;
-            Settings.Instance.SingleInstance = !cb_allowMultipleInstances.Checked;
+
             Settings.Instance.SaveSettings();
 
             DialogResult = DialogResult.OK;
