@@ -54,11 +54,8 @@ namespace GIF_Viewer.GifComponents.Components
         public static long SkipStream(Stream inputStream)
         {
             int blockSize = inputStream.ReadByte();
-
             if (blockSize == -1)
-            {
                 return 0;
-            }
 
             inputStream.Position += blockSize;
             return blockSize;

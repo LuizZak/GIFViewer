@@ -480,9 +480,5 @@ namespace GIF_Viewer.GifComponents.Components
         {
             throw new NotImplementedException();
         }
-
-        // .NET wrapper to native call of 'memset'. Requires Microsoft Visual C++ Runtime installed
-        [DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
-        public static extern IntPtr memset(IntPtr ptr, int value, UIntPtr count);
     }
 }
