@@ -107,11 +107,7 @@ namespace GIF_Viewer.GifComponents.Components
             #region declare / initialise local variables
 
             _pixelIndexes = new byte[pixelCount];
-            int nextAvailableCode; // the next code to be added to the dictionary
-            int currentCodeSize;
-            int in_code;
-            int previousCode;
-            int code;
+	        int code;
             int datum = 0; // temporary storage for codes read from the input stream
             int meaningfulBitsInDatum = 0; // number of bits of useful information held in the datum variable
             int firstCode = 0; // first code read from the stream since last clear code
@@ -123,7 +119,7 @@ namespace GIF_Viewer.GifComponents.Components
 
             short[] prefix = new short[MaxStackSize];
             byte[] suffix = new byte[MaxStackSize];
-            Stack<byte> pixelStack = new Stack<byte>();
+            var pixelStack = new Stack<byte>();
 
             #endregion
 
@@ -131,9 +127,9 @@ namespace GIF_Viewer.GifComponents.Components
             _lzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
             int clearCode = ClearCode;
 	        int endOfInformation = EndOfInformation;
-            nextAvailableCode = clearCode + 2;
-            previousCode = NullCode;
-            currentCodeSize = InitialCodeSize;
+            int nextAvailableCode = clearCode + 2;
+	        int previousCode = NullCode;
+	        int currentCodeSize = InitialCodeSize;
 
             #region guard against LZW code size being too large
 
@@ -152,7 +148,6 @@ namespace GIF_Viewer.GifComponents.Components
             // TODO: what are prefix and suffix and why are we initialising them like this?
             for (code = 0; code < clearCode; code++)
             {
-                prefix[code] = 0;
                 suffix[code] = (byte)code;
             }
 
@@ -311,7 +306,7 @@ namespace GIF_Viewer.GifComponents.Components
 
                     #endregion
 
-                    in_code = code;
+                    var inCode = code;
                     if (code == nextAvailableCode)
                     {
                         pixelStack.Push((byte)firstCode);
@@ -361,7 +356,7 @@ namespace GIF_Viewer.GifComponents.Components
                         #endregion
                     }
 
-                    previousCode = in_code;
+                    previousCode = inCode;
 
                     #endregion
                 }

@@ -325,32 +325,30 @@ namespace GIF_Viewer
         public void ProcessCommandLine(string[] args)
         {
             // Load a gif file from the command line arguments
-            if (args.Length > 0 && File.Exists(args[0]))
-            {
-                try
-                {
-                    LoadGif(args[0]);
-                }
-                catch (Exception ex)
-                {
-                    ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
-                }
-
-                try
-                {
-                    LoadGifsInFolder(Path.GetDirectoryName(args[0]));
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-            else
+            if (args.Length <= 0 || !File.Exists(args[0]))
             {
                 if (_currentGif.GifPath == "")
-                {
                     _openFile = true;
-                }
+
+                return;
+            }
+
+            try
+            {
+                LoadGif(args[0]);
+            }
+            catch (Exception ex)
+            {
+                ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
+            }
+
+            try
+            {
+                LoadGifsInFolder(Path.GetDirectoryName(args[0]));
+            }
+            catch (Exception)
+            {
+                // ignored
             }
         }
 
@@ -370,38 +368,36 @@ namespace GIF_Viewer
             _op.Filter = @"GIF files (*.gif)|*.gif";
 
             // The user has chosen a valid .gif file
-            if (_op.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    LoadGif(_op.FileName);
-                }
-                catch (Exception ex)
-                {
-                    ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
-
-                    // Set the play button as an open file button:
-                    PlayBtn.Text = @"&Open...";
-                    PlayBtn.Enabled = true;
-
-                    return;
-                }
-
-                try
-                {
-                    LoadGifsInFolder(Path.GetDirectoryName(_op.FileName));
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-            // The user has closed the dialog
-            else
+            if (_op.ShowDialog() != DialogResult.OK)
             {
                 // Set the play button as an open file button:
                 PlayBtn.Text = @"&Open...";
                 PlayBtn.Enabled = true;
+                return;
+            }
+
+            try
+            {
+                LoadGif(_op.FileName);
+            }
+            catch (Exception ex)
+            {
+                ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
+
+                // Set the play button as an open file button:
+                PlayBtn.Text = @"&Open...";
+                PlayBtn.Enabled = true;
+
+                return;
+            }
+
+            try
+            {
+                LoadGifsInFolder(Path.GetDirectoryName(_op.FileName));
+            }
+            catch (Exception)
+            {
+                // ignored
             }
         }
 
@@ -438,7 +434,7 @@ namespace GIF_Viewer
             try
             {
                 // Check the magic number
-                FileStream fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
+                var fs = new FileStream(fileName, FileMode.Open, FileAccess.Read);
 
                 if (fs.ReadByte() != 0x47 || fs.ReadByte() != 0x49 || fs.ReadByte() != 0x46)
                 {
@@ -616,10 +612,10 @@ namespace GIF_Viewer
             cms_gifRightClick.Items.Clear();
 
             // Loop through each entry in the Programs Dictionary:
-            foreach (string k in Settings.Instance.Programs.Keys)
+            foreach (var k in Settings.Instance.Programs.Keys)
             {
                 // Add a new contex menu:
-                ToolStripItem tsi = cms_gifRightClick.Items.Add(k);
+                var tsi = cms_gifRightClick.Items.Add(k);
 
                 // Set the path to the application:
                 tsi.Tag = Settings.Instance.Programs[k];
@@ -630,7 +626,7 @@ namespace GIF_Viewer
             cms_gifRightClick.Items.Add("-");
 
             // Quality settings:
-            ToolStripItemCollection col = ((ToolStripMenuItem)cms_gifRightClick.Items.Add("Quality")).DropDownItems;
+            var col = ((ToolStripMenuItem)cms_gifRightClick.Items.Add("Quality")).DropDownItems;
 
             _lowQualityMenuItem = (ToolStripMenuItem)col.Add("Low");
             _mediumQualityMenuItem = (ToolStripMenuItem)col.Add("Medium");
@@ -640,12 +636,18 @@ namespace GIF_Viewer
             _mediumQualityMenuItem.Click += Quality_Change;
             _highQualityMenuItem.Click += Quality_Change;
 
-            if (pb_gif.Quality == 1)
-                _lowQualityMenuItem.Checked = true;
-            if (pb_gif.Quality == 2)
-                _mediumQualityMenuItem.Checked = true;
-            else if (pb_gif.Quality == 3)
-                _highQualityMenuItem.Checked = true;
+            switch (pb_gif.Quality)
+            {
+                case 1:
+                    _lowQualityMenuItem.Checked = true;
+                    break;
+                case 2:
+                    _mediumQualityMenuItem.Checked = true;
+                    break;
+                case 3:
+                    _highQualityMenuItem.Checked = true;
+                    break;
+            }
 
             // Frame Extraction:
             FrameExtract = cms_gifRightClick.Items.Add("Extract Frames...");
@@ -659,7 +661,7 @@ namespace GIF_Viewer
         public void SaveSettings()
         {
             // Try to open the settings file:
-            string fileName = Application.StartupPath + "\\settings.ini";
+            var fileName = Application.StartupPath + "\\settings.ini";
 
             if (File.Exists(fileName))
                 File.Delete(fileName);
@@ -672,7 +674,8 @@ namespace GIF_Viewer
         /// </summary>
         void UpdateTitle()
         {
-            Text = @"GIF Viewer " + (Images.Count > 1 ? "[" + (CurrentImage + 1) + "/" + Images.Count + "]" : "") + @" [" + _currentGif.GifPath + @"] " + _currentGif.Width + @"x" + _currentGif.Height;
+            Text = @"GIF Viewer " + (Images.Count > 1 ? "[" + (CurrentImage + 1) + "/" + Images.Count + "]" : "") +
+                   @" [" + _currentGif.GifPath + @"] " + _currentGif.Width + @"x" + _currentGif.Height;
         }
 
         /// <summary>
@@ -698,7 +701,6 @@ namespace GIF_Viewer
             if (_currentGif.FrameCount <= 1)
             {
                 MessageBox.Show(this, @"Animation must have atleast 2 frames to export.", @"Info", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-
                 return;
             }
 
@@ -713,7 +715,7 @@ namespace GIF_Viewer
             LoadGif("");
 
             // Create the form and assign the Gif path:
-            FrameExtract f = new FrameExtract(_currentGif);
+            var f = new FrameExtract(_currentGif);
             f.Init();
             f.ShowDialog(this);
 
@@ -881,37 +883,36 @@ namespace GIF_Viewer
             // Response for when the button is set to open a .gif file
             else if (PlayBtn.Text == @"&Open...")
             {
-                if (_op.ShowDialog() == DialogResult.OK)
-                {
-                    try
-                    {
-                        LoadGif(_op.FileName);
-                    }
-                    catch (Exception ex)
-                    {
-                        ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
-
-                        // Set the play button as an open file button:
-                        PlayBtn.Text = @"&Open...";
-                        PlayBtn.Enabled = true;
-
-                        return;
-                    }
-
-                    try
-                    {
-                        LoadGifsInFolder(Path.GetDirectoryName(_op.FileName));
-                    }
-                    catch (Exception)
-                    {
-                        // ignored
-                    }
-                }
-                else
+                if (_op.ShowDialog() != DialogResult.OK)
                 {
                     // Set the play button as an open file button:
                     PlayBtn.Text = @"&Open...";
                     PlayBtn.Enabled = true;
+                    return;
+                }
+
+                try
+                {
+                    LoadGif(_op.FileName);
+                }
+                catch (Exception ex)
+                {
+                    ErrorBox.Show("Error: " + ex.Message, "Error", ex.StackTrace);
+
+                    // Set the play button as an open file button:
+                    PlayBtn.Text = @"&Open...";
+                    PlayBtn.Enabled = true;
+
+                    return;
+                }
+
+                try
+                {
+                    LoadGifsInFolder(Path.GetDirectoryName(_op.FileName));
+                }
+                catch (Exception)
+                {
+                    // ignored
                 }
             }
         }
@@ -999,24 +1000,21 @@ namespace GIF_Viewer
             {
                 OpenFileDialog ofd = new OpenFileDialog { Filter = @"Executable files|*.exe" };
 
-                if (ofd.ShowDialog() == DialogResult.OK)
-                {
-                    if (ofd.FileName.EndsWith("exe"))
-                    {
-                        ToolStripItem it = cms_gifRightClick.Items.Add(Path.GetFileNameWithoutExtension(ofd.FileName));
-                        it.Tag = ofd.FileName;
+                if (ofd.ShowDialog() != DialogResult.OK || !ofd.FileName.EndsWith("exe"))
+                    return;
 
-                        cms_gifRightClick.Items.Remove(it);
-                        cms_gifRightClick.Items.Insert(cms_gifRightClick.Items.Count - 1, it);
+                var it = cms_gifRightClick.Items.Add(Path.GetFileNameWithoutExtension(ofd.FileName));
+                it.Tag = ofd.FileName;
 
-                        Settings.Instance.Programs.Add(Path.GetFileNameWithoutExtension(ofd.FileName), ofd.FileName);
+                cms_gifRightClick.Items.Remove(it);
+                cms_gifRightClick.Items.Insert(cms_gifRightClick.Items.Count - 1, it);
 
-                        SaveSettings();
+                Settings.Instance.Programs.Add(Path.GetFileNameWithoutExtension(ofd.FileName), ofd.FileName);
 
-                        Process.Start(ofd.FileName, "\"" + _currentGif.GifPath + "\"");
-                        Close();
-                    }
-                }
+                SaveSettings();
+
+                Process.Start(ofd.FileName, "\"" + _currentGif.GifPath + "\"");
+                Close();
 
                 return;
             }
@@ -1050,7 +1048,7 @@ namespace GIF_Viewer
         /// <param name="e">The arguments for this event</param>
         private void btn_configuration_Click(object sender, EventArgs e)
         {
-            SettingsForm settings = new SettingsForm();
+            var settings = new SettingsForm();
 
             if (settings.ShowDialog(this) == DialogResult.OK)
             {

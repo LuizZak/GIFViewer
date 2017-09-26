@@ -517,8 +517,7 @@ namespace GIF_Viewer.GifComponents
                                 break;
 
                             case CodeApplicationExtensionLabel:
-                                ApplicationExtension ext
-                                    = new ApplicationExtension(inputStream);
+                                var ext = new ApplicationExtension(inputStream);
                                 if (ext.ApplicationIdentifier == "NETSCAPE"
                                     && ext.ApplicationAuthenticationCode == "2.0")
                                 {

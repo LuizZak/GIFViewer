@@ -78,8 +78,8 @@ namespace GIF_Viewer.Views
 
             // timelineControl1.maximum = Frames - 1;
             tlc_timeline.Minimum = 1;
-            tlc_timeline.Maximum = CurrentGif.GetFrameCount() - 1;
-            tlc_timeline.SecondKnob.Value = CurrentGif.GetFrameCount() - 1;
+            tlc_timeline.Maximum = CurrentGif.FrameCount - 1;
+            tlc_timeline.SecondKnob.Value = CurrentGif.FrameCount - 1;
 
             Range = tlc_timeline.GetRange();
         }
@@ -211,7 +211,7 @@ namespace GIF_Viewer.Views
             }
 
             // Starts a new animation thread
-            if (CurrentGif.GetFrameCount() > 1)
+            if (CurrentGif.FrameCount > 1)
             {
                 AnimationTimer.Interval = UseMinFrameInterval ? Math.Max(CurrentGif.GetIntervalForCurrentFrame(), MinFrameInterval) : CurrentGif.GetIntervalForCurrentFrame();
                 AnimationTimer.Start();
@@ -353,22 +353,22 @@ namespace GIF_Viewer.Views
         /// <param name="e">The arguments for this event</param>
         private void FrameExtract_KeyDown(object sender, KeyEventArgs e)
         {
-            if (CurrentGif.Loaded && CurrentGif.GetFrameCount() > 0)
+            if (!CurrentGif.Loaded || CurrentGif.FrameCount <= 0)
+                return;
+
+            // Seek GIF timeline
+            if (e.KeyData == Keys.Left)
             {
-                // Seek GIF timeline
-                if (e.KeyData == Keys.Left)
+                if (tlc_timeline.CurrentFrame > 0)
                 {
-                    if (tlc_timeline.CurrentFrame > 0)
-                    {
-                        tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame - 1);
-                    }
+                    tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame - 1);
                 }
-                else if (e.KeyData == Keys.Right)
+            }
+            else if (e.KeyData == Keys.Right)
+            {
+                if (tlc_timeline.CurrentFrame < tlc_timeline.Maximum)
                 {
-                    if (tlc_timeline.CurrentFrame < tlc_timeline.Maximum)
-                    {
-                        tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame + 1);
-                    }
+                    tlc_timeline.ChangeFrame(tlc_timeline.CurrentFrame + 1);
                 }
             }
         }

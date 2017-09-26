@@ -18,7 +18,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Image object representing the current GIF
         /// </summary>
-        public Image Gif;
+        public Bitmap Gif;
 
         /// <summary>
         /// The decoder holding the information about the currently loaded .gif file
@@ -54,7 +54,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Gets the current frame interval (in milliseconds)
         /// </summary>
-        public int CurrentInterval => _currentInterval;
+        public int CurrentInterval { get; set; }
 
         /// <summary>
         /// Whether the GIF file should loop
@@ -70,11 +70,6 @@ namespace GIF_Viewer
         /// Gets the Height of this GIF file
         /// </summary>
         public int Height { get; private set; }
-
-        /// <summary>
-        /// Current frame interval (in milliseconds)
-        /// </summary>
-        private int _currentInterval;
 
         /// <summary>
         /// The current frame being displayed
@@ -143,14 +138,14 @@ namespace GIF_Viewer
             }
 
             // Get whether this GIF loops over:
-            CanLoop = (_gifDecoded.NetscapeExtension != null && _gifDecoded.NetscapeExtension.LoopCount == 0);
+            CanLoop = _gifDecoded.NetscapeExtension != null && _gifDecoded.NetscapeExtension.LoopCount == 0;
 
             // Force load of the first frame
-            Image img = _gifDecoded[0].TheImage;
+            var img = _gifDecoded[0].TheImage;
 
             Gif = new Bitmap(img.Width, img.Height);
 
-            FastBitmap.CopyPixels((Bitmap)_gifDecoded[_currentFrame].TheImage, (Bitmap)Gif);
+            FastBitmap.CopyPixels(_gifDecoded[_currentFrame].TheImage, Gif);
 
             Loaded = true;
 
@@ -164,7 +159,7 @@ namespace GIF_Viewer
         /// <returns>The interval for the frame, in ms</returns>
         public int GetIntervalForFrame(int frame)
         {
-            return (Intervals[frame] == 0 ? 1 : Intervals[frame]);
+            return Intervals[frame] == 0 ? 1 : Intervals[frame];
         }
 
         /// <summary>
@@ -186,8 +181,8 @@ namespace GIF_Viewer
                 return;
 
             _currentFrame = currentFrame;
-            _currentInterval = Intervals[currentFrame];
-            FastBitmap.CopyPixels((Bitmap)_gifDecoded[currentFrame].TheImage, (Bitmap)Gif);
+            CurrentInterval = Intervals[currentFrame];
+            FastBitmap.CopyPixels(_gifDecoded[currentFrame].TheImage, Gif);
         }
 
         /// <summary>

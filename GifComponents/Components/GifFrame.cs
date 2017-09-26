@@ -57,7 +57,6 @@ namespace GIF_Viewer.GifComponents.Components
 
         private readonly int _index;
         private bool _keyframe;
-        private Bitmap _image;
         private int _delay;
         private bool _expectsUserInput;
         private Point _position;
@@ -301,7 +300,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("The image held in this frame")]
         [Category("Set by decoder")]
-        public Image TheImage => _image;
+        public Bitmap TheImage { get; private set; }
 
         #endregion
 
@@ -367,7 +366,7 @@ namespace GIF_Viewer.GifComponents.Components
         public void CheckRequiresRedraw()
         {
             // Base case: This frame is the first, and has an image attached to it
-            if (_index == 0 && _image != null)
+            if (_index == 0 && TheImage != null)
             {
                 _requiresRedraw = false;
                 return;
@@ -382,7 +381,7 @@ namespace GIF_Viewer.GifComponents.Components
             // Check if the previous frame requires redraw, if either this frame or the previous require redraw, mark this one as requiring a redraw
             if (_previousFrame != null)
             {
-                _requiresRedraw = _image == null || _previousFrame._requiresRedraw;
+                _requiresRedraw = TheImage == null || _previousFrame._requiresRedraw;
             }
 
             if (_keyframe && !_keyframeReady)
@@ -425,10 +424,10 @@ namespace GIF_Viewer.GifComponents.Components
             if (!_isLoaded)
                 return;
 
-            _image.Dispose();
+            TheImage.Dispose();
             _imageDescriptor.Dispose();
 
-            _image = null;
+            TheImage = null;
             _imageDescriptor = null;
 
             _requiresRedraw = true;
@@ -476,7 +475,7 @@ namespace GIF_Viewer.GifComponents.Components
                     // We have neither local nor global colour table, so we
                     // won't be able to decode this frame.
                     Bitmap emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
-                    _image = emptyBitmap;
+                    TheImage = emptyBitmap;
                     _delay = _graphicControlExtension.DelayTime;
                     SetStatus(ErrorState.FrameHasNoColourTable, "");
                     return;
@@ -498,7 +497,7 @@ namespace GIF_Viewer.GifComponents.Components
                 // TESTME: constructor - PixelIndexes.Length == 0
                 // TODO: probably not possible as TBID constructor rejects 0 pixels
                 Bitmap emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
-                _image = emptyBitmap;
+                TheImage = emptyBitmap;
                 _delay = _graphicControlExtension.DelayTime;
                 SetStatus(ErrorState.FrameHasNoImageData, "");
                 return;
@@ -514,11 +513,11 @@ namespace GIF_Viewer.GifComponents.Components
             }
             _imageDescriptor = imageDescriptor;
             _backgroundColour = backgroundColour;
-            _image = CreateBitmap(tbid, _logicalScreenDescriptor, imageDescriptor, activeColourTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
+            TheImage = CreateBitmap(tbid, _logicalScreenDescriptor, imageDescriptor, activeColourTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
             
             CheckRequiresRedraw();
 
-            if (_image != null && _previousFrame != null)
+            if (TheImage != null && _previousFrame != null)
             {
                 _isImagePartial = _previousFrame._isImagePartial;
             }
@@ -760,14 +759,14 @@ namespace GIF_Viewer.GifComponents.Components
 
             #region paint baseImage
 
-            if (previousFrame?._image == null)
+            if (previousFrame?.TheImage == null)
             {
                 baseImage = new Bitmap(width, height);
             }
             else
             {
                 baseImage = new Bitmap(width, height);
-                FastBitmap.CopyPixels(previousFrame._image, baseImage);
+                FastBitmap.CopyPixels(previousFrame.TheImage, baseImage);
             }
 
             switch (previousDisposalMethod)
