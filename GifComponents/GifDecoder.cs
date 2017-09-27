@@ -213,6 +213,18 @@ namespace GIF_Viewer.GifComponents
             _stream.Position = 0;
         }
 
+        protected override void Dispose(bool disposing)
+        {
+            foreach (var frame in _frames)
+            {
+                frame.Dispose();
+            }
+
+            _frames = null;
+
+            base.Dispose(disposing);
+        }
+
         /// <summary>
         /// Returns an integer that represents the delay for the given frame (in hundredths of a second)
         /// </summary>
@@ -293,39 +305,42 @@ namespace GIF_Viewer.GifComponents
         /// <summary>
         /// Gets a frame from the GIF file.
         /// </summary>
-        public GifFrame this[int index]
+        public GifFrame this[int index] => GetFrameAtIndex(index, true);
+
+        public GifFrame GetFrameAtIndex(int index, bool enqueueIfNotKeyframe)
         {
-            get
+            var frame = _frames[index];
+
+            if ((enqueueIfNotKeyframe || frame.Keyframe) && !_loadedFrames.Contains(frame))
             {
-                GifFrame frame = _frames[index];
-
-                if (!_loadedFrames.Contains(frame))
+                // Unload a previous frame, is the queue is full
+                while (_loadedFrames.Count >= _maxFrameQueueSize)
                 {
-                    // Unload a previous frame, is the queue is full
-                    while (_loadedFrames.Count >= _maxFrameQueueSize)
+                    var oldFrame = _loadedFrames.Dequeue();
+
+                    if (oldFrame.Index == index - 1)
                     {
-                        GifFrame oldFrame = _loadedFrames.Dequeue();
-
-                        if (oldFrame.Index == index - 1)
-                        {
-                            _loadedFrames.Enqueue(oldFrame);
-                            continue;
-                        }
-
-                        if (!oldFrame.Keyframe)
-                        {
-                            oldFrame.Unload();
-                        }
+                        _loadedFrames.Enqueue(oldFrame);
+                        continue;
                     }
 
-                    _loadedFrames.Enqueue(frame);
+                    if (!oldFrame.Keyframe)
+                        oldFrame.Unload();
                 }
 
-                frame.RecurseToKeyframe(_maxKeyframeReach);
-                frame.Decode();
-
-                return frame;
+                _loadedFrames.Enqueue(frame);
             }
+
+            frame.RecurseToKeyframe(_maxKeyframeReach);
+            frame.Decode();
+
+            // Dequeue, if this frame is not a keyframe
+            if (!enqueueIfNotKeyframe && !frame.Keyframe && !_loadedFrames.Contains(frame))
+            {
+                frame.Unload();
+            }
+
+            return frame;
         }
 
         #region Memory/Performance related properties

@@ -158,9 +158,9 @@ namespace GIF_Viewer.GifComponents.Components
 	    {
 	        get
 	        {
-	            ErrorState state = ErrorState;
-	            PropertyInfo[] properties = GetType().GetProperties();
-	            foreach (PropertyInfo property in properties)
+	            var state = ErrorState;
+	            var properties = GetType().GetProperties();
+	            foreach (var property in properties)
 	            {
 	                // We don't want to inspect the ConsolidatedState property
 	                // else we get a StackOverflowException.
@@ -172,18 +172,17 @@ namespace GIF_Viewer.GifComponents.Components
 	                // Is this property an array?
 	                if (property.PropertyType.IsArray)
 	                {
-	                    // Is this property an array of GifComponents?
-	                    var componentArray = property.GetValue(this, null) as GifComponent[];
-	                    if (componentArray != null)
-	                    {
-	                        // It's an array of GifComponents, so inspect
-	                        // their ConsolidatedState properties.
-	                        foreach (GifComponent c in componentArray)
-	                        {
-	                            state |= c.ConsolidatedState;
-	                        }
-	                    }
-	                    continue;
+                        // Is this property an array of GifComponents?
+                        if (property.GetValue(this, null) is GifComponent[] componentArray)
+                        {
+                            // It's an array of GifComponents, so inspect
+                            // their ConsolidatedState properties.
+                            foreach (GifComponent c in componentArray)
+                            {
+                                state |= c.ConsolidatedState;
+                            }
+                        }
+                        continue;
 	                }
 
 	                // Is this property an indexer?
@@ -194,36 +193,33 @@ namespace GIF_Viewer.GifComponents.Components
 	                }
 
 	                // Is this property of a type derived from GifComponent?
-	                if (property.PropertyType.IsSubclassOf(typeof (GifComponent)))
+	                if (property.PropertyType.IsSubclassOf(typeof(GifComponent)))
 	                {
-	                    // Yes, so it also has a ConsolidatedState property
-	                    var component = property.GetValue(this, null) as GifComponent;
-	                    if (component != null)
-	                    {
-	                        state |= component.ConsolidatedState;
-	                    }
-	                    continue;
+                        // Yes, so it also has a ConsolidatedState property
+                        if (property.GetValue(this, null) is GifComponent component)
+                        {
+                            state |= component.ConsolidatedState;
+                        }
+                        continue;
 	                }
 
 	                // Is this property a generic type?
-	                if (property.PropertyType.IsGenericType)
-	                {
-	                    IEnumerable objectCollection = property.GetValue(this, null) as IEnumerable;
-	                    if (objectCollection != null)
-	                    {
-	                        // Yes, it's IEnumerable, so iterate through its members
-	                        foreach (object o in objectCollection)
-	                        {
-	                            GifComponent c = o as GifComponent;
-	                            if (c != null)
-	                            {
-	                                state |= c.ConsolidatedState;
-	                            }
-	                        }
-	                    }
-	                }
+	                if (!property.PropertyType.IsGenericType)
+	                    continue;
 
-	            }
+                    if (property.GetValue(this, null) is IEnumerable objectCollection)
+                    {
+                        // Yes, it's IEnumerable, so iterate through its members
+                        foreach (object o in objectCollection)
+                        {
+                            var c = o as GifComponent;
+                            if (c != null)
+                            {
+                                state |= c.ConsolidatedState;
+                            }
+                        }
+                    }
+                }
 	            return state;
 	        }
 	    }
@@ -298,8 +294,8 @@ namespace GIF_Viewer.GifComponents.Components
 		/// </param>
 		protected void SetStatus( ErrorState errorState, string errorMessage )
 		{
-			ErrorState newState = _status.ErrorState | errorState;
-			string newMessage = _status.ErrorMessage;
+			var newState = _status.ErrorState | errorState;
+			var newMessage = _status.ErrorMessage;
 			if( !String.IsNullOrEmpty( newMessage ) )
 			{
 				newMessage += Environment.NewLine;
@@ -391,21 +387,10 @@ namespace GIF_Viewer.GifComponents.Components
 		/// <param name="inputStream">
 		/// The input stream to read.
 		/// </param>
-		protected void SkipBlocks( Stream inputStream )
+		protected static void SkipBlocks( Stream inputStream )
 		{
             while (DataBlock.SkipStream(inputStream) > 0) { }
 		}
-        /// <summary>
-        /// Skips variable length blocks up to and including next zero length 
-        /// block (block terminator).
-        /// </summary>
-        /// <param name="inputStream">
-        /// The input stream to read.
-        /// </param>
-        protected static void SkipBlocksStatic(Stream inputStream)
-        {
-            while (DataBlock.SkipStream(inputStream) > 0) { }
-        }
 		#endregion
 
 		#endregion

@@ -101,7 +101,10 @@ namespace GIF_Viewer.Utils
                 int[] argbValues = new int[bytes / BytesPerPixel];
 
                 // Copy the RGB values into the array
-                Marshal.Copy(_bitmapData.Scan0, argbValues, 0, bytes / BytesPerPixel);
+                fixed (int* pArgbValues = argbValues)
+                {
+                    memcpy(pArgbValues, (int*)_bitmapData.Scan0, (ulong)(bytes / BytesPerPixel));
+                }
 
                 if (unlockAfter)
                 {
@@ -425,33 +428,117 @@ namespace GIF_Viewer.Utils
             int count = Width * Height;
             int* curScan = _scan0;
 
-            // Defines the ammount of assignments that the main while() loop is performing per loop.
-            // The value specified here must match the number of assignment statements inside that loop
-            const int assignsPerLoop = 8;
-
-            int rem = count % assignsPerLoop;
-            count /= assignsPerLoop;
-
-            while (count-- > 0)
+            // Uniform color pixel values can be mem-set straight aways
+            if ((color & 0xFF) == ((color >> 8) & 0xFF) && (color & 0xFF) == ((color >> 16) & 0xFF) && (color & 0xFF) == ((color >> 24) & 0xFF))
             {
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
-
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
+                memset(_scan0, color & 0xFF, (ulong)count);
             }
-            while (rem-- > 0)
+            else
             {
-                *(curScan++) = color;
+                // Defines the ammount of assignments that the main while() loop is performing per loop.
+                // The value specified here must match the number of assignment statements inside that loop
+                const int assignsPerLoop = 8;
+
+                int rem = count % assignsPerLoop;
+                count /= assignsPerLoop;
+
+                while (count-- > 0)
+                {
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                }
+                while (rem-- > 0)
+                {
+                    *(curScan++) = color;
+                }
             }
 
             if (unlockAfter)
             {
                 Unlock();
+            }
+        }
+
+        /// <summary>
+        /// Clears a square region of this image w/ a given color
+        /// </summary>
+        /// <param name="region"></param>
+        /// <param name="color"></param>
+        public void ClearRegion(Rectangle region, Color color)
+        {
+            ClearRegion(region, color.ToArgb());
+        }
+
+        /// <summary>
+        /// Clears a square region of this image w/ a given color
+        /// </summary>
+        /// <param name="region"></param>
+        /// <param name="color"></param>
+        public void ClearRegion(Rectangle region, int color)
+        {
+            var thisReg = new Rectangle(0, 0, Width, Height);
+            if (!region.IntersectsWith(thisReg))
+                return;
+
+            // If the region covers the entire image, use faster Clear().
+            if (region == thisReg)
+            {
+                Clear(color);
+                return;
+            }
+
+            var minX = region.X;
+            var maxX = region.X + region.Width;
+
+            var minY = region.Y;
+            var maxY = region.Y + region.Height;
+
+            // Bail out of optimization if there's too few rows to make this worth it
+            if (maxY - minY < 16)
+            {
+                for (int y = minY; y < maxY; y++)
+                {
+                    for (int x = minX; x < maxX; x++)
+                    {
+                        *(_scan0 + x + y * Stride) = color;
+                    }
+                }
+                return;
+            }
+
+            // Uniform color pixel values can be mem-set straight aways
+            if ((color & 0xFF) == ((color >> 8) & 0xFF) && (color & 0xFF) == ((color >> 16) & 0xFF) &&
+                (color & 0xFF) == ((color >> 24) & 0xFF))
+            {
+                for (int y = minY; y < maxY; y++)
+                {
+                    memset(_scan0 + minX + y * Stride, color & 0xFF, (ulong)(maxX - minX));
+                }
+            }
+            else
+            {
+                // Prepare a horizontal slice of pixels that will be copied over each horizontal row down.
+                int[] row = new int[maxX - minX];
+
+                fixed (int* pRow = row)
+                {
+                    for (int i = 0; i < maxX - minX; i++)
+                    {
+                        pRow[i] = color;
+                    }
+
+                    for (int y = minY; y < maxY; y++)
+                    {
+                        memcpy(_scan0 + minX + y * Stride, pRow, (ulong)(maxX - minX));
+                    }
+                }
             }
         }
 
@@ -636,6 +723,10 @@ namespace GIF_Viewer.Utils
         // .NET wrapper to native call of 'memcpy'. Requires Microsoft Visual C++ Runtime installed
         [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
         public static extern IntPtr memcpy(void* dest, void* src, ulong count);
+
+        // .NET wrapper to native call of 'memset'. Requires Microsoft Visual C++ Runtime installed
+        [DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+        public static extern IntPtr memset(void* dest, int value, ulong count);
 
         /// <summary>
         /// Represents a disposable structure that is returned during Lock() calls, and unlocks the bitmap on Dispose calls
