@@ -128,11 +128,6 @@ namespace GIF_Viewer.GifComponents.Components
             ColourTable globalColourTable, GraphicControlExtension graphicControlExtension, GifFrame previousFrame,
             GifFrame previousFrameBut1, int index)
         {
-            if (logicalScreenDescriptor == null)
-            {
-                throw new ArgumentNullException(nameof(logicalScreenDescriptor));
-            }
-
             if (graphicControlExtension == null)
             {
                 SetStatus(ErrorState.NoGraphicControlExtension, "");
@@ -142,7 +137,7 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             _index = index;
-            _logicalScreenDescriptor = logicalScreenDescriptor;
+            _logicalScreenDescriptor = logicalScreenDescriptor ?? throw new ArgumentNullException(nameof(logicalScreenDescriptor));
             _globalColourTable = globalColourTable;
             _graphicControlExtension = graphicControlExtension;
             _isLoaded = false;
@@ -159,6 +154,13 @@ namespace GIF_Viewer.GifComponents.Components
         #endregion
 
         #endregion
+
+        protected override void Dispose(bool disposing)
+        {
+            Unload();
+
+            base.Dispose(disposing);
+        }
 
         #region properties
 
@@ -375,7 +377,7 @@ namespace GIF_Viewer.GifComponents.Components
             // If the disposal mode is set to restore to the background, and the frame image is set, it is said to be valid
             if (_graphicControlExtension.DisposalMethod == DisposalMethod.RestoreToBackgroundColour)
             {
-
+                // TODO: This is empty, but shouldn't be? What was supposed to be here, anyways?
             }
 
             // Check if the previous frame requires redraw, if either this frame or the previous require redraw, mark this one as requiring a redraw
@@ -410,7 +412,7 @@ namespace GIF_Viewer.GifComponents.Components
 
             if (redraw)
             {
-                Decode();
+                NeoDecode();
             }
 
             return redraw;
@@ -474,7 +476,7 @@ namespace GIF_Viewer.GifComponents.Components
                 {
                     // We have neither local nor global colour table, so we
                     // won't be able to decode this frame.
-                    Bitmap emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
+                    var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
                     TheImage = emptyBitmap;
                     _delay = _graphicControlExtension.DelayTime;
                     SetStatus(ErrorState.FrameHasNoColourTable, "");
@@ -496,7 +498,7 @@ namespace GIF_Viewer.GifComponents.Components
             {
                 // TESTME: constructor - PixelIndexes.Length == 0
                 // TODO: probably not possible as TBID constructor rejects 0 pixels
-                Bitmap emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
+                var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
                 TheImage = emptyBitmap;
                 _delay = _graphicControlExtension.DelayTime;
                 SetStatus(ErrorState.FrameHasNoImageData, "");
@@ -525,6 +527,84 @@ namespace GIF_Viewer.GifComponents.Components
             _isLoaded = true;
         }
 
+        /// <summary>
+        /// Decodes the contents of the GifFrame from the binded stream
+        /// </summary>
+        /// <param name="force">Whether to force redraw, even if the frame is already drawn</param>
+        public void NeoDecode(bool force = false)
+        {
+            // Image preparation and reutilization checks
+            if (_isLoaded && !_requiresRedraw && !force)
+            {
+                return;
+            }
+            if (_isLoaded && (_requiresRedraw || force))
+            {
+                Unload();
+            }
+
+            // Prepare the stream
+            _inputStream.Position = _streamOffset;
+
+            _extension = _graphicControlExtension;
+
+            int transparentColourIndex = _graphicControlExtension.TransparentColourIndex;
+
+            var imageDescriptor = new ImageDescriptor(_inputStream);
+
+            #region determine the colour table to use for this frame
+            var backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
+            // TODO: use backgroundColourIndex from the logical screen descriptor?
+            ColourTable activeColourTable;
+            if (imageDescriptor.HasLocalColourTable)
+            {
+                _localColourTable = new ColourTable(_inputStream, imageDescriptor.LocalColourTableSize);
+                activeColourTable = _localColourTable; // make local table active
+            }
+            else
+            {
+                if (_globalColourTable == null)
+                {
+                    // We have neither local nor global colour table, so we
+                    // won't be able to decode this frame.
+                    var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
+                    TheImage = emptyBitmap;
+                    _delay = _graphicControlExtension.DelayTime;
+                    SetStatus(ErrorState.FrameHasNoColourTable, "");
+                    return;
+                }
+                activeColourTable = _globalColourTable; // make global table active
+                if (_logicalScreenDescriptor.BackgroundColourIndex
+                    == transparentColourIndex)
+                {
+                    backgroundColour = Color.FromArgb(0);
+                }
+            }
+            #endregion
+
+            // decode pixel data
+            if (_graphicControlExtension != null)
+            {
+                _delay = _graphicControlExtension.DelayTime;
+            }
+            _imageDescriptor = imageDescriptor;
+            _backgroundColour = backgroundColour;
+            TheImage = CreateBitmap(_inputStream, _logicalScreenDescriptor, imageDescriptor, activeColourTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
+
+            // Skip any remaining blocks up to the next block terminator (in
+            // case there is any surplus data before the next frame)
+            SkipBlocks(_inputStream);
+
+            CheckRequiresRedraw();
+
+            if (TheImage != null && _previousFrame != null)
+            {
+                _isImagePartial = _previousFrame._isImagePartial;
+            }
+
+            _isLoaded = true;
+        }
+
         #endregion
 
         #region private methods
@@ -540,15 +620,17 @@ namespace GIF_Viewer.GifComponents.Components
             {
                 throw new Exception(@"Logical screen descriptor is null");
             }
-
-            ImageDescriptor imageDescriptor = new ImageDescriptor(_inputStream);
+            
+            var imageDescriptor = new ImageDescriptor(_inputStream);
 
             if (imageDescriptor.HasLocalColourTable)
             {
                 ColourTable.SkipOnStream(_inputStream, imageDescriptor.LocalColourTableSize);
             }
-
-            TableBasedImageData.SkipOnStream(_inputStream);
+            
+            // Skip image data table
+            Read(_inputStream);
+            SkipBlocks(_inputStream);
         }
 
         /// <summary>
@@ -605,7 +687,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// </param>
         private unsafe Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
         {
-            Bitmap baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
+            var baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
 
             // copy each source line to the appropriate place in the destination
             int pass = 1;
@@ -621,82 +703,232 @@ namespace GIF_Viewer.GifComponents.Components
             int imageY = id.Position.Y;
             int imageWidth = id.Size.Width;
             int imageHeight = id.Size.Height;
+            var isInterlaced = id.IsInterlaced;
 
             int[] colorTableIndices = activeColourTable.IntColours;
-            byte[] pixelIndices = imageData.PixelIndexes;
             int numColors = activeColourTable.Length;
 
-            var fastImageBase = baseImage.FastLock();
-            int* pointerImage = (int*)fastImageBase.Scan0;
+            byte[] pixelIndices = imageData.PixelIndexes;
 
-            for (int i = 0; i < imageHeight; i++)
+            using (var fastLock = baseImage.FastLock())
             {
-                int pixelRowNumber = i;
-                if (id.IsInterlaced)
+                int* pointerImage = (int*)fastLock.Scan0;
+
+                fixed (byte* pPixelIndices = pixelIndices)
                 {
-                    #region work out the pixel row we're setting for an interlaced image
-                    if (interlaceRowNumber >= imageHeight)
+                    fixed (int* pColorTableIndices = colorTableIndices)
                     {
-                        pass++;
-                        switch (pass)
+                        for (int i = 0; i < imageHeight; i++)
                         {
-                            case 2:
-                                interlaceRowNumber = 4;
-                                break;
-                            case 3:
-                                interlaceRowNumber = 2;
-                                interlaceRowIncrement = 4;
-                                break;
-                            case 4:
-                                interlaceRowNumber = 1;
-                                interlaceRowIncrement = 2;
-                                break;
+                            int pixelRowNumber = i;
+                            if (isInterlaced)
+                            {
+                                #region work out the pixel row we're setting for an interlaced image
+                                if (interlaceRowNumber >= imageHeight)
+                                {
+                                    pass++;
+                                    switch (pass)
+                                    {
+                                        case 2:
+                                            interlaceRowNumber = 4;
+                                            break;
+                                        case 3:
+                                            interlaceRowNumber = 2;
+                                            interlaceRowIncrement = 4;
+                                            break;
+                                        case 4:
+                                            interlaceRowNumber = 1;
+                                            interlaceRowIncrement = 2;
+                                            break;
+                                    }
+                                }
+                                #endregion
+                                pixelRowNumber = interlaceRowNumber;
+                                interlaceRowNumber += interlaceRowIncrement;
+                            }
+
+                            // Colour in the pixels for this row
+                            pixelRowNumber += imageY;
+                            if (pixelRowNumber >= logicalHeight)
+                                continue;
+
+                            int k = pixelRowNumber * logicalWidth;
+                            int dx = k + imageX; // start of line in dest
+                            int dlim = dx + imageWidth; // end of dest line
+                            if (k + logicalWidth < dlim)
+                            {
+                                // TESTME: CreateBitmap - past dest edge
+                                dlim = k + logicalWidth; // past dest edge
+                            }
+                            int sx = i * imageWidth; // start of line in source
+                            while (dx < dlim)
+                            {
+                                // map color and insert in destination
+                                int indexInColourTable = pPixelIndices[sx++];
+                                // Set this pixel's colour if its index isn't the transparent colour index, or if this frame doesn't have a transparent colour.
+                                if (!hasTransparent || indexInColourTable != transparentColor)
+                                {
+                                    if (indexInColourTable < numColors)
+                                    {
+                                        pointerImage[dx] = pColorTableIndices[indexInColourTable];
+                                    }
+                                    else
+                                    {
+                                        // TESTME: CreateBitmap - BadColourIndex 
+                                        pointerImage[dx] = 255 << 24;
+                                        string message = "Colour index: " + indexInColourTable + ", colour table length: " + activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
+                                        SetStatus(ErrorState.BadColourIndex, message);
+                                    }
+                                }
+
+                                dx++;
+                            }
                         }
                     }
-                    #endregion
-                    pixelRowNumber = interlaceRowNumber;
-                    interlaceRowNumber += interlaceRowIncrement;
-                }
-
-                // Colour in the pixels for this row
-                pixelRowNumber += imageY;
-                if (pixelRowNumber >= logicalHeight)
-                    continue;
-
-                int k = pixelRowNumber * logicalWidth;
-                int dx = k + imageX; // start of line in dest
-                int dlim = dx + imageWidth; // end of dest line
-                if ((k + logicalWidth) < dlim)
-                {
-                    // TESTME: CreateBitmap - past dest edge
-                    dlim = k + logicalWidth; // past dest edge
-                }
-                int sx = i * imageWidth; // start of line in source
-                while (dx < dlim)
-                {
-                    // map color and insert in destination
-                    int indexInColourTable = pixelIndices[sx++];
-                    // Set this pixel's colour if its index isn't the transparent colour index, or if this frame doesn't have a transparent colour.
-                    if (!hasTransparent || indexInColourTable != transparentColor)
-                    {
-                        if (indexInColourTable < numColors)
-                        {
-                            *(pointerImage + dx) = colorTableIndices[indexInColourTable];
-                        }
-                        else
-                        {
-                            // TESTME: CreateBitmap - BadColourIndex 
-                            *(pointerImage + dx) = (255 << 24);
-                            string message = "Colour index: " + indexInColourTable + ", colour table length: " + activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
-                            SetStatus(ErrorState.BadColourIndex, message);
-                        }
-                    }
-
-                    dx++;
                 }
             }
 
-            fastImageBase.Unlock();
+            return baseImage;
+        }
+
+        /// <summary>
+        /// Sets the pixels of the decoded image.
+        /// </summary>
+        /// <param name="imageData">
+        /// Table based image data containing the indices within the active
+        /// colour table of the colours of the pixels in this frame.
+        /// </param>
+        /// <param name="lsd">
+        /// The logical screen descriptor for the GIF stream.
+        /// </param>
+        /// <param name="id">
+        /// The image descriptor for this frame.
+        /// </param>
+        /// <param name="activeColourTable">
+        /// The colour table to use with this frame - either the global colour
+        /// table or a local colour table.
+        /// </param>
+        /// <param name="gce">
+        /// The graphic control extension, if any, which precedes this image in
+        /// the input stream.
+        /// </param>
+        /// <param name="previousFrame">
+        /// The frame which precedes this one in the GIF stream, if present.
+        /// </param>
+        /// <param name="previousFrameBut1">
+        /// The frame which precedes the frame before this one in the GIF stream,
+        /// if present.
+        /// </param>
+        private unsafe Bitmap CreateBitmap(Stream stream, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
+        {
+            var baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
+            int pixelCount = id.Size.Width * id.Size.Height;
+
+            using (var fastImage = baseImage.FastLock())
+            {
+                TableBasedImageDataWriter.ReadTableBasedImageData(stream, pixelCount, fastImage, lsd, id, activeColourTable, gce);
+            }
+            
+            /*
+            // copy each source line to the appropriate place in the destination
+            int pass = 1;
+            int interlaceRowIncrement = 8;
+            int interlaceRowNumber = 0; // the row of pixels we're currently 
+            // setting in an interlaced image.
+            bool hasTransparent = gce.HasTransparentColour;
+            int transparentColor = gce.TransparentColourIndex;
+            int logicalWidth = lsd.LogicalScreenSize.Width;
+            int logicalHeight = lsd.LogicalScreenSize.Height;
+
+            int imageX = id.Position.X;
+            int imageY = id.Position.Y;
+            int imageWidth = id.Size.Width;
+            int imageHeight = id.Size.Height;
+            var isInterlaced = id.IsInterlaced;
+
+            int[] colorTableIndices = activeColourTable.IntColours;
+            int numColors = activeColourTable.Length;
+
+            byte[] pixelIndices = imageData.PixelIndexes;
+
+            using (var fastLock = baseImage.FastLock())
+            {
+                int* pointerImage = (int*)fastLock.Scan0;
+
+                fixed (byte* pPixelIndices = pixelIndices)
+                {
+                    fixed (int* pColorTableIndices = colorTableIndices)
+                    {
+                        for (int i = 0; i < imageHeight; i++)
+                        {
+                            int pixelRowNumber = i;
+                            if (isInterlaced)
+                            {
+                                #region work out the pixel row we're setting for an interlaced image
+                                if (interlaceRowNumber >= imageHeight)
+                                {
+                                    pass++;
+                                    switch (pass)
+                                    {
+                                        case 2:
+                                            interlaceRowNumber = 4;
+                                            break;
+                                        case 3:
+                                            interlaceRowNumber = 2;
+                                            interlaceRowIncrement = 4;
+                                            break;
+                                        case 4:
+                                            interlaceRowNumber = 1;
+                                            interlaceRowIncrement = 2;
+                                            break;
+                                    }
+                                }
+                                #endregion
+                                pixelRowNumber = interlaceRowNumber;
+                                interlaceRowNumber += interlaceRowIncrement;
+                            }
+
+                            // Colour in the pixels for this row
+                            pixelRowNumber += imageY;
+                            if (pixelRowNumber >= logicalHeight)
+                                continue;
+
+                            int k = pixelRowNumber * logicalWidth;
+                            int dx = k + imageX; // start of line in dest
+                            int dlim = dx + imageWidth; // end of dest line
+                            if (k + logicalWidth < dlim)
+                            {
+                                // TESTME: CreateBitmap - past dest edge
+                                dlim = k + logicalWidth; // past dest edge
+                            }
+                            int sx = i * imageWidth; // start of line in source
+                            while (dx < dlim)
+                            {
+                                // map color and insert in destination
+                                int indexInColourTable = pPixelIndices[sx++];
+                                // Set this pixel's colour if its index isn't the transparent colour index, or if this frame doesn't have a transparent colour.
+                                if (!hasTransparent || indexInColourTable != transparentColor)
+                                {
+                                    if (indexInColourTable < numColors)
+                                    {
+                                        pointerImage[dx] = pColorTableIndices[indexInColourTable];
+                                    }
+                                    else
+                                    {
+                                        // TESTME: CreateBitmap - BadColourIndex 
+                                        pointerImage[dx] = 255 << 24;
+                                        string message = "Colour index: " + indexInColourTable + ", colour table length: " + activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
+                                        SetStatus(ErrorState.BadColourIndex, message);
+                                    }
+                                }
+
+                                dx++;
+                            }
+                        }
+                    }
+                }
+            }
+            */
 
             return baseImage;
         }
@@ -755,7 +987,7 @@ namespace GIF_Viewer.GifComponents.Components
             int height = lsd.LogicalScreenSize.Height;
             int backgroundColorIndex = previousFrame?._logicalScreenDescriptor.BackgroundColourIndex ?? lsd.BackgroundColourIndex;
             int transparentColorIndex = previousFrame?._graphicControlExtension.TransparentColourIndex ?? gce.TransparentColourIndex;
-            act = (previousFrame == null ? act : previousFrame._localColourTable ?? _globalColourTable);
+            act = previousFrame == null ? act : previousFrame._localColourTable ?? _globalColourTable;
 
             #region paint baseImage
 
@@ -804,27 +1036,11 @@ namespace GIF_Viewer.GifComponents.Components
 
                     using (var fastBaseImage = baseImage.FastLock())
                     {
-                        // If the area to redraw is the whole image, utilize the fast image drawing method FastBitmap.Clear()
-                        if (previousFrame._imageDescriptor.Position == Point.Empty && previousFrame._imageDescriptor.Size == _logicalScreenDescriptor.LogicalScreenSize)
-                        {
-                            fastBaseImage.Clear(backgroundColour);
-                        }
-                        else
-                        {
-                            var minY = previousFrame._imageDescriptor.Position.Y;
-                            var maxY = previousFrame._imageDescriptor.Position.Y + previousFrame._imageDescriptor.Size.Height;
+                        var reg = new Rectangle(previousFrame._imageDescriptor.Position.X,
+                            previousFrame._imageDescriptor.Position.Y, previousFrame._imageDescriptor.Size.Width,
+                            previousFrame._imageDescriptor.Size.Height);
 
-                            for (int y = minY; y < maxY; y++)
-                            {
-                                var minX = previousFrame._imageDescriptor.Position.X;
-                                var maxX = previousFrame._imageDescriptor.Position.X + previousFrame._imageDescriptor.Size.Width;
-
-                                for (int x = minX; x < maxX; x++)
-                                {
-                                    fastBaseImage.SetPixel(x, y, backgroundColour);
-                                }
-                            }
-                        }
+                        fastBaseImage.ClearRegion(reg, backgroundColour);
                     }
 
                     break;

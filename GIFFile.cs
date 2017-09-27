@@ -23,7 +23,7 @@ namespace GIF_Viewer
         /// <summary>
         /// The decoder holding the information about the currently loaded .gif file
         /// </summary>
-        private GifDecoder _gifDecoded;
+        private GifDecoder _gifDecoder;
 
         /// <summary>
         /// Whether there is a GIF file currently loaded on this GIFFile object
@@ -82,9 +82,9 @@ namespace GIF_Viewer
         public void Dispose()
         {
             CurrentFrameBitmap.Dispose();
-            _gifDecoded.Dispose();
+            _gifDecoder.Dispose();
 
-            _gifDecoded = null;
+            _gifDecoder = null;
         }
 
         /// <summary>
@@ -92,21 +92,22 @@ namespace GIF_Viewer
         /// </summary>
         public void ApplyMemorySettings()
         {
-            if (_gifDecoded == null || !Loaded)
+            if (_gifDecoder == null || !Loaded)
                 return;
 
-            _gifDecoded.MaxMemoryForBuffer    = Settings.Instance.MaxBufferMemory * 1024 * 1024;
-            _gifDecoded.MaxMemoryForKeyframes = Settings.Instance.MaxKeyframeMemory * 1024 * 1024;
-            _gifDecoded.MaxKeyframeReach = Settings.Instance.MaxKeyframeReach;
+            _gifDecoder.MaxMemoryForBuffer    = Settings.Instance.MaxBufferMemory * 1024 * 1024;
+            _gifDecoder.MaxMemoryForKeyframes = Settings.Instance.MaxKeyframeMemory * 1024 * 1024;
+            _gifDecoder.MaxKeyframeReach = Settings.Instance.MaxKeyframeReach;
 
-            _gifDecoded.ApplyMemoryFields();
+            _gifDecoder.ApplyMemoryFields();
         }
 
         /// <summary>
         /// Loads this GIF file's parameters from the given GIF file
         /// </summary>
         /// <param name="path">The gif to load the parameters from</param>
-        public void LoadFromPath(string path)
+        /// <param name="preloadKeyframes">Whether to walk through every frame, preloading keyframes</param>
+        public void LoadFromPath(string path, bool preloadKeyframes = true)
         {
             Loaded = false;
 
@@ -114,39 +115,48 @@ namespace GIF_Viewer
             GifPath = path;
 
             // Decode the gif file
-            _gifDecoded?.Dispose();
-            _gifDecoded = new GifDecoder(path);
-            _gifDecoded.Decode();
+            _gifDecoder?.Dispose();
+            _gifDecoder = new GifDecoder(path);
+            _gifDecoder.Decode();
 
-            if (_gifDecoded.ConsolidatedState != ErrorState.Ok)
+            if (_gifDecoder.ConsolidatedState != ErrorState.Ok)
             {
-                _gifDecoded.Dispose();
+                _gifDecoder.Dispose();
                 return;
             }
 
             // Get information from the gif file
-            Width = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Width;
-            Height = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Height;
+            Width = _gifDecoder.LogicalScreenDescriptor.LogicalScreenSize.Width;
+            Height = _gifDecoder.LogicalScreenDescriptor.LogicalScreenSize.Height;
 
             _currentFrame = 0;
-            FrameCount = _gifDecoded.FrameCount;
+            FrameCount = _gifDecoder.FrameCount;
 
             // Get frame intervals
             Intervals = new int[FrameCount];
             for (int i = 0; i < FrameCount; i++)
             {
-                Intervals[i] = _gifDecoded.GetDelayForFrame(i) * 10;
+                Intervals[i] = _gifDecoder.GetDelayForFrame(i) * 10;
             }
 
             // Get whether this GIF loops over:
-            CanLoop = _gifDecoded.NetscapeExtension != null && _gifDecoded.NetscapeExtension.LoopCount == 0;
+            CanLoop = _gifDecoder.NetscapeExtension != null && _gifDecoder.NetscapeExtension.LoopCount == 0;
+
+            if (preloadKeyframes)
+            {
+                ApplyMemorySettings();
+                // Test: Pre-fill keyframes by iterating over the image one frame at a time
+                for (int i = 0; i < _gifDecoder.FrameCount; i++)
+                {
+                    _gifDecoder.GetFrameAtIndex(i, false);
+                }
+            }
 
             // Force load of the first frame
-            var img = _gifDecoded[0].TheImage;
+            var img = _gifDecoder[0].TheImage;
 
             CurrentFrameBitmap = new Bitmap(img.Width, img.Height);
-
-            FastBitmap.CopyPixels(_gifDecoded[_currentFrame].TheImage, CurrentFrameBitmap);
+            FastBitmap.CopyPixels(_gifDecoder[_currentFrame].TheImage, CurrentFrameBitmap);
 
             Loaded = true;
 
@@ -183,7 +193,7 @@ namespace GIF_Viewer
 
             _currentFrame = currentFrame;
             CurrentInterval = Intervals[currentFrame];
-            FastBitmap.CopyPixels(_gifDecoded[currentFrame].TheImage, CurrentFrameBitmap);
+            FastBitmap.CopyPixels(_gifDecoder[currentFrame].TheImage, CurrentFrameBitmap);
         }
 
         /// <summary>

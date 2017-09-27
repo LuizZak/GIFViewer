@@ -23,9 +23,8 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-
+using System.Runtime.InteropServices;
 using GIF_Viewer.GifComponents.Enums;
 
 namespace GIF_Viewer.GifComponents.Components
@@ -44,14 +43,14 @@ namespace GIF_Viewer.GifComponents.Components
 	/// account for the size byte itself, therefore, the empty sub-block is one 
 	/// whose size field contains 0x00.
 	/// </remarks>
-	public class DataBlock : GifComponent
+	public unsafe class DataBlock : GifComponent
 	{
         /// <summary>
         /// Skips a data block from the given stream and returns a number that specifies the ammount of bytes that were skipt
         /// </summary>
         /// <param name="inputStream">The input stream to skip</param>
         /// <returns>The ammount of bytes that were skipt</returns>
-        public static long SkipStream(Stream inputStream)
+        public static int SkipStream(Stream inputStream)
         {
             int blockSize = inputStream.ReadByte();
             if (blockSize == -1)
@@ -195,7 +194,6 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// Gets the byte array containing the data in this data sub-block.
 	    /// This does not include the first byte which holds the block size.
 	    /// </summary>
-	    [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
 	    public byte[] Data => _data;
 
 	    #endregion
@@ -219,6 +217,14 @@ namespace GIF_Viewer.GifComponents.Components
 	    }
 
 	    #endregion
+
+	    public void CopyTo(byte* bytes)
+	    {
+	        fixed (byte* pData = _data)
+	        {
+	            memcpy(bytes, pData, (ulong)_blockSize);
+            }
+	    }
 
         /// <summary>
         /// Gets the combined error states of this component and all its child
@@ -250,6 +256,10 @@ namespace GIF_Viewer.GifComponents.Components
 	        }
 	    }
 
-	    #endregion
-	}
+        #endregion
+        
+	    // .NET wrapper to native call of 'memcpy'. Requires Microsoft Visual C++ Runtime installed
+	    [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+	    public static extern IntPtr memcpy(void* dest, void* src, ulong count);
+    }
 }
