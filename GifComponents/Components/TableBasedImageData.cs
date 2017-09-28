@@ -37,10 +37,8 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 
 using System.IO;
-using System.Runtime.InteropServices;
 using GIF_Viewer.GifComponents.Enums;
 
 namespace GIF_Viewer.GifComponents.Components
@@ -146,8 +144,7 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             #endregion
-
-            // TODO: what are prefix and suffix and why are we initialising them like this?
+            
             for (code = 0; code < clearCode; code++)
             {
                 suffix[code] = (byte)code;
@@ -489,9 +486,5 @@ namespace GIF_Viewer.GifComponents.Components
         {
             throw new NotImplementedException();
         }
-
-        // .NET wrapper to native call of 'memset'. Requires Microsoft Visual C++ Runtime installed
-        [DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
-        public static extern IntPtr memset(IntPtr ptr, int value, UIntPtr count);
     }
 }

@@ -425,33 +425,41 @@ namespace GIF_Viewer.Utils
             int count = Width * Height;
             int* curScan = _scan0;
 
-            // Defines the ammount of assignments that the main while() loop is performing per loop.
-            // The value specified here must match the number of assignment statements inside that loop
-            const int assignsPerLoop = 8;
-
-            int rem = count % assignsPerLoop;
-            count /= assignsPerLoop;
-
-            while (count-- > 0)
+            // Uniform color pixel values can be mem-set straight away
+            if ((color & 0xFF) == ((color >> 8) & 0xFF) && (color & 0xFF) == ((color >> 16) & 0xFF) && (color & 0xFF) == ((color >> 24) & 0xFF))
             {
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
-
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
-                *(curScan++) = color;
+                memset(_scan0, color & 0xFF, (ulong)(Height * Stride * BytesPerPixel));
             }
-            while (rem-- > 0)
+            else
             {
-                *(curScan++) = color;
-            }
+                // Defines the ammount of assignments that the main while() loop is performing per loop.
+                // The value specified here must match the number of assignment statements inside that loop
+                const int assignsPerLoop = 8;
 
-            if (unlockAfter)
-            {
-                Unlock();
+                int rem = count % assignsPerLoop;
+                count /= assignsPerLoop;
+
+                while (count-- > 0)
+                {
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                    *(curScan++) = color;
+                }
+                while (rem-- > 0)
+                {
+                    *(curScan++) = color;
+                }
+
+                if (unlockAfter)
+                {
+                    Unlock();
+                }
             }
         }
 
@@ -502,37 +510,50 @@ namespace GIF_Viewer.Utils
                 return;
             }
 
-            // Prepare a horizontal slice of pixels that will be copied over each horizontal row down.
-            int[] row = new int[region.Width];
             ulong strideWidth = (ulong)region.Width * BytesPerPixel;
 
-            fixed (int* pRow = row)
+            // Uniform color pixel values can be mem-set straight away
+            if ((color & 0xFF) == ((color >> 8) & 0xFF) && (color & 0xFF) == ((color >> 16) & 0xFF) &&
+                (color & 0xFF) == ((color >> 24) & 0xFF))
             {
-                int count = region.Width;
-                int rem = count % 8;
-                count /= 8;
-                int* pSrc = pRow;
-                while(count-- > 0)
-                {
-                    *pSrc++ = color;
-                    *pSrc++ = color;
-                    *pSrc++ = color;
-                    *pSrc++ = color;
-
-                    *pSrc++ = color;
-                    *pSrc++ = color;
-                    *pSrc++ = color;
-                    *pSrc++ = color;
-                }
-                while (rem-- > 0)
-                {
-                    *pSrc++ = color;
-                }
-                
-                int* sx = _scan0 + minX;
                 for (int y = minY; y < maxY; y++)
                 {
-                    memcpy(sx + y * Stride, pRow, strideWidth);
+                    memset(_scan0 + minX + y * Stride, color & 0xFF, strideWidth);
+                }
+            }
+            else
+            {
+                // Prepare a horizontal slice of pixels that will be copied over each horizontal row down.
+                int[] row = new int[region.Width];
+
+                fixed (int* pRow = row)
+                {
+                    int count = region.Width;
+                    int rem = count % 8;
+                    count /= 8;
+                    int* pSrc = pRow;
+                    while (count-- > 0)
+                    {
+                        *pSrc++ = color;
+                        *pSrc++ = color;
+                        *pSrc++ = color;
+                        *pSrc++ = color;
+
+                        *pSrc++ = color;
+                        *pSrc++ = color;
+                        *pSrc++ = color;
+                        *pSrc++ = color;
+                    }
+                    while (rem-- > 0)
+                    {
+                        *pSrc++ = color;
+                    }
+
+                    int* sx = _scan0 + minX;
+                    for (int y = minY; y < maxY; y++)
+                    {
+                        memcpy(sx + y * Stride, pRow, strideWidth);
+                    }
                 }
             }
         }
@@ -718,6 +739,10 @@ namespace GIF_Viewer.Utils
         // .NET wrapper to native call of 'memcpy'. Requires Microsoft Visual C++ Runtime installed
         [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
         public static extern IntPtr memcpy(void* dest, void* src, ulong count);
+
+        // .NET wrapper to native call of 'memset'. Requires Microsoft Visual C++ Runtime installed
+        [DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+        public static extern IntPtr memset(void* dest, int value, ulong count);
 
         /// <summary>
         /// Represents a disposable structure that is returned during Lock() calls, and unlocks the bitmap on Dispose calls
