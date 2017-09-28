@@ -157,7 +157,7 @@ namespace GIF_Viewer.GifComponents.Components
             // Initialise block to an empty data block. This will be overwritten
             // first time through the loop with a data block read from the input
             // stream.
-            var block = new DataBlock(0, new byte[0]);
+            var bytes = new byte[0];
 
             for (pixelIndex = 0; pixelIndex < pixelCount;)
             {
@@ -183,7 +183,7 @@ namespace GIF_Viewer.GifComponents.Components
 
                             #region	read the next data block from the stream
 
-                            block = ReadDataBlock(inputStream);
+                            var block = ReadDataBlock(inputStream);
                             bytesToExtract = block.ActualBlockSize;
 
                             // Point to the first byte in the new data block
@@ -204,11 +204,13 @@ namespace GIF_Viewer.GifComponents.Components
                                 break;
                             }
 
+                            bytes = block.Data;
+
                             #endregion
                         }
                         // Append the contents of the current byte in the data 
                         // block to the beginning of the datum
-                        int newDatum = block[indexInDataBlock] << meaningfulBitsInDatum;
+                        int newDatum = bytes[indexInDataBlock] << meaningfulBitsInDatum;
                         datum += newDatum;
 
                         // so we've now got 8 more bits of information in the
