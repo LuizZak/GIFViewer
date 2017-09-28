@@ -205,7 +205,7 @@ namespace GIF_Viewer.GifComponents.Components
             WriteByte(11, outputStream); // block size
             WriteString(_applicationIdentifier, outputStream);
             WriteString(_applicationAuthenticationCode, outputStream);
-            foreach (DataBlock b in _applicationData)
+            foreach (var b in _applicationData)
             {
                 b.WriteToStream(outputStream);
             }

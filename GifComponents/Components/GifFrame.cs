@@ -622,12 +622,13 @@ namespace GIF_Viewer.GifComponents.Components
             int imageWidth = id.Size.Width;
             int imageHeight = id.Size.Height;
 
-            int[] colorTableIndices = activeColourTable.IntColours;
             byte[] pixelIndices = imageData.PixelIndexes;
-            int numColors = activeColourTable.Length;
 
             var fastImageBase = baseImage.FastLock();
             int* pointerImage = (int*)fastImageBase.Scan0;
+
+            int[] colorTableIndices = activeColourTable.IntColours;
+            int numColors = activeColourTable.Length;
 
             for (int i = 0; i < imageHeight; i++)
             {
@@ -666,7 +667,7 @@ namespace GIF_Viewer.GifComponents.Components
                 int k = pixelRowNumber * logicalWidth;
                 int dx = k + imageX; // start of line in dest
                 int dlim = dx + imageWidth; // end of dest line
-                if ((k + logicalWidth) < dlim)
+                if (k + logicalWidth < dlim)
                 {
                     // TESTME: CreateBitmap - past dest edge
                     dlim = k + logicalWidth; // past dest edge
@@ -681,12 +682,12 @@ namespace GIF_Viewer.GifComponents.Components
                     {
                         if (indexInColourTable < numColors)
                         {
-                            *(pointerImage + dx) = colorTableIndices[indexInColourTable];
+                            pointerImage[dx] = colorTableIndices[indexInColourTable];
                         }
                         else
                         {
                             // TESTME: CreateBitmap - BadColourIndex 
-                            *(pointerImage + dx) = (255 << 24);
+                            pointerImage[dx] = 255 << 24;
                             string message = "Colour index: " + indexInColourTable + ", colour table length: " + activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
                             SetStatus(ErrorState.BadColourIndex, message);
                         }
@@ -790,7 +791,7 @@ namespace GIF_Viewer.GifComponents.Components
                         }
                         else
                         {
-                            backgroundColour = (255 << 24);
+                            backgroundColour = 255 << 24;
                             string message = "Background colour index: " + lsd.BackgroundColourIndex + ", colour table length: " + act.Length;
                             SetStatus(ErrorState.BadColourIndex, message);
                         }

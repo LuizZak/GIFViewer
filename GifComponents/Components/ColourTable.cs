@@ -22,7 +22,6 @@
 #endregion
 
 using System;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 
@@ -38,23 +37,12 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// The colours in the colour table in INT form
         /// </summary>
-        private readonly Collection<int> _intColours;
+        private readonly int[] _intColours;
 
         #endregion
 
         #region constructors
-
-        #region default constructor
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public ColourTable()
-        {
-            _intColours = new Collection<int>();
-        }
-
-        #endregion
-
+        
         #region constructor( Stream, int, bool )
 
         /// <summary>
@@ -66,8 +54,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <param name="numberOfColours">
         /// The number of colours the colour table is expected to contain.
         /// </param>
-        public ColourTable(Stream inputStream,
-                            int numberOfColours)
+        public unsafe ColourTable(Stream inputStream, int numberOfColours)
         {
             if (numberOfColours < 0 || numberOfColours > 256)
             {
@@ -83,17 +70,20 @@ namespace GIF_Viewer.GifComponents.Components
             byte[] buffer = new byte[bytesExpected];
             int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
             int coloursRead = bytesRead / 3;
-
-            int i = 0;
+            
             int j = 0;
-            _intColours = new Collection<int>();
-            while (i < coloursRead)
+            _intColours = new int[coloursRead];
+
+            fixed (byte* pBuffer = buffer)
+            fixed (int* pIntColours = _intColours)
             {
-                int r = buffer[j++] & 0xff;
-                int g = buffer[j++] & 0xff;
-                int b = buffer[j++] & 0xff;
-                _intColours.Add((255 << 24) | (r << 16) | (g << 8) | b);
-                i++;
+                for (int i = 0; i < coloursRead; i++)
+                {
+                    byte r = pBuffer[j++];
+                    byte g = pBuffer[j++];
+                    byte b = pBuffer[j++];
+                    pIntColours[i] = (255 << 24) | (r << 16) | (g << 8) | b;
+                }
             }
         }
         #endregion
@@ -113,7 +103,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// Gets the number of colours in the colour table.
         /// </summary>
-        public int Length => _intColours.Count;
+        public int Length => _intColours.Length;
 
         #endregion
 
@@ -187,15 +177,6 @@ namespace GIF_Viewer.GifComponents.Components
 
         #region methods
 
-        #region public Add method
-
-        public void Add(int colourToAdd)
-        {
-            _intColours.Add(colourToAdd);
-        }
-
-        #endregion
-
         #region public WriteToStream method
 
         /// <summary>
@@ -218,10 +199,10 @@ namespace GIF_Viewer.GifComponents.Components
 
         private void ValidateIndex(int index)
         {
-            if (index >= _intColours.Count || index < 0)
+            if (index >= _intColours.Length || index < 0)
             {
                 string message
-                    = "Colour table size: " + _intColours.Count
+                    = "Colour table size: " + _intColours.Length
                     + ". Index: " + index;
                 throw new ArgumentOutOfRangeException(nameof(index), message);
             }

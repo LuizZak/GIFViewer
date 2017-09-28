@@ -508,11 +508,27 @@ namespace GIF_Viewer.Utils
 
             fixed (int* pRow = row)
             {
-                for (int i = 0; i < region.Width; i++)
+                int count = region.Width;
+                int rem = count % 8;
+                count /= 8;
+                int* pSrc = pRow;
+                while(count-- > 0)
                 {
-                    pRow[i] = color;
-                }
+                    *pSrc++ = color;
+                    *pSrc++ = color;
+                    *pSrc++ = color;
+                    *pSrc++ = color;
 
+                    *pSrc++ = color;
+                    *pSrc++ = color;
+                    *pSrc++ = color;
+                    *pSrc++ = color;
+                }
+                while (rem-- > 0)
+                {
+                    *pSrc++ = color;
+                }
+                
                 int* sx = _scan0 + minX;
                 for (int y = minY; y < maxY; y++)
                 {
