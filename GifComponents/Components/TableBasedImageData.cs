@@ -90,7 +90,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// end-of-information code or error condition is encountered, any
 	    /// remaining pixel indices not already populated default to zero.
 	    /// </remarks>
-	    public TableBasedImageData(Stream inputStream, int pixelCount)
+	    public unsafe TableBasedImageData(Stream inputStream, int pixelCount)
 	    {
             #region guard against silly image sizes
 
@@ -117,9 +117,10 @@ namespace GIF_Viewer.GifComponents.Components
             // number of bytes still to be extracted from the current data block
             int bytesToExtract = 0;
 
-            short[] prefix = new short[MaxStackSize];
-            byte[] suffix = new byte[MaxStackSize];
-            var pixelStack = new Stack<byte>();
+            short* prefix = stackalloc short[MaxStackSize];
+            byte* suffix = stackalloc byte[MaxStackSize];
+            byte* pixelStack = stackalloc byte[MaxStackSize + 1];
+	        int top = 0;
 
             #endregion
 
@@ -160,7 +161,7 @@ namespace GIF_Viewer.GifComponents.Components
 
             for (pixelIndex = 0; pixelIndex < pixelCount;)
             {
-                if (pixelStack.Count == 0)
+                if (top == 0)
                 {
                     // There are no pixels in the stack at the moment, so...
 
@@ -296,7 +297,7 @@ namespace GIF_Viewer.GifComponents.Components
                         // There's no previously read code in memory yet, so
                         // get the pixel index for the current code and add it
                         // to the stack.
-                        pixelStack.Push(suffix[code]);
+                        pixelStack[top++] = suffix[code];
                         previousCode = code;
                         firstCode = code;
 
@@ -309,21 +310,21 @@ namespace GIF_Viewer.GifComponents.Components
                     var inCode = code;
                     if (code == nextAvailableCode)
                     {
-                        pixelStack.Push((byte)firstCode);
+                        pixelStack[top++] = (byte)firstCode;
                         code = previousCode;
                     }
 
                     while (code > clearCode)
                     {
-                        pixelStack.Push(suffix[code]);
+                        pixelStack[top++] = suffix[code];
                         code = prefix[code];
                     }
 
                     #endregion
 
-                    firstCode = (suffix[code]) & 0xff;
+                    firstCode = suffix[code] & 0xff;
 
-                    pixelStack.Push((byte)firstCode);
+                    pixelStack[top++] = (byte)firstCode;
 
                     #region add a new string to the string table
 
@@ -363,7 +364,8 @@ namespace GIF_Viewer.GifComponents.Components
 
                 // Pop all the pixels currently on the stack off, and add them
                 // to the return value.
-                _pixelIndexes[pixelIndex] = pixelStack.Pop();
+                top--;
+                _pixelIndexes[pixelIndex] = pixelStack[top];
                 pixelIndex++;
             }
 
@@ -380,7 +382,6 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             #endregion
-
         }
 
         /// <summary>
