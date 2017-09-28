@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.Windows.Forms;
 using GIF_Viewer.Controls;
 
@@ -195,7 +194,7 @@ namespace GIF_Viewer.Views
             Text = @"Extract Frames from [" + fileName + @"] " + CurrentGif.Width + @"x" + CurrentGif.Height;
 
             // Refresh the pictureBox with the new animation
-            cpb_preview.BackgroundImage = CurrentGif.Gif;
+            cpb_preview.BackgroundImage = CurrentGif.CurrentFrameBitmap;
 
             // Change the window size and location only if windowed
             if (WindowState == FormWindowState.Normal)
@@ -223,9 +222,6 @@ namespace GIF_Viewer.Views
         /// </summary>
         public void ExportFrames()
         {
-            // Get the current time to use in the iterator:
-            DateTime t = DateTime.Now;
-
             // Get the path and trim the leading characters:
             string path = _formatForm.SavePath.Trim(' ', '\\');
 
@@ -234,106 +230,19 @@ namespace GIF_Viewer.Views
             string extension = _formatForm.Extension;
 
             // Get a valid imageformat to use in the savind process:
-            ImageFormat format = GetFormatByString(extension);
+            var format = ExtractCommandLineHandler.GetFormatByString(extension);
 
             // Get the frame range:
-            Point range = tlc_timeline.GetRange();
+            var range = tlc_timeline.GetRange();
             range.X -= 1;
 
             // Unload the GIF from the memory, so we can work it with:
             LoadGif("");
 
-            // Load the GIF file:
-            Image m = Image.FromFile(CurrentGif.GifPath);
-
-            // Get the frame dimension to advance the frames:
-            FrameDimension frameDimension = new FrameDimension(m.FrameDimensionsList[0]);
-
-            try
-            {
-                for (int x = range.X; x < (range.X + 1) + range.Y; x++)
-                {
-                    // Get the name:
-                    string name = fileName;
-
-                    // Replace the tokens:
-                    while (name.Contains("{%i}"))
-                        name = name.Replace("{%i}", (x + 1) + "");
-                    while (name.Contains("{%h}"))
-                        name = name.Replace("{%h}", "" + t.Hour);
-                    while (name.Contains("{%m}"))
-                        name = name.Replace("{%m}", "" + t.Minute);
-                    while (name.Contains("{%s}"))
-                        name = name.Replace("{%s}", "" + t.Second);
-
-                    // Create the bitmap and the graphics:
-                    Bitmap b = new Bitmap(m.Width, m.Height);
-                    Graphics g = Graphics.FromImage(b);
-
-                    // Advance to the desired frame:
-                    m.SelectActiveFrame(frameDimension, x);
-
-                    // Draw the image:
-                    g.DrawImageUnscaled(m, 0, 0);
-
-                    // Save the image down to the path with the given format:
-                    b.Save(path + "\\" + name + extension, format);
-
-                    // Dispose the bitmap and the graphics:
-                    g.Dispose();
-                    b.Dispose();
-                }
-            }
-            catch (Exception e)
-            {
-                ErrorBox.Show("Error exporting frames: " + e.Message, "Error", e.StackTrace);
-            }
-
-            // Dispose the GIF:
-            m.Dispose();
+            ExtractCommandLineHandler.ExtractGifFrames(CurrentGif.GifPath, path, fileName, format, range.X, range.Y);
 
             // Reload the GIF:
             LoadGif(CurrentGif.GifPath);
-        }
-
-        /// <summary>
-        /// Returns an ImageFormat based on the file extension provided
-        /// </summary>
-        /// <param name="format">A valid image file extension (including the dot)</param>
-        /// <returns>An ImageFormat that represents the provided image file extension</returns>
-        public ImageFormat GetFormatByString(string format)
-        {
-            ImageFormat imageFormat = ImageFormat.Bmp;
-            
-            switch (format)
-            {
-                case ".bmp":
-                    imageFormat = ImageFormat.Bmp;
-                    break;
-                case ".jpg":
-                    imageFormat = ImageFormat.Jpeg;
-                    break;
-                case ".gif":
-                    imageFormat = ImageFormat.Gif;
-                    break;
-                case ".png":
-                    imageFormat = ImageFormat.Png;
-                    break;
-                case ".tiff":
-                    imageFormat = ImageFormat.Tiff;
-                    break;
-                case ".exif":
-                    imageFormat = ImageFormat.Exif;
-                    break;
-                case ".emf":
-                    imageFormat = ImageFormat.Emf;
-                    break;
-                case ".wmf":
-                    imageFormat = ImageFormat.Wmf;
-                    break;
-            }
-
-            return imageFormat;
         }
 
         /// <summary>
@@ -486,13 +395,13 @@ namespace GIF_Viewer.Views
         private void btnHelp_Click(object sender, EventArgs e)
         {
             // Show the help dialog
-            FrameExtractorHelp helpDialog = new FrameExtractorHelp();
+            var helpDialog = new FrameExtractorHelp();
             helpDialog.ShowDialog(this);
         }
 
         /// <summary>
-        /// The last mouse button that was pressed on the FrameExtract
+        /// The last mouse button that was pressed on the .gif preview panel
         /// </summary>
-        MouseButtons _lastMouseButton;
+        private MouseButtons _lastMouseButton;
     }
 }

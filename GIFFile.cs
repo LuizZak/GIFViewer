@@ -16,9 +16,9 @@ namespace GIF_Viewer
         /// </summary>
         public string GifPath = "";
         /// <summary>
-        /// Image object representing the current GIF
+        /// Image object representing the current GIF frame.
         /// </summary>
-        public Bitmap Gif;
+        public Bitmap CurrentFrameBitmap;
 
         /// <summary>
         /// The decoder holding the information about the currently loaded .gif file
@@ -81,7 +81,7 @@ namespace GIF_Viewer
         /// </summary>
         public void Dispose()
         {
-            Gif.Dispose();
+            CurrentFrameBitmap.Dispose();
             _gifDecoded.Dispose();
 
             _gifDecoded = null;
@@ -114,6 +114,7 @@ namespace GIF_Viewer
             GifPath = path;
 
             // Decode the gif file
+            _gifDecoded?.Dispose();
             _gifDecoded = new GifDecoder(path);
             _gifDecoded.Decode();
 
@@ -143,9 +144,9 @@ namespace GIF_Viewer
             // Force load of the first frame
             var img = _gifDecoded[0].TheImage;
 
-            Gif = new Bitmap(img.Width, img.Height);
+            CurrentFrameBitmap = new Bitmap(img.Width, img.Height);
 
-            FastBitmap.CopyPixels(_gifDecoded[_currentFrame].TheImage, Gif);
+            FastBitmap.CopyPixels(_gifDecoded[_currentFrame].TheImage, CurrentFrameBitmap);
 
             Loaded = true;
 
@@ -182,7 +183,7 @@ namespace GIF_Viewer
 
             _currentFrame = currentFrame;
             CurrentInterval = Intervals[currentFrame];
-            FastBitmap.CopyPixels(_gifDecoded[currentFrame].TheImage, Gif);
+            FastBitmap.CopyPixels(_gifDecoded[currentFrame].TheImage, CurrentFrameBitmap);
         }
 
         /// <summary>

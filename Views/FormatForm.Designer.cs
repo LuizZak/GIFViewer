@@ -100,10 +100,10 @@
             this.cmbFormat.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cmbFormat.FormattingEnabled = true;
             this.cmbFormat.Items.AddRange(new object[] {
-            ".bmp",
+            ".png",
             ".jpg",
             ".gif (Non animated)",
-            ".png",
+            ".bmp",
             ".tiff",
             ".exif",
             ".emf",
@@ -126,7 +126,8 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.txtBaseFilename);
@@ -135,7 +136,7 @@
             this.groupBox2.Controls.Add(this.cmbFormat);
             this.groupBox2.Location = new System.Drawing.Point(12, 108);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(479, 113);
+            this.groupBox2.Size = new System.Drawing.Size(479, 129);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "File Name";
@@ -145,11 +146,9 @@
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(6, 63);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(299, 39);
+            this.label4.Size = new System.Drawing.Size(381, 52);
             this.label4.TabIndex = 2;
-            this.label4.Text = "You can use special tokens to get values and use in filename.\r\n{%i} : Gets the it" +
-    "erator (or the current frame being exported).\r\n{%h} and {%m} and {%s} : Gets the" +
-    " current time.";
+            this.label4.Text = resources.GetString("label4.Text");
             // 
             // txtBaseFilename
             // 
@@ -173,9 +172,9 @@
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.Image = global::GIF_Viewer.Properties.Resources.action_check;
-            this.btnOk.Location = new System.Drawing.Point(326, 227);
+            this.btnOk.Location = new System.Drawing.Point(326, 243);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(84, 23);
             this.btnOk.TabIndex = 1;
@@ -187,10 +186,10 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Image = global::GIF_Viewer.Properties.Resources.action_delete;
-            this.btnCancel.Location = new System.Drawing.Point(416, 227);
+            this.btnCancel.Location = new System.Drawing.Point(416, 243);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -205,14 +204,14 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(503, 262);
+            this.ClientSize = new System.Drawing.Size(503, 277);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnOk);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.MaximumSize = new System.Drawing.Size(9000, 300);
-            this.MinimumSize = new System.Drawing.Size(300, 300);
+            this.MaximumSize = new System.Drawing.Size(9000, 316);
+            this.MinimumSize = new System.Drawing.Size(300, 316);
             this.Name = "FormatForm";
             this.Text = "FormatForm";
             this.groupBox1.ResumeLayout(false);

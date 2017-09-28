@@ -17,12 +17,12 @@ namespace GIF_Viewer.Views
         /// <summary>
         /// The filename (minus extension)
         /// </summary>
-        public string FileName = "Frame-{%i}";
+        public string FileName = "{%name}-{%frame}";
 
         /// <summary>
         /// The extension format to use
         /// </summary>
-        public string Extension = ".bmp";
+        public string Extension = ".png";
 
         /// <summary>
         /// The folder browser attached to this form

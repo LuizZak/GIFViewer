@@ -486,7 +486,7 @@ namespace GIF_Viewer
             lblFrame.Text = @"Frame: " + (_currentGif.CurrentFrame + 1) + @"/" + _currentGif.FrameCount;
 
             // Refresh the pictureBox with the new animation
-            pb_gif.BackgroundImage = _currentGif.Gif;
+            pb_gif.BackgroundImage = _currentGif.CurrentFrameBitmap;
 
             // Change the window size and location only if windowed
             if (WindowState == FormWindowState.Normal && resizeAndRelocate)
@@ -694,7 +694,7 @@ namespace GIF_Viewer
         void FrameExtract_Click(object sender, EventArgs e)
         {
             // No animation? Skip:
-            if (_currentGif.Gif == null)
+            if (_currentGif.CurrentFrameBitmap == null)
                 return;
 
             // Skip if animation has only one frame:
@@ -938,7 +938,7 @@ namespace GIF_Viewer
         private void cms_gifRightClick_Opening(object sender, CancelEventArgs e)
         {
             // If no GIf is specified:
-            if (_currentGif.Gif == null)
+            if (_currentGif.CurrentFrameBitmap == null)
             {
                 // Cancel the action:
                 e.Cancel = true;
