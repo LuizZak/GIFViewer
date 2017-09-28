@@ -340,8 +340,6 @@ namespace GIF_Viewer.GifComponents.Components
                         suffix[nextAvailableCode] = (byte)firstCode;
                         nextAvailableCode++;
 
-                        #endregion
-
                         #region do we need to increase the code size?
 
                         if ((nextAvailableCode & GetMaximumPossibleCode(currentCodeSize)) == 0)
@@ -356,6 +354,8 @@ namespace GIF_Viewer.GifComponents.Components
 
                         #endregion
                     }
+
+                    #endregion
 
                     previousCode = inCode;
 

@@ -755,11 +755,11 @@ namespace GIF_Viewer.GifComponents.Components
             int height = lsd.LogicalScreenSize.Height;
             int backgroundColorIndex = previousFrame?._logicalScreenDescriptor.BackgroundColourIndex ?? lsd.BackgroundColourIndex;
             int transparentColorIndex = previousFrame?._graphicControlExtension.TransparentColourIndex ?? gce.TransparentColourIndex;
-            act = (previousFrame == null ? act : previousFrame._localColourTable ?? _globalColourTable);
+            act = previousFrame == null ? act : previousFrame._localColourTable ?? _globalColourTable;
 
             #region paint baseImage
 
-            if (previousFrame?.TheImage == null)
+            if (previousDisposalMethod == DisposalMethod.RestoreToPrevious || previousFrame?.TheImage == null)
             {
                 baseImage = new Bitmap(width, height);
             }
@@ -804,27 +804,11 @@ namespace GIF_Viewer.GifComponents.Components
 
                     using (var fastBaseImage = baseImage.FastLock())
                     {
-                        // If the area to redraw is the whole image, utilize the fast image drawing method FastBitmap.Clear()
-                        if (previousFrame._imageDescriptor.Position == Point.Empty && previousFrame._imageDescriptor.Size == _logicalScreenDescriptor.LogicalScreenSize)
-                        {
-                            fastBaseImage.Clear(backgroundColour);
-                        }
-                        else
-                        {
-                            var minY = previousFrame._imageDescriptor.Position.Y;
-                            var maxY = previousFrame._imageDescriptor.Position.Y + previousFrame._imageDescriptor.Size.Height;
+                        var rect = new Rectangle(previousFrame._imageDescriptor.Position.X,
+                            previousFrame._imageDescriptor.Position.Y, previousFrame._imageDescriptor.Size.Width,
+                            previousFrame._imageDescriptor.Size.Height);
 
-                            for (int y = minY; y < maxY; y++)
-                            {
-                                var minX = previousFrame._imageDescriptor.Position.X;
-                                var maxX = previousFrame._imageDescriptor.Position.X + previousFrame._imageDescriptor.Size.Width;
-
-                                for (int x = minX; x < maxX; x++)
-                                {
-                                    fastBaseImage.SetPixel(x, y, backgroundColour);
-                                }
-                            }
-                        }
+                        fastBaseImage.ClearRegion(rect, backgroundColour);
                     }
 
                     break;
@@ -832,9 +816,14 @@ namespace GIF_Viewer.GifComponents.Components
                 case DisposalMethod.RestoreToPrevious:
                     // pre-populate image with previous frame but 1
                     // TESTME: DisposalMethod.RestoreToPrevious
-                    baseImage = previousFrame != null
-                                    ? new Bitmap((previousFrameBut1 ?? previousFrame).TheImage)
-                                    : new Bitmap(width, height);
+                    var prevImage = 
+                        (previousFrameBut1 ?? previousFrame)?.TheImage;
+
+                    if (prevImage != null)
+                    {
+                        FastBitmap.CopyPixels(prevImage, baseImage);
+                    }
+
                     break;
             }
             #endregion
