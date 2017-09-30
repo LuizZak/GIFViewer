@@ -1,4 +1,3 @@
-#region Copyright (C) Simon Bridewell
 // 
 // This file is part of the GifComponents library.
 // GifComponents is free software; you can redistribute it and/or
@@ -19,7 +18,6 @@
 //
 // Simon Bridewell makes no claim to be the original author of this library,
 // only to have created a derived work.
-#endregion
 
 using System.ComponentModel;
 using System.IO;
@@ -43,13 +41,8 @@ namespace GIF_Viewer.GifComponents.Components
 		/// The expected block size for a Graphic Control Extension
 		/// </summary>
 		public const int ExpectedBlockSize = 4;
-		
-		#region declarations
 
-	    #endregion
-
-		#region constructor
-		/// <summary>
+	    /// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="blockSize">
@@ -84,9 +77,6 @@ namespace GIF_Viewer.GifComponents.Components
 			DelayTime = delayTime;
 			TransparentColourIndex = transparentColourIndex;
 		}
-		#endregion
-		
-		#region constructor( Stream, bool )
 
 	    /// <summary>
 	    /// Constructor.
@@ -94,43 +84,36 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// <param name="inputStream">
 	    /// The input stream to read.
 	    /// </param>
-	    public GraphicControlExtension( Stream inputStream )
-		{
-			BlockSize = Read( inputStream ); // block size
-			
-			PackedFields packed = new PackedFields( Read( inputStream ) );
-			DisposalMethod = (DisposalMethod) packed.GetBits( 3, 3 );
-			ExpectsUserInput = packed.GetBit( 6 );
-			HasTransparentColour = packed.GetBit( 7 );
+	    public GraphicControlExtension(Stream inputStream)
+	    {
+	        BlockSize = Read(inputStream); // block size
 
-			if( DisposalMethod == 0 )
-			{
-				DisposalMethod = DisposalMethod.DoNotDispose; // elect to keep old image if discretionary
-			}
-			
-			DelayTime = ReadShort( inputStream ); // delay in hundredths of a second
-			TransparentColourIndex = Read( inputStream ); // transparent color index
-			Read( inputStream ); // block terminator
-		}
-		#endregion
+	        var packed = new PackedFields(Read(inputStream));
+	        DisposalMethod = (DisposalMethod)packed.GetBits(3, 3);
+	        ExpectsUserInput = packed.GetBit(6);
+	        HasTransparentColour = packed.GetBit(7);
 
-		#region logical properties
-		
-		#region BlockSize
-		/// <summary>
-		/// Number of bytes in the block, after the Block Size field and up to 
-		/// but not including the Block Terminator.
-		/// This field contains the fixed value 4.
-		/// </summary>
-		[Description( "Number of bytes in the block, after the Block Size " + 
+	        if (DisposalMethod == 0)
+	        {
+	            DisposalMethod = DisposalMethod.DoNotDispose; // elect to keep old image if discretionary
+	        }
+
+	        DelayTime = ReadShort(inputStream); // delay in hundredths of a second
+	        TransparentColourIndex = Read(inputStream); // transparent color index
+	        Read(inputStream); // block terminator
+	    }
+
+        /// <summary>
+        /// Number of bytes in the block, after the Block Size field and up to 
+        /// but not including the Block Terminator.
+        /// This field contains the fixed value 4.
+        /// </summary>
+        [Description( "Number of bytes in the block, after the Block Size " + 
 		             "field and up to but not including the Block Terminator. " + 
 		             "This field contains the fixed value 4." )]
 		public int BlockSize { get; }
 
-	    #endregion
-		
-		#region DisposalMethod
-		/// <summary>
+	    /// <summary>
 		/// Indicates the way in which the graphic is to be treated after being 
 		/// displayed.
 		/// </summary>
@@ -138,10 +121,7 @@ namespace GIF_Viewer.GifComponents.Components
 		             "treated after being displayed." )]
 		public DisposalMethod DisposalMethod { get; }
 
-	    #endregion
-		
-		#region ExpectsUserInput
-		/// <summary>
+	    /// <summary>
 		/// Indicates whether or not user input is expected before continuing. 
 		/// If the flag is set, processing will continue when user input is 
 		/// entered. 
@@ -168,10 +148,7 @@ namespace GIF_Viewer.GifComponents.Components
 		             "occurs first." )]
 		public bool ExpectsUserInput { get; }
 
-	    #endregion
-		
-		#region HasTransparentColour
-		/// <summary>
+	    /// <summary>
 		/// Indicates whether a transparency index is given in the Transparent 
 		/// Index field.
 		/// </summary>
@@ -179,10 +156,7 @@ namespace GIF_Viewer.GifComponents.Components
 		             "the Transparent Index field." )]
 		public bool HasTransparentColour { get; }
 
-	    #endregion
-		
-		#region DelayTime
-		/// <summary>
+	    /// <summary>
 		/// If not 0, this field specifies the number of hundredths (1/100) 
 		/// of a second to wait before continuing with the processing of the 
 		/// Data Stream. 
@@ -198,10 +172,7 @@ namespace GIF_Viewer.GifComponents.Components
 		             "Input Flag field." )]
 		public int DelayTime { get; }
 
-	    #endregion
-		
-		#region TransparentColourIndex
-		/// <summary>
+	    /// <summary>
 		/// The Transparency Index is such that when encountered, the 
 		/// corresponding pixel of the display device is not modified and 
 		/// processing goes on to the next pixel. 
@@ -214,9 +185,5 @@ namespace GIF_Viewer.GifComponents.Components
 		             "The index is present if and only if the Transparency " + 
 		             "Flag is set to 1." )]
 		public int TransparentColourIndex { get; }
-
-	    #endregion
-		
-		#endregion
 	}
 }

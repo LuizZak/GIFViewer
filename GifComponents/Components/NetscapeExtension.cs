@@ -1,4 +1,3 @@
-#region Copyright (C) Simon Bridewell
 // 
 // This file is part of the GifComponents library.
 // GifComponents is free software; you can redistribute it and/or
@@ -19,7 +18,6 @@
 //
 // Simon Bridewell makes no claim to be the original author of this library,
 // only to have created a derived work.
-#endregion
 
 using System;
 using System.Collections.ObjectModel;
@@ -35,12 +33,7 @@ namespace GIF_Viewer.GifComponents.Components
 	/// </summary>
 	public class NetscapeExtension : ApplicationExtension
 	{
-		#region declarations
-
-	    #endregion
-		
-		#region constructor( int repeatCount )
-		/// <summary>
+	    /// <summary>
 		/// Constructor.
 		/// </summary>
 		/// <param name="repeatCount">
@@ -52,9 +45,6 @@ namespace GIF_Viewer.GifComponents.Components
 		{
 			LoopCount = repeatCount;
 		}
-		#endregion
-		
-		#region constructor( ApplicationExtension )
 
 	    /// <summary>
 	    /// Constructor.
@@ -66,8 +56,6 @@ namespace GIF_Viewer.GifComponents.Components
 	        : base(applicationExtension.IdentificationBlock,
 	            applicationExtension.ApplicationData)
 	    {
-	        #region guard against application extensions which are not Netscape extensions
-
 	        string message;
 	        if (applicationExtension.ApplicationIdentifier != "NETSCAPE")
 	        {
@@ -86,8 +74,6 @@ namespace GIF_Viewer.GifComponents.Components
 	                      + applicationExtension.ApplicationAuthenticationCode;
 	            throw new ArgumentException(message, nameof(applicationExtension));
 	        }
-
-	        #endregion
 
 	        foreach (var block in ApplicationData)
 	        {
@@ -112,33 +98,25 @@ namespace GIF_Viewer.GifComponents.Components
 	        }
 	    }
 
-	    #endregion
-		
-		#region LoopCount property
-		/// <summary>
+	    /// <summary>
 		/// Number of times to repeat the frames of the animation.
 		/// 0 to repeat indefinitely. -1 to not repeat.
 		/// </summary>
 		public int LoopCount { get; }
 
-	    #endregion
+	    private static DataBlock GetIdentificationBlock()
+	    {
+	        var s = new MemoryStream();
+	        var bytes = Encoding.ASCII.GetBytes("NETSCAPE2.0".ToCharArray());
+	        s.Write(bytes, 0, bytes.Length);
+	        s.Seek(0, SeekOrigin.Begin);
+	        byte[] identificationData = new byte[11];
+	        s.Read(identificationData, 0, 11);
+	        var identificationBlock = new DataBlock(11, identificationData);
+	        return identificationBlock;
+	    }
 
-		#region private static GetIdentificationBlock method
-		private static DataBlock GetIdentificationBlock()
-		{
-			var s = new MemoryStream();
-		    var bytes = Encoding.ASCII.GetBytes("NETSCAPE2.0".ToCharArray());
-            s.Write(bytes, 0, bytes.Length);
-			s.Seek( 0, SeekOrigin.Begin );
-			byte[] identificationData = new byte[11];
-			s.Read( identificationData, 0, 11 );
-			var identificationBlock = new DataBlock( 11, identificationData );
-			return identificationBlock;
-		}
-		#endregion
-		
-		#region private static GetApplicationData method
-		private static Collection<DataBlock> GetApplicationData( int repeatCount )
+        private static Collection<DataBlock> GetApplicationData( int repeatCount )
 		{
 		    var s = new MemoryStream();
             s.WriteByte(1);
@@ -155,6 +133,5 @@ namespace GIF_Viewer.GifComponents.Components
 		    var appData = new Collection<DataBlock> { repeatBlock, terminatorBlock };
             return appData;
 		}
-		#endregion
 	}
 }

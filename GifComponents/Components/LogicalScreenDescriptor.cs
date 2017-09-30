@@ -1,4 +1,3 @@
-#region Copyright (C) Simon Bridewell
 // 
 // This file is part of the GifComponents library.
 // GifComponents is free software; you can redistribute it and/or
@@ -19,7 +18,6 @@
 //
 // Simon Bridewell makes no claim to be the original author of this library,
 // only to have created a derived work.
-#endregion
 
 using System;
 using System.ComponentModel;
@@ -48,13 +46,9 @@ namespace GIF_Viewer.GifComponents.Components
     /// </remarks>
     public class LogicalScreenDescriptor : GifComponent
     {
-        #region declarations
-
         private const int ByteMax = byte.MaxValue;
         private const int UShortMax = ushort.MaxValue;
-        #endregion
 
-        #region constructor( logical properties )
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -119,7 +113,6 @@ namespace GIF_Viewer.GifComponents.Components
                                         int backgroundColourIndex,
                                         int pixelAspectRatio)
         {
-            #region validation
             if (logicalScreenSize.Width > UShortMax)
             {
                 string message
@@ -167,7 +160,6 @@ namespace GIF_Viewer.GifComponents.Components
                     + "Supplied value: " + pixelAspectRatio;
                 throw new ArgumentException(message, nameof(pixelAspectRatio));
             }
-            #endregion
 
             LogicalScreenSize = logicalScreenSize;
             HasGlobalColourTable = hasGlobalColourTable;
@@ -177,9 +169,7 @@ namespace GIF_Viewer.GifComponents.Components
             BackgroundColourIndex = backgroundColourIndex;
             PixelAspectRatio = pixelAspectRatio;
         }
-        #endregion
 
-        #region constructor( Stream )
         /// <summary>
         /// Constructor.
         /// Reads and returns a logical screen descriptor from the supplied
@@ -210,11 +200,7 @@ namespace GIF_Viewer.GifComponents.Components
                 SetStatus(ErrorState.EndOfInputStream, "");
             }
         }
-        #endregion
 
-        #region logical properties
-
-        #region LogicalScreenSize
         /// <summary>
         /// Gets the width and height, in pixels, of the logical screen where
         /// the images will be rendered in the displaying device.
@@ -224,9 +210,6 @@ namespace GIF_Viewer.GifComponents.Components
                       "device.")]
         public Size LogicalScreenSize { get; }
 
-        #endregion
-
-        #region HasGlobalColourTable property
         /// <summary>
         /// Gets a flag indicating the presence of a Global Color Table; if the 
         /// flag is set, the Global Color Table will immediately follow the 
@@ -245,9 +228,6 @@ namespace GIF_Viewer.GifComponents.Components
                       "(This field is the most significant bit of the byte.)")]
         public bool HasGlobalColourTable { get; }
 
-        #endregion
-
-        #region ColourResolution property
         /// <summary>
         /// Gets the number of bits per primary color available to the original 
         /// image, minus 1. This value represents the size of the entire palette 
@@ -271,9 +251,6 @@ namespace GIF_Viewer.GifComponents.Components
                       "palette is available on the source machine")]
         public int ColourResolution { get; }
 
-        #endregion
-
-        #region GlobalColourTableIsSorted property
         /// <summary>
         /// Indicates whether the Global Color Table is sorted.
         /// If the flag is set, the Global Color Table is sorted, in order of
@@ -294,9 +271,6 @@ namespace GIF_Viewer.GifComponents.Components
                      "graphic.")]
         public bool GlobalColourTableIsSorted { get; }
 
-        #endregion
-
-        #region GlobalColourTableSizeBits property
         /// <summary>
         /// If the Global Color Table Flag is set to 1, the value in this field 
         /// is used to calculate the number of bytes contained in the Global 
@@ -321,17 +295,11 @@ namespace GIF_Viewer.GifComponents.Components
                      "the stream in.")]
         public int GlobalColourTableSizeBits { get; }
 
-        #endregion
-
-        #region GlobalColourTableSize property
         /// <summary>
         /// Gets the number of colours in the global colour table.
         /// </summary>
         public int GlobalColourTableSize => 2 << GlobalColourTableSizeBits;
 
-        #endregion
-
-        #region BackgroundColourIndex property
         /// <summary>
         /// Gets the index into the Global Color Table for the Background Color.
         /// The Background Color is the color used for those pixels on the 
@@ -346,9 +314,6 @@ namespace GIF_Viewer.GifComponents.Components
                       "field should be zero and should be ignored.")]
         public int BackgroundColourIndex { get; }
 
-        #endregion
-
-        #region PixelAspectRatio property
         /// <summary>
         /// Gets the factor used to compute an approximation of the aspect ratio 
         /// of the pixel in the original image.  If the value of the field is 
@@ -374,9 +339,5 @@ namespace GIF_Viewer.GifComponents.Components
                       "the widest pixel of 4:1 to the tallest pixel of 1:4 " +
                       "in increments of 1/64th.")]
         public int PixelAspectRatio { get; }
-
-        #endregion
-
-        #endregion
     }
 }

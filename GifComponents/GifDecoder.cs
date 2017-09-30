@@ -1,4 +1,3 @@
-#region Copyright (C) Simon Bridewell, Kevin Weiner, John Christy
 // 
 // This file is part of the GifComponents library.
 // GifComponents is free software; you can redistribute it and/or
@@ -19,9 +18,7 @@
 //
 // Simon Bridewell makes no claim to be the original author of this library,
 // only to have created a derived work.
-#endregion
 
-#region changes
 /*
  No copyright asserted on the source code of this class.  May be used for
  any purpose, however, refer to the Unisys LZW patent for any additional
@@ -44,7 +41,6 @@
 	the types of the components of a GIF file.
  5. Removed all private declarations which are not components of a GIF file.
 */
-#endregion
 
 using System;
 using System.Collections.Generic;
@@ -127,6 +123,127 @@ namespace GIF_Viewer.GifComponents
         /// Holds the <see cref="System.IO.Stream"/> from which the GIF is being read.
         /// </summary>
         private readonly Stream _stream;
+        
+        /// <summary>
+        /// Gets a frame from the GIF file.
+        /// </summary>
+        public GifFrame this[int index] => GetDecodedFrameAtIndex(index);
+
+        /// <summary>
+        /// Gets or sets the maximum memory allocated for buffers
+        /// </summary>
+        public int MaxMemoryForBuffer
+        {
+            get => _maxMemoryForBuffer;
+            set
+            {
+                _maxMemoryForBuffer = value;
+                ApplyMemoryFields();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum memory allocated for keyframes
+        /// </summary>
+        public int MaxMemoryForKeyframes
+        {
+            get => _maxMemoryForKeyframes;
+            set
+            {
+                _maxMemoryForKeyframes = value;
+                ApplyMemoryFields();
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the maximum number of frames to try to backtrack into a keyframe before failing and trying to draw the uncomplete frame anyways
+        /// </summary>
+        public int MaxKeyframeReach
+        {
+            get => _maxKeyframeReach;
+            set
+            {
+                _maxKeyframeReach = value;
+                ApplyMemoryFields();
+            }
+        }
+
+        /// <summary>
+        /// Gets the header of the GIF stream, containing the signature and
+        /// version of the GIF standard used.
+        /// </summary>
+        public GifHeader Header { get; private set; }
+
+        /// <summary>
+        /// Gets the logical screen descriptor.
+        /// </summary>
+        /// <remarks>
+        /// The Logical Screen Descriptor contains the parameters necessary to 
+        /// define the area of the display device within which the images will 
+        /// be rendered.
+        /// The coordinates in this block are given with respect to the 
+        /// top-left corner of the virtual screen; they do not necessarily 
+        /// refer to absolute coordinates on the display device.
+        /// This implies that they could refer to window coordinates in a 
+        /// window-based environment or printer coordinates when a printer is 
+        /// used.
+        /// </remarks>
+        [Description("The Logical Screen Descriptor contains the parameters " +
+                     "necessary to define the area of the display device " +
+                     "within which the images will be rendered. " +
+                     "The coordinates in this block are given with respect " +
+                     "to the top-left corner of the virtual screen; they do " +
+                     "not necessarily refer to absolute coordinates on the " +
+                     "display device. " +
+                     "This implies that they could refer to window " +
+                     "coordinates in a window-based environment or printer " +
+                     "coordinates when a printer is used.")]
+        public LogicalScreenDescriptor LogicalScreenDescriptor { get; private set; }
+
+        /// <summary>
+        /// Gets the background colour.
+        /// </summary>
+        [Description("The default background colour for this GIF file." +
+                     "This is derived using the background colour index in the " +
+                     "Logical Screen Descriptor and looking up the colour " +
+                     "in the Global Colour Table.")]
+        public Color BackgroundColour => Color.FromArgb(GlobalColourTable[LogicalScreenDescriptor.BackgroundColourIndex]);
+
+        /// <summary>
+        /// Gets the application extensions contained within the GIF stream.
+        /// This is an array rather than a property because it looks better in
+        /// a property sheet control.
+        /// </summary>
+        [SuppressMessage("Microsoft.Performance",
+            "CA1819:PropertiesShouldNotReturnArrays")]
+        public ApplicationExtension[] ApplicationExtensions
+        {
+            get
+            {
+                ApplicationExtension[] appExts = new ApplicationExtension[_applicationExtensions.Count];
+                _applicationExtensions.CopyTo(appExts, 0);
+                return appExts;
+            }
+        }
+
+        /// <summary>
+        /// Gets the Netscape 2.0 application extension, if present.
+        /// This contains the animation's loop count.
+        /// </summary>
+        [Description("Gets the Netscape 2.0 application extension, if " +
+                     "present. This contains the animation's loop count.")]
+        public NetscapeExtension NetscapeExtension { get; private set; }
+
+        /// <summary>
+        /// Gets the frame count for this GIF file
+        /// </summary>
+        public int FrameCount => _frames.Count;
+
+        /// <summary>
+        /// Gets the global colour table for this GIF data stream, or null if the
+        /// frames have local colour tables.
+        /// </summary>
+        public ColourTable GlobalColourTable { get; private set; }
 
         /// <summary>
         /// Reads a GIF file from specified file/URL source  
@@ -269,8 +386,6 @@ namespace GIF_Viewer.GifComponents
             return false;
         }
 
-        #region Decode() method
-
         /// <summary>
         /// Decodes the supplied GIF stream.
         /// </summary>
@@ -343,161 +458,6 @@ namespace GIF_Viewer.GifComponents
             }
         }
 
-        #endregion
-
-        #region properties
-
-        /// <summary>
-        /// Gets a frame from the GIF file.
-        /// </summary>
-        public GifFrame this[int index] => GetDecodedFrameAtIndex(index);
-
-        #region Memory/Performance related properties
-
-        /// <summary>
-        /// Gets or sets the maximum memory allocated for buffers
-        /// </summary>
-        public int MaxMemoryForBuffer
-        {
-            get => _maxMemoryForBuffer;
-            set
-            {
-                _maxMemoryForBuffer = value;
-                ApplyMemoryFields();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum memory allocated for keyframes
-        /// </summary>
-        public int MaxMemoryForKeyframes
-        {
-            get => _maxMemoryForKeyframes;
-            set
-            {
-                _maxMemoryForKeyframes = value;
-                ApplyMemoryFields();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the maximum number of frames to try to backtrack into a keyframe before failing and trying to draw the uncomplete frame anyways
-        /// </summary>
-        public int MaxKeyframeReach
-        {
-            get => _maxKeyframeReach;
-            set
-            {
-                _maxKeyframeReach = value;
-                ApplyMemoryFields();
-            }
-        }
-
-        #endregion
-
-        #region Header property
-
-        /// <summary>
-        /// Gets the header of the GIF stream, containing the signature and
-        /// version of the GIF standard used.
-        /// </summary>
-        public GifHeader Header { get; private set; }
-
-        #endregion
-
-        #region Logical Screen descriptor property
-        /// <summary>
-        /// Gets the logical screen descriptor.
-        /// </summary>
-        /// <remarks>
-        /// The Logical Screen Descriptor contains the parameters necessary to 
-        /// define the area of the display device within which the images will 
-        /// be rendered.
-        /// The coordinates in this block are given with respect to the 
-        /// top-left corner of the virtual screen; they do not necessarily 
-        /// refer to absolute coordinates on the display device.
-        /// This implies that they could refer to window coordinates in a 
-        /// window-based environment or printer coordinates when a printer is 
-        /// used.
-        /// </remarks>
-        [Description("The Logical Screen Descriptor contains the parameters " +
-                      "necessary to define the area of the display device " +
-                      "within which the images will be rendered. " +
-                      "The coordinates in this block are given with respect " +
-                      "to the top-left corner of the virtual screen; they do " +
-                      "not necessarily refer to absolute coordinates on the " +
-                      "display device. " +
-                      "This implies that they could refer to window " +
-                      "coordinates in a window-based environment or printer " +
-                      "coordinates when a printer is used.")]
-        public LogicalScreenDescriptor LogicalScreenDescriptor { get; private set; }
-
-        #endregion
-
-        #region BackgroundColour property
-        /// <summary>
-        /// Gets the background colour.
-        /// </summary>
-        [Description("The default background colour for this GIF file." +
-                     "This is derived using the background colour index in the " +
-                     "Logical Screen Descriptor and looking up the colour " +
-                     "in the Global Colour Table.")]
-        public Color BackgroundColour => Color.FromArgb(GlobalColourTable[LogicalScreenDescriptor.BackgroundColourIndex]);
-
-        #endregion
-
-        #region ApplicationExtensions property
-        /// <summary>
-        /// Gets the application extensions contained within the GIF stream.
-        /// This is an array rather than a property because it looks better in
-        /// a property sheet control.
-        /// </summary>
-        [SuppressMessage("Microsoft.Performance",
-                         "CA1819:PropertiesShouldNotReturnArrays")]
-        public ApplicationExtension[] ApplicationExtensions
-        {
-            get
-            {
-                ApplicationExtension[] appExts = new ApplicationExtension[_applicationExtensions.Count];
-                _applicationExtensions.CopyTo(appExts, 0);
-                return appExts;
-            }
-        }
-        #endregion
-
-        #region NetscapeExtension property
-        /// <summary>
-        /// Gets the Netscape 2.0 application extension, if present.
-        /// This contains the animation's loop count.
-        /// </summary>
-        [Description("Gets the Netscape 2.0 application extension, if " +
-                      "present. This contains the animation's loop count.")]
-        public NetscapeExtension NetscapeExtension { get; private set; }
-
-        #endregion
-
-        #region Frame-related properties
-
-        /// <summary>
-        /// Gets the frame count for this GIF file
-        /// </summary>
-        public int FrameCount => _frames.Count;
-
-        #endregion
-
-        #region GlobalColourTable property
-        /// <summary>
-        /// Gets the global colour table for this GIF data stream, or null if the
-        /// frames have local colour tables.
-        /// </summary>
-        public ColourTable GlobalColourTable { get; private set; }
-
-        #endregion
-
-        #endregion
-
-        #region private methods
-        
         private GifFrame GetDecodedFrameAtIndex(int index)
         {
             var frame = _frames[index];
@@ -671,7 +631,5 @@ namespace GIF_Viewer.GifComponents
 
             _frames.Add(frame);
         }
-        
-        #endregion
     }
 }

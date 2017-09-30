@@ -40,18 +40,6 @@ namespace GIF_Viewer.GifComponents.Components
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public abstract class GifComponent : IDisposable
 	{
-		#region declarations
-
-		/// <summary>
-		/// The status of this component, consisting of its error state and any
-		/// associated error messages.
-		/// </summary>
-		private GifComponentStatus _status;
-		
-		#endregion
-		
-		#region public constants
-		
 		/// <summary>
 		/// Plain text label - identifies the current block as a plain text
 		/// extension.
@@ -100,35 +88,27 @@ namespace GIF_Viewer.GifComponents.Components
 		/// Value 0xFF.
 		/// </summary>
 		public const byte CodeApplicationExtensionLabel = 0xFF;
-		
-		#endregion
-		
-		#region protected default constructor
-		/// <summary>
-		/// Constructor.
-		/// This is implicitly called by constructors of derived types.
-		/// </summary>
-		protected GifComponent()
-		{
-			_status = new GifComponentStatus( ErrorState.Ok, "" );
-		}
-		#endregion 
+        
+	    /// <summary>
+	    /// Constructor.
+	    /// This is implicitly called by constructors of derived types.
+	    /// </summary>
+	    protected GifComponent()
+	    {
+	        ComponentStatus = new GifComponentStatus(ErrorState.Ok, "");
+	    }
 
-		#region public properties
-		
-		#region ComponentStatus property
-		/// <summary>
-		/// Gets the status of this component, consisting of its error state
-		/// and any associated error message.
-		/// </summary>
-		[Category( "Status" )]
+        #region public properties
+
+        /// <summary>
+        /// Gets the status of this component, consisting of its error state
+        /// and any associated error message.
+        /// </summary>
+        [Category( "Status" )]
 		[Description( "Gets the status of this component, consisting of its " +
 		              "error state and any associated error message." )]
-		public GifComponentStatus ComponentStatus => _status;
-
-	    #endregion
-		
-		#region ErrorState property
+		public GifComponentStatus ComponentStatus { get; private set; }
+        
 		/// <summary>
 		/// Gets the member of the Gif.Components.ErrorState enumeration held 
 		/// within the ComponentStatus property.
@@ -137,12 +117,8 @@ namespace GIF_Viewer.GifComponents.Components
 		[Category( "Status" )]
 		[Description( "Gets the member of the Gif.Components.ErrorState " +
 		              "enumeration held within the ComponentStatus property." )]
-		public ErrorState ErrorState => _status.ErrorState;
-
-	    #endregion
+		public ErrorState ErrorState => ComponentStatus.ErrorState;
 		
-		#region ConsolidatedState property
-
 	    /// <summary>
 	    /// Gets the combined error states of this component and all its child
 	    /// components.
@@ -227,10 +203,7 @@ namespace GIF_Viewer.GifComponents.Components
 	            return state;
 	        }
 	    }
-
-	    #endregion
-		
-		#region ErrorMessage property
+        
 		/// <summary>
 		/// Gets any error message associated with the component's error state.
 		/// </summary>
@@ -238,18 +211,10 @@ namespace GIF_Viewer.GifComponents.Components
 		[Category( "Status" )]
 		[Description( "Gets any error message associated with the component's " +
 		              "error state." )]
-		public string ErrorMessage => _status.ErrorMessage;
-
-	    #endregion
-		
+		public string ErrorMessage => ComponentStatus.ErrorMessage;
+        
 		#endregion
 		
-		#region methods
-		
-		#region public methods
-		
-		#region override ToString method
-
 	    /// <summary>
 	    /// Gets a string representation of the error status of this component
 	    /// and its subcomponents.
@@ -263,91 +228,73 @@ namespace GIF_Viewer.GifComponents.Components
 	        return ConsolidatedState.ToString();
 	    }
 
-	    #endregion
-		
-		#region public TestState method
-		/// <summary>
-		/// Tests whether the error state of this component or any of its member
-		/// components contains the supplied member of the ErrorState 
-		/// enumeration.
-		/// </summary>
-		/// <param name="state">
-		/// The error state to look for in the current instance's state.
-		/// </param>
-		/// <returns>
-		/// True if the current instance's error state includes the supplied
-		/// error state, otherwise false.
-		/// </returns>
-		public bool TestState( ErrorState state )
-		{
-			return( ConsolidatedState & state ) == state;
-		}
-		#endregion
-
-		#endregion
-		
-		#region protected SetStatus method
-		/// <summary>
-		/// Sets the ComponentStatus property of thie GifComponent.
-		/// </summary>
-		/// <param name="errorState">
-		/// A member of the Gif.Components.ErrorState enumeration.
-		/// </param>
-		/// <param name="errorMessage">
-		/// An error message associated with the error state.
-		/// </param>
-		protected void SetStatus( ErrorState errorState, string errorMessage )
-		{
-			ErrorState newState = _status.ErrorState | errorState;
-			string newMessage = _status.ErrorMessage;
-			if( !String.IsNullOrEmpty( newMessage ) )
-			{
-				newMessage += Environment.NewLine;
-			}
-			newMessage += errorMessage;
-			_status = new GifComponentStatus( newState, newMessage );
-		}
-		#endregion
-
-		#region protected static ToHex method
-		/// <summary>
-		/// Converts the supplied integer to a 2-character hexadecimal value.
-		/// </summary>
-		/// <param name="value">The integer to convert</param>
-		/// <returns>A 2-character hexadecimal value</returns>
-		protected static string ToHex( int value )
-		{
-			return string.Format( CultureInfo.InvariantCulture, 
-			                      "{0:X2}",
-			                      value );
-		}
-		#endregion
-		// TODO: consider moving methods for interacting with the GIF stream into their own class.
-		#region methods for reading the GIF stream
-		
-		#region protected static Read method
-
 	    /// <summary>
-	    /// Reads a single byte from the input stream and advances the position
-	    /// within the stream by one byte, or returns -1 if at the end of the
-	    /// stream.
+	    /// Tests whether the error state of this component or any of its member
+	    /// components contains the supplied member of the ErrorState 
+	    /// enumeration.
 	    /// </summary>
-	    /// <param name="inputStream">
-	    /// The input stream to read.
+	    /// <param name="state">
+	    /// The error state to look for in the current instance's state.
 	    /// </param>
 	    /// <returns>
-	    /// The unsigned byte, cast to an Int32, or -1 if at the end of the 
-	    /// stream.
+	    /// True if the current instance's error state includes the supplied
+	    /// error state, otherwise false.
 	    /// </returns>
-	    protected static int Read(Stream inputStream)
+	    public bool TestState(ErrorState state)
+	    {
+	        return (ConsolidatedState & state) == state;
+	    }
+
+        /// <summary>
+        /// Sets the ComponentStatus property of thie GifComponent.
+        /// </summary>
+        /// <param name="errorState">
+        /// A member of the Gif.Components.ErrorState enumeration.
+        /// </param>
+        /// <param name="errorMessage">
+        /// An error message associated with the error state.
+        /// </param>
+        protected void SetStatus(ErrorState errorState, string errorMessage)
+	    {
+	        var newState = ComponentStatus.ErrorState | errorState;
+	        string newMessage = ComponentStatus.ErrorMessage;
+	        if (!string.IsNullOrEmpty(newMessage))
+	        {
+	            newMessage += Environment.NewLine;
+	        }
+	        newMessage += errorMessage;
+	        ComponentStatus = new GifComponentStatus(newState, newMessage);
+	    }
+
+        /// <summary>
+        /// Converts the supplied integer to a 2-character hexadecimal value.
+        /// </summary>
+        /// <param name="value">The integer to convert</param>
+        /// <returns>A 2-character hexadecimal value</returns>
+        protected static string ToHex(int value)
+	    {
+	        return string.Format(CultureInfo.InvariantCulture, "{0:X2}", value);
+	    }
+
+        // TODO: consider moving methods for interacting with the GIF stream into their own class.
+
+        /// <summary>
+        /// Reads a single byte from the input stream and advances the position
+        /// within the stream by one byte, or returns -1 if at the end of the
+        /// stream.
+        /// </summary>
+        /// <param name="inputStream">
+        /// The input stream to read.
+        /// </param>
+        /// <returns>
+        /// The unsigned byte, cast to an Int32, or -1 if at the end of the 
+        /// stream.
+        /// </returns>
+        protected static int Read(Stream inputStream)
 	    {
 	        return inputStream.ReadByte();
 	    }
-
-	    #endregion
-
-		#region protected static ReadShort method
-
+        
 	    /// <summary>
 	    /// Reads next 16-bit value, least significant byte first, and advances 
 	    /// the position within the stream by two bytes.
@@ -380,10 +327,7 @@ namespace GIF_Viewer.GifComponents.Components
 
 	        return returnValue;
 	    }
-
-	    #endregion
-
-		#region protected SkipBlocks method
+        
 		/// <summary>
 		/// Skips variable length blocks up to and including next zero length 
 		/// block (block terminator).
@@ -406,13 +350,7 @@ namespace GIF_Viewer.GifComponents.Components
         {
             while (DataBlock.SkipStream(inputStream) > 0) { }
         }
-		#endregion
-
-		#endregion
         
-		#endregion
-
-		#region IDisposable implementation
 		/// <summary>
 		/// Indicates whether or not the Dispose( bool ) method has already been 
 		/// called.
@@ -450,10 +388,6 @@ namespace GIF_Viewer.GifComponents.Components
 				// new shared cleanup logic
 				_disposed = true;
 			}
-
-			// Uncomment if the base type also implements IDisposable
-//			base.Dispose( disposing );
 		}
-		#endregion
 	}
 }

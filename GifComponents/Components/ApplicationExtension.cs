@@ -42,14 +42,6 @@ namespace GIF_Viewer.GifComponents.Components
                  "and its block label is 0xFF.")]
     public class ApplicationExtension : GifComponent
     {
-        #region declarations
-        private DataBlock _identificationBlock;
-        private string _applicationIdentifier;
-        private string _applicationAuthenticationCode;
-
-        #endregion
-
-        #region constructor( DataBlock, Collection<DataBlock> )
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -64,9 +56,7 @@ namespace GIF_Viewer.GifComponents.Components
         {
             SaveData(identificationBlock, applicationData);
         }
-        #endregion
-
-        #region constructor( Stream )
+        
         /// <summary>
         /// Reads and returns an application extension from the supplied input 
         /// stream.
@@ -76,8 +66,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// </param>
         public ApplicationExtension(Stream inputStream)
         {
-            DataBlock identificationBlock = new DataBlock(inputStream);
-            Collection<DataBlock> applicationData = new Collection<DataBlock>();
+            var identificationBlock = new DataBlock(inputStream);
+            var applicationData = new Collection<DataBlock>();
             if (!identificationBlock.TestState(ErrorState.EndOfInputStream))
             {
                 // Read application specific data
@@ -95,27 +85,25 @@ namespace GIF_Viewer.GifComponents.Components
 
             SaveData(identificationBlock, applicationData);
         }
-        #endregion
-
-        #region private SaveData method
+        
         private void SaveData(DataBlock identificationBlock,
                                Collection<DataBlock> applicationData)
         {
-            _identificationBlock = identificationBlock;
+            IdentificationBlock = identificationBlock;
 
-            if (_identificationBlock.Data.Length < 11)
+            if (IdentificationBlock.Data.Length < 11)
             {
                 string message
                     = "The identification block should be 11 bytes long but "
-                    + "is only " + _identificationBlock.Data.Length + " bytes.";
+                    + "is only " + IdentificationBlock.Data.Length + " bytes.";
                 throw new ArgumentException(message, nameof(identificationBlock));
             }
 
-            if (_identificationBlock.Data.Length > 11)
+            if (IdentificationBlock.Data.Length > 11)
             {
                 string message
                     = "The identification block should be 11 bytes long but "
-                    + "is " + _identificationBlock.Data.Length + " bytes long. "
+                    + "is " + IdentificationBlock.Data.Length + " bytes long. "
                     + "Additional bytes are ignored.";
                 SetStatus(ErrorState.IdentificationBlockTooLong, message);
             }
@@ -124,36 +112,29 @@ namespace GIF_Viewer.GifComponents.Components
             var sb = new StringBuilder();
             for (int i = 0; i < 8; i++)
             {
-                sb.Append((char)_identificationBlock[i]);
+                sb.Append((char)IdentificationBlock[i]);
             }
-            _applicationIdentifier = sb.ToString();
+            ApplicationIdentifier = sb.ToString();
 
             // Read application authentication code
             sb = new StringBuilder();
             for (int i = 8; i < 11; i++)
             {
-                sb.Append((char)_identificationBlock[i]);
+                sb.Append((char)IdentificationBlock[i]);
             }
-            _applicationAuthenticationCode = sb.ToString();
+            ApplicationAuthenticationCode = sb.ToString();
 
             ApplicationData = applicationData;
         }
-        #endregion
 
-        #region logical properties
-
-        #region IdentificationBlock property
         /// <summary>
         /// Returns a data block which identifies the application defining this 
         /// extension.
         /// </summary>
         [Description("Returns a data block which identifies the application " +
                      "defining this extension.")]
-        public DataBlock IdentificationBlock => _identificationBlock;
+        public DataBlock IdentificationBlock { get; private set; }
 
-        #endregion
-
-        #region ApplicationIdentifier property
         /// <summary>
         /// Sequence of eight printable ASCII characters used to identify the 
         /// application owning the Application Extension.
@@ -161,11 +142,8 @@ namespace GIF_Viewer.GifComponents.Components
         [Description("Sequence of eight printable ASCII characters used " +
                      "to identify the application owning the Application " +
                      "Extension.")]
-        public string ApplicationIdentifier => _applicationIdentifier;
+        public string ApplicationIdentifier { get; private set; }
 
-        #endregion
-
-        #region ApplicationAuthenticationCode property
         /// <summary>
         /// Sequence of three bytes used to authenticate the Application 
         /// Identifier. 
@@ -178,19 +156,12 @@ namespace GIF_Viewer.GifComponents.Components
                      "An Application program may use an algorithm to compute " +
                      "a binary code that uniquely identifies it as the " +
                      "application owning the Application Extension.")]
-        public string ApplicationAuthenticationCode => _applicationAuthenticationCode;
+        public string ApplicationAuthenticationCode { get; private set; }
 
-        #endregion
-
-        #region ApplicationData property
         /// <summary>
         /// Data specific to the application declared by the 
         /// <see cref="ApplicationIdentifier"/>
         /// </summary>
         public Collection<DataBlock> ApplicationData { get; private set; }
-
-        #endregion
-
-        #endregion
     }
 }

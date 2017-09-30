@@ -1,4 +1,3 @@
-#region Copyright (C) Simon Bridewell, Kevin Weiner
 // 
 // This file is part of the GifComponents library.
 // GifComponents is free software; you can redistribute it and/or
@@ -19,9 +18,7 @@
 //
 // Simon Bridewell makes no claim to be the original author of this library,
 // only to have created a derived work.
-#endregion
 
-#region changes
 /*
  Amended by Simon Bridewell June 2009-February 2010:
  1. Made member variables private.
@@ -33,7 +30,6 @@
     (bug 2940635).
  7. Corrected decoding of frames with transparent pixels (bug 2940669)
 */
-#endregion
 
 using System;
 using System.ComponentModel;
@@ -53,15 +49,11 @@ namespace GIF_Viewer.GifComponents.Components
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public class GifFrame : GifComponent
     {
-        #region declarations
-
         private bool _keyframe;
-        private int _delay;
         private bool _expectsUserInput;
         private Point _position;
         private ColourTable _localColourTable;
         private GraphicControlExtension _extension;
-        private Color _backgroundColour;
         private readonly Stream _inputStream;
         private readonly LogicalScreenDescriptor _logicalScreenDescriptor;
         private readonly ColourTable _globalColourTable;
@@ -85,12 +77,6 @@ namespace GIF_Viewer.GifComponents.Components
         private bool _isImagePartial;
         private readonly GifFrame _previousFrame;
         private readonly GifFrame _previousFrameBut1;
-
-        #endregion
-
-        #region constructors
-
-        #region constructor( Stream, , , , , , )
 
         /// <summary>
         /// Creates and returns a GifFrame by reading its data from the supplied
@@ -149,41 +135,20 @@ namespace GIF_Viewer.GifComponents.Components
             Skip();
         }
 
-        #endregion
-
-        #endregion
-
-        #region properties
-
-        #region read/write properties
-
-        #region Delay property
         /// <summary>
         /// Gets and sets the delay in hundredths of a second before showing 
         /// the next frame.
         /// </summary>
         [Description("The delay in hundredths of a second before showing " +
                       "the next frame in the animation")]
-        public int Delay
-        {
-            get => _delay;
-            set => _delay = value;
-        }
-        #endregion
+        public int Delay { get; set; }
 
-        #region BackgroundColour property
         /// <summary>
         /// Gets and sets the background colour of the current frame
         /// </summary>
         [Description("The background colour for this frame.")]
-        public Color BackgroundColour
-        {
-            get => _backgroundColour;
-            set => _backgroundColour = value;
-        }
-        #endregion
+        public Color BackgroundColour { get; set; }
 
-        #region ExpectsUserInput property
         /// <summary>
         /// Gets a flag indicating whether the device displaying the animation
         /// should wait for user input (e.g. a mouse click or key press) before
@@ -201,17 +166,7 @@ namespace GIF_Viewer.GifComponents.Components
                       "click or key press) before displaying the next frame.")]
         public bool ExpectsUserInput
         {
-            get
-            {
-                if (_extension == null)
-                {
-                    return _expectsUserInput;
-                }
-                else
-                {
-                    return _extension.ExpectsUserInput;
-                }
-            }
+            get => _extension?.ExpectsUserInput ?? _expectsUserInput;
             set
             {
                 if (_extension == null)
@@ -227,9 +182,7 @@ namespace GIF_Viewer.GifComponents.Components
                 }
             }
         }
-        #endregion
 
-        #region Position property
         /// <summary>
         /// Gets and sets the position of this frame's image within the logical
         /// screen.
@@ -245,15 +198,7 @@ namespace GIF_Viewer.GifComponents.Components
                       "within the logical screen.")]
         public Point Position
         {
-            get
-            {
-                if (ImageDescriptor == null)
-                {
-                    return _position;
-                }
-
-                return ImageDescriptor.Position;
-            }
+            get => ImageDescriptor?.Position ?? _position;
             set
             {
                 if (ImageDescriptor == null)
@@ -267,7 +212,6 @@ namespace GIF_Viewer.GifComponents.Components
                 }
             }
         }
-        #endregion
 
         /// <summary>
         /// Gets or sets whether this frame is a keyword
@@ -277,10 +221,6 @@ namespace GIF_Viewer.GifComponents.Components
             get => _keyframe;
             set => _keyframe = value;
         }
-
-        #endregion
-
-        #region read-only properties
 
         /// <summary>
         /// The index of this frame on the animation
@@ -292,7 +232,6 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         public long StreamOffset { get; }
 
-        #region TheImage property
         /// <summary>
         /// Gets the image held in this frame.
         /// </summary>
@@ -300,9 +239,6 @@ namespace GIF_Viewer.GifComponents.Components
         [Category("Set by decoder")]
         public Bitmap TheImage { get; private set; }
 
-        #endregion
-
-        #region LocalColourTable property
         /// <summary>
         /// Gets the local colour table for this frame.
         /// </summary>
@@ -310,9 +246,6 @@ namespace GIF_Viewer.GifComponents.Components
         [Category("Set by decoder")]
         public ColourTable LocalColourTable => _localColourTable;
 
-        #endregion
-
-        #region GraphicControlExtension property
         /// <summary>
         /// Gets the graphic control extension which precedes this image.
         /// </summary>
@@ -320,9 +253,6 @@ namespace GIF_Viewer.GifComponents.Components
         [Category("Set by decoder")]
         public GraphicControlExtension GraphicControlExtension => _extension;
 
-        #endregion
-
-        #region ImageDescriptor property
         /// <summary>
         /// Gets the image descriptor for this frame.
         /// </summary>
@@ -332,14 +262,6 @@ namespace GIF_Viewer.GifComponents.Components
                       "whether the colour table is global or local, whether " +
                       "it is sorted, and whether the image is interlaced.")]
         public ImageDescriptor ImageDescriptor { get; private set; }
-
-        #endregion
-
-        #endregion
-
-        #endregion
-
-        #region public methods
 
         /// <summary>
         /// Recursively checks whether the current sequence of frames requires redrawing
@@ -457,7 +379,6 @@ namespace GIF_Viewer.GifComponents.Components
 
             var imageDescriptor = new ImageDescriptor(_inputStream);
 
-            #region determine the colour table to use for this frame
             var backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
             // TODO: use backgroundColourIndex from the logical screen descriptor?
             ColourTable activeColourTable;
@@ -474,7 +395,7 @@ namespace GIF_Viewer.GifComponents.Components
                     // won't be able to decode this frame.
                     var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
                     TheImage = emptyBitmap;
-                    _delay = _graphicControlExtension.DelayTime;
+                    Delay = _graphicControlExtension.DelayTime;
                     SetStatus(ErrorState.FrameHasNoColourTable, "");
                     return;
                 }
@@ -485,7 +406,6 @@ namespace GIF_Viewer.GifComponents.Components
                     backgroundColour = Color.FromArgb(0);
                 }
             }
-            #endregion
 
             // decode pixel data
             int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
@@ -496,7 +416,7 @@ namespace GIF_Viewer.GifComponents.Components
                 // TODO: probably not possible as TBID constructor rejects 0 pixels
                 var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
                 TheImage = emptyBitmap;
-                _delay = _graphicControlExtension.DelayTime;
+                Delay = _graphicControlExtension.DelayTime;
                 SetStatus(ErrorState.FrameHasNoImageData, "");
                 return;
             }
@@ -507,10 +427,10 @@ namespace GIF_Viewer.GifComponents.Components
 
             if (_graphicControlExtension != null)
             {
-                _delay = _graphicControlExtension.DelayTime;
+                Delay = _graphicControlExtension.DelayTime;
             }
             ImageDescriptor = imageDescriptor;
-            _backgroundColour = backgroundColour;
+            BackgroundColour = backgroundColour;
             TheImage = CreateBitmap(tbid, _logicalScreenDescriptor, imageDescriptor, activeColourTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
             
             CheckRequiresRedraw();
@@ -522,10 +442,6 @@ namespace GIF_Viewer.GifComponents.Components
 
             _isLoaded = true;
         }
-
-        #endregion
-
-        #region private methods
 
         /// <summary>
         /// Skips the stream past the frame
@@ -548,8 +464,6 @@ namespace GIF_Viewer.GifComponents.Components
 
             TableBasedImageData.SkipOnStream(_inputStream);
         }
-
-        #region private static CreateBitmap( ) method
 
         /// <summary>
         /// Sets the pixels of the decoded image.
@@ -611,7 +525,6 @@ namespace GIF_Viewer.GifComponents.Components
                 int pixelRowNumber = i;
                 if (id.IsInterlaced)
                 {
-                    #region work out the pixel row we're setting for an interlaced image
                     if (interlaceRowNumber >= imageHeight)
                     {
                         pass++;
@@ -630,7 +543,6 @@ namespace GIF_Viewer.GifComponents.Components
                                 break;
                         }
                     }
-                    #endregion
                     pixelRowNumber = interlaceRowNumber;
                     interlaceRowNumber += interlaceRowIncrement;
                 }
@@ -678,10 +590,6 @@ namespace GIF_Viewer.GifComponents.Components
             return baseImage;
         }
 
-        #endregion
-
-        #region private static GetBaseImage method
-
         /// <summary>
         /// Gets the base image for this frame. This will be overpainted with
         /// the pixels for this frame, where they are not transparent.
@@ -708,8 +616,6 @@ namespace GIF_Viewer.GifComponents.Components
         {
             RecurseGraphicControlExtension();
 
-            #region Get the disposal method of the previous frame read from the GIF stream
-
             DisposalMethod previousDisposalMethod;
             if (previousFrame == null)
             {
@@ -725,16 +631,12 @@ namespace GIF_Viewer.GifComponents.Components
                 }
             }
 
-            #endregion
-
             Bitmap baseImage;
             int width = lsd.LogicalScreenSize.Width;
             int height = lsd.LogicalScreenSize.Height;
             int backgroundColorIndex = previousFrame?._logicalScreenDescriptor.BackgroundColourIndex ?? lsd.BackgroundColourIndex;
             int transparentColorIndex = previousFrame?._graphicControlExtension.TransparentColourIndex ?? gce.TransparentColourIndex;
             act = previousFrame == null ? act : previousFrame._localColourTable ?? _globalColourTable;
-
-            #region paint baseImage
 
             if (previousDisposalMethod == DisposalMethod.RestoreToPrevious || previousFrame?.TheImage == null)
             {
@@ -799,13 +701,8 @@ namespace GIF_Viewer.GifComponents.Components
 
                     break;
             }
-            #endregion
 
             return baseImage;
         }
-
-        #endregion
-
-        #endregion
     }
 }

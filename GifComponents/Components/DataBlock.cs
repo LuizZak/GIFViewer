@@ -63,17 +63,9 @@ namespace GIF_Viewer.GifComponents.Components
             inputStream.Position += blockSize;
             return blockSize;
         }
-
-		#region declarations
-		
-        private int _blockSize;
-        private int _dataLength;
-		private byte[] _data;
-
-        #endregion
-		
-		#region constructor
-
+        
+	    private int _dataLength;
+        
 	    /// <summary>
 	    /// Constructor.
 	    /// </summary>
@@ -87,11 +79,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    {
 	        SaveData(blockSize, data);
 	    }
-
-	    #endregion
-		
-		#region constructor( Stream, bool )
-
+        
 	    /// <summary>
 	    /// Reads the next variable length data block from the input stream.
 	    /// </summary>
@@ -141,11 +129,7 @@ namespace GIF_Viewer.GifComponents.Components
 	            SetStatus(ErrorState.DataBlockTooShort, message);
 	        }
 	    }
-
-	    #endregion
-
-		#region private SaveData method
-
+        
 	    private void SaveData(int blockSize, byte[] data)
 	    {
 	        if (data == null)
@@ -164,46 +148,30 @@ namespace GIF_Viewer.GifComponents.Components
 	            SetStatus(ErrorState.DataBlockTooLong, message);
 	        }
 
-	        _blockSize = blockSize;
+	        DeclaredBlockSize = blockSize;
             _dataLength = data.Length;
-	        _data = data;
+	        Data = data;
 	    }
-
-	    #endregion
-		
-		#region DeclaredBlockSize property
-
+        
 	    /// <summary>
 	    /// Gets the block size held in the first byte of this data block.
 	    /// This should be the same as the actual length of the data block but
 	    /// may not be if the data block was instantiated from a corrupt stream
 	    /// - check the ErrorStatus property.
 	    /// </summary>
-	    public int DeclaredBlockSize => _blockSize;
-
-	    #endregion
-		
-		#region ActualBlockSize property
+	    public int DeclaredBlockSize { get; private set; }
 
 	    /// <summary>
 	    /// Gets the actual length of the data block.
 	    /// </summary>
-	    public int ActualBlockSize => _data.Length;
-
-	    #endregion
-		
-		#region Data property
-
+	    public int ActualBlockSize => Data.Length;
+        
 	    /// <summary>
 	    /// Gets the byte array containing the data in this data sub-block.
 	    /// This does not include the first byte which holds the block size.
 	    /// </summary>
 	    [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
-	    public byte[] Data => _data;
-
-	    #endregion
-
-		#region indexer
+	    public byte[] Data { get; private set; }
 
 	    /// <summary>
 	    /// Gets a specific byte within the data block
@@ -214,15 +182,13 @@ namespace GIF_Viewer.GifComponents.Components
 	        {
                 if (index >= _dataLength)
 	            {
-	                string message = "Supplied index: " + index + ". Array length: " + _data.Length;
+	                string message = "Supplied index: " + index + ". Array length: " + Data.Length;
 	                throw new ArgumentOutOfRangeException(nameof(index), message);
 	            }
-	            return _data[index];
+	            return Data[index];
 	        }
 	    }
-
-	    #endregion
-
+        
         /// <summary>
         /// Gets the combined error states of this component and all its child
         /// components.

@@ -34,46 +34,33 @@ namespace GIF_Viewer.GifComponents.Types
 	[TypeConverter( typeof( ExpandableObjectConverter ) )]
 	public class GifComponentStatus
 	{
-		#region declarations
+	    /// <summary>
+	    /// Constructor.
+	    /// </summary>
+	    /// <param name="errorState">
+	    /// A member of the Gif.Components.ErrorState enumeration.
+	    /// </param>
+	    /// <param name="errorMessage">
+	    /// Any error message associated with the error state.
+	    /// </param>
+	    public GifComponentStatus(ErrorState errorState, string errorMessage)
+	    {
+	        ErrorState = errorState;
+	        ErrorMessage = errorMessage;
+	    }
 
-	    #endregion
-		
-		#region constructor
-		/// <summary>
-		/// Constructor.
-		/// </summary>
-		/// <param name="errorState">
-		/// A member of the Gif.Components.ErrorState enumeration.
-		/// </param>
-		/// <param name="errorMessage">
-		/// Any error message associated with the error state.
-		/// </param>
-		public GifComponentStatus( ErrorState errorState, string errorMessage )
-		{
-			ErrorState = errorState;
-			ErrorMessage = errorMessage;
-		}
-		#endregion
-
-		#region public ErrorState property
-		/// <summary>
-		/// Gets a member of the GifComponents.ErrorState enumeration 
-		/// describing the error state of a component of a GIF data stream.
-		/// </summary>
-		public ErrorState ErrorState { get; }
-
-	    #endregion
-		
-		#region ErrorMessage property
+        /// <summary>
+        /// Gets a member of the GifComponents.ErrorState enumeration 
+        /// describing the error state of a component of a GIF data stream.
+        /// </summary>
+        public ErrorState ErrorState { get; }
+        
 		/// <summary>
 		/// Gets any error message associated with the status of a GIF 
 		/// component.
 		/// </summary>
 		public string ErrorMessage { get; }
-
-	    #endregion
-
-		#region ToString method
+        
 		/// <summary>
 		/// Gets a string representation of the GifComponentStatus's ErrorState
 		/// property.
@@ -85,6 +72,5 @@ namespace GIF_Viewer.GifComponents.Types
 		{
 			return ErrorState.ToString();
 		}
-		#endregion
 	}
 }

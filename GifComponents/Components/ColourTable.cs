@@ -32,19 +32,11 @@ namespace GIF_Viewer.GifComponents.Components
     /// </summary>
     public class ColourTable : GifComponent
     {
-        #region declarations
-        
         /// <summary>
         /// The colours in the colour table in INT form
         /// </summary>
         private readonly int[] _intColours;
-
-        #endregion
-
-        #region constructors
         
-        #region constructor( Stream, int, bool )
-
         /// <summary>
         /// Reads and returns a colour table from the supplied input stream.
         /// </summary>
@@ -86,29 +78,14 @@ namespace GIF_Viewer.GifComponents.Components
                 }
             }
         }
-        #endregion
-
-        #endregion
-
-        #region properties
-
-        #region Colours property
         
         public int[] IntColours => _intColours.ToArray();
-
-        #endregion
-
-        #region Length property
-
+        
         /// <summary>
         /// Gets the number of colours in the colour table.
         /// </summary>
         public int Length => _intColours.Length;
-
-        #endregion
-
-        #region SizeBits property
-
+        
         /// <summary>
         /// Gets the number of bits required to hold the length of the colour
         /// table, minus 1.
@@ -146,13 +123,7 @@ namespace GIF_Viewer.GifComponents.Components
                 }
             }
         }
-
-        #endregion
-
-        #endregion
-
-        #region indexer
-
+        
         /// <summary>
         /// Gets or sets the colour at the specified index in the colour table.
         /// </summary>
@@ -172,13 +143,7 @@ namespace GIF_Viewer.GifComponents.Components
                 _intColours[index] = value;
             }
         }
-
-        #endregion
-
-        #region methods
         
-        #region private ValidateIndex method
-
         private void ValidateIndex(int index)
         {
             if (index >= _intColours.Length || index < 0)
@@ -189,11 +154,7 @@ namespace GIF_Viewer.GifComponents.Components
                 throw new ArgumentOutOfRangeException(nameof(index), message);
             }
         }
-
-        #endregion
-
-        #endregion
-
+        
         /// <summary>
         /// Skips a whole color table block on a given stream
         /// </summary>

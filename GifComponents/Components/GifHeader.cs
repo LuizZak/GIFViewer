@@ -1,4 +1,3 @@
-#region Copyright (C) Simon Bridewell
 // 
 // This file is part of the GifComponents library.
 // GifComponents is free software; you can redistribute it and/or
@@ -19,7 +18,6 @@
 //
 // Simon Bridewell makes no claim to be the original author of this library,
 // only to have created a derived work.
-#endregion
 
 using System.ComponentModel;
 using System.IO;
@@ -42,10 +40,6 @@ namespace GIF_Viewer.GifComponents.Components
     /// </remarks>
     public class GifHeader : GifComponent
     {
-        private readonly string _signature;
-        private readonly string _gifVersion;
-
-        #region constructor( logical properties )
         /// <summary>
         /// Constructor.
         /// </summary>
@@ -58,19 +52,16 @@ namespace GIF_Viewer.GifComponents.Components
         /// </param>
         public GifHeader(string signature, string gifVersion)
         {
-            _signature = signature;
-            _gifVersion = gifVersion;
+            Signature = signature;
+            Version = gifVersion;
 
-            if (_signature != "GIF")
+            if (Signature != "GIF")
             {
-                string errorInfo = "Bad signature: " + _signature;
+                string errorInfo = "Bad signature: " + Signature;
                 const ErrorState status = ErrorState.BadSignature;
                 SetStatus(status, errorInfo);
             }
         }
-        #endregion
-
-        #region constructor( Stream, bool )
 
         /// <summary>
         /// Constructor.
@@ -82,7 +73,7 @@ namespace GIF_Viewer.GifComponents.Components
         public GifHeader(Stream inputStream)
         {
 
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             // Read 6 bytes from the GIF stream
             // These should contain the signature and GIF version.
             bool endOfFile = false;
@@ -104,37 +95,30 @@ namespace GIF_Viewer.GifComponents.Components
 
             string headerString = sb.ToString();
 
-            _signature = headerString.Substring(0, 3);
-            _gifVersion = headerString.Substring(3, 3);
-            if (_signature != "GIF")
+            Signature = headerString.Substring(0, 3);
+            Version = headerString.Substring(3, 3);
+            if (Signature != "GIF")
             {
-                string errorInfo = "Bad signature: " + _signature;
+                string errorInfo = "Bad signature: " + Signature;
                 const ErrorState status = ErrorState.BadSignature;
                 SetStatus(status, errorInfo);
             }
         }
-        #endregion
 
-        #region Signature property
         /// <summary>
         /// Gets the signature which introduces the GIF stream.
         /// This should contain the fixed value "GIF".
         /// </summary>
         [Description("The signature which introduces the GIF stream. " +
                      "This should contain the fixed value \"GIF\".")]
-        public string Signature => _signature;
+        public string Signature { get; }
 
-        #endregion
-
-        #region Version property
         /// <summary>
         /// Gets the version of the Graphics Interchange Format used by the GIF 
         /// stream which contains this header.
         /// </summary>
         [Description("The version of the Graphics Interchange Format used " +
                      "by the GIF stream which contains this header.")]
-        public string Version => _gifVersion;
-
-        #endregion
+        public string Version { get; }
     }
 }

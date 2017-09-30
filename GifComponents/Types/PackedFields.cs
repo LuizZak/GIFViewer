@@ -1,4 +1,3 @@
-#region Copyright (C) Simon Bridewell
 // 
 // This file is part of the GifComponents library.
 // GifComponents is free software; you can redistribute it and/or
@@ -19,7 +18,6 @@
 //
 // Simon Bridewell makes no claim to be the original author of this library,
 // only to have created a derived work.
-#endregion
 
 using System;
 
@@ -33,7 +31,6 @@ namespace GIF_Viewer.GifComponents.Types
 	{
 	    private readonly bool[] _bits;
 
-	    #region default constructor
 	    /// <summary>
 	    /// Constructor.
 	    /// </summary>
@@ -41,9 +38,7 @@ namespace GIF_Viewer.GifComponents.Types
 	    {
 	        _bits = new bool[8];
 	    }
-	    #endregion
-
-	    #region constructor( int )
+        
 	    /// <summary>
 	    /// Constructor.
 	    /// Sets the bits in the packed fields to the corresponding bits from
@@ -63,9 +58,7 @@ namespace GIF_Viewer.GifComponents.Types
 	            _bits[i] = bit;
 	        }
 	    }
-	    #endregion
 
-	    #region Byte property
 	    /// <summary>
 	    /// Gets the byte which represents the data items held in the packed 
 	    /// fields.
@@ -93,9 +86,7 @@ namespace GIF_Viewer.GifComponents.Types
 	            return returnValue;
 	        }
 	    }
-	    #endregion
-
-	    #region SetBit method
+        
 	    /// <summary>
 	    /// Sets the specified bit within the packed fields to the supplied 
 	    /// value.
@@ -117,9 +108,7 @@ namespace GIF_Viewer.GifComponents.Types
 	        }
 	        _bits[index] = valueToSet;
 	    }
-	    #endregion
 
-	    #region SetBits method
 	    /// <summary>
 	    /// Sets the specified bits within the packed fields to the supplied 
 	    /// value.
@@ -158,16 +147,14 @@ namespace GIF_Viewer.GifComponents.Types
 	        int bitShift = length - 1;
 	        for (int i = startIndex; i < startIndex + length; i++)
 	        {
-	            var bitValueIfSet = (1 << bitShift);
-	            var bitValue = (valueToSet & bitValueIfSet);
-	            var bitIsSet = (bitValue >> bitShift);
-	            _bits[i] = (bitIsSet == 1);
+	            var bitValueIfSet = 1 << bitShift;
+	            var bitValue = valueToSet & bitValueIfSet;
+	            var bitIsSet = bitValue >> bitShift;
+	            _bits[i] = bitIsSet == 1;
 	            bitShift--;
 	        }
 	    }
-	    #endregion
 
-	    #region GetBit method
 	    /// <summary>
 	    /// Gets the value of the specified bit within the byte.
 	    /// </summary>
@@ -186,11 +173,10 @@ namespace GIF_Viewer.GifComponents.Types
 	                  + index;
 	            throw new ArgumentOutOfRangeException(nameof(index), message);
 	        }
+
 	        return _bits[index];
 	    }
-	    #endregion
 
-	    #region GetBits method
 	    /// <summary>
 	    /// Gets the value of the specified bits within the byte.
 	    /// </summary>
@@ -234,6 +220,5 @@ namespace GIF_Viewer.GifComponents.Types
 	        }
 	        return returnValue;
 	    }
-	    #endregion
     }
 }
