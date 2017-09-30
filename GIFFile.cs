@@ -23,7 +23,7 @@ namespace GIF_Viewer
         /// <summary>
         /// The decoder holding the information about the currently loaded .gif file
         /// </summary>
-        private GifDecoder _gifDecoded;
+        private GifDecoder _gifDecoder;
 
         /// <summary>
         /// Whether there is a GIF file currently loaded on this GIFFile object
@@ -82,24 +82,33 @@ namespace GIF_Viewer
         public void Dispose()
         {
             CurrentFrameBitmap.Dispose();
-            _gifDecoded.Dispose();
+            _gifDecoder.Dispose();
 
-            _gifDecoded = null;
+            _gifDecoder = null;
         }
 
         /// <summary>
         /// Applies the memory settings to the currently loaded gif file
         /// </summary>
-        public void ApplyMemorySettings()
+        public void ApplyUserSelectedMemorySettings()
         {
-            if (_gifDecoded == null || !Loaded)
+            ApplyMemorySettings(Settings.Instance.MaxBufferMemory * 1024 * 1024,
+                Settings.Instance.MaxKeyframeMemory * 1024 * 1024, Settings.Instance.MaxKeyframeReach);
+        }
+
+        /// <summary>
+        /// Applies the memory settings to the currently loaded gif file
+        /// </summary>
+        public void ApplyMemorySettings(int maxMemoryForBuffer, int maxMemoryForKeyframes, int maxKeyframeReach)
+        {
+            if (_gifDecoder == null || !Loaded)
                 return;
 
-            _gifDecoded.MaxMemoryForBuffer    = Settings.Instance.MaxBufferMemory * 1024 * 1024;
-            _gifDecoded.MaxMemoryForKeyframes = Settings.Instance.MaxKeyframeMemory * 1024 * 1024;
-            _gifDecoded.MaxKeyframeReach = Settings.Instance.MaxKeyframeReach;
+            _gifDecoder.MaxMemoryForBuffer = maxMemoryForBuffer;
+            _gifDecoder.MaxMemoryForKeyframes = maxMemoryForKeyframes;
+            _gifDecoder.MaxKeyframeReach = maxKeyframeReach;
 
-            _gifDecoded.ApplyMemoryFields();
+            _gifDecoder.ApplyMemoryFields();
         }
 
         /// <summary>
@@ -114,43 +123,43 @@ namespace GIF_Viewer
             GifPath = path;
 
             // Decode the gif file
-            _gifDecoded?.Dispose();
-            _gifDecoded = new GifDecoder(path);
-            _gifDecoded.Decode();
+            _gifDecoder?.Dispose();
+            _gifDecoder = new GifDecoder(path);
+            _gifDecoder.Decode();
 
-            if (_gifDecoded.ConsolidatedState != ErrorState.Ok)
+            if (_gifDecoder.ConsolidatedState != ErrorState.Ok)
             {
-                _gifDecoded.Dispose();
+                _gifDecoder.Dispose();
                 return;
             }
 
             // Get information from the gif file
-            Width = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Width;
-            Height = _gifDecoded.LogicalScreenDescriptor.LogicalScreenSize.Height;
+            Width = _gifDecoder.LogicalScreenDescriptor.LogicalScreenSize.Width;
+            Height = _gifDecoder.LogicalScreenDescriptor.LogicalScreenSize.Height;
 
             _currentFrame = 0;
-            FrameCount = _gifDecoded.FrameCount;
+            FrameCount = _gifDecoder.FrameCount;
 
             // Get frame intervals
             Intervals = new int[FrameCount];
             for (int i = 0; i < FrameCount; i++)
             {
-                Intervals[i] = _gifDecoded.GetDelayForFrame(i) * 10;
+                Intervals[i] = _gifDecoder.GetDelayForFrame(i) * 10;
             }
 
             // Get whether this GIF loops over:
-            CanLoop = _gifDecoded.NetscapeExtension != null && _gifDecoded.NetscapeExtension.LoopCount == 0;
+            CanLoop = _gifDecoder.NetscapeExtension != null && _gifDecoder.NetscapeExtension.LoopCount == 0;
 
             // Force load of the first frame
-            var img = _gifDecoded[0].TheImage;
+            var img = _gifDecoder[0].TheImage;
 
             CurrentFrameBitmap = new Bitmap(img.Width, img.Height);
 
-            FastBitmap.CopyPixels(_gifDecoded[_currentFrame].TheImage, CurrentFrameBitmap);
+            FastBitmap.CopyPixels(_gifDecoder[_currentFrame].TheImage, CurrentFrameBitmap);
 
             Loaded = true;
 
-            ApplyMemorySettings();
+            ApplyUserSelectedMemorySettings();
         }
 
         /// <summary>
@@ -183,7 +192,25 @@ namespace GIF_Viewer
 
             _currentFrame = currentFrame;
             CurrentInterval = Intervals[currentFrame];
-            FastBitmap.CopyPixels(_gifDecoded[currentFrame].TheImage, CurrentFrameBitmap);
+            FastBitmap.CopyPixels(_gifDecoder[currentFrame].TheImage, CurrentFrameBitmap);
+        }
+
+        /// <summary>
+        /// Returns whether a frame at a given index can be rendered independently from any previous frame.
+        /// 
+        /// Frames are independent if they have one of the following render modes:
+        /// 
+        /// 1. Not Specified (e.g. every first frame);
+        /// 2. RestoreToBackground, with the restore area being the whole frame bounds;
+        /// </summary>
+        /// <param name="frameIndex">Index of frame to verify</param>
+        /// <param name="checkTransparency">
+        /// Whether to load the indexed colors from the stream for the frame to validate if its overdraw
+        /// fully overlaps the previous frames with non-transparent pixels.
+        /// </param>
+        public bool IsFrameIndependent(int frameIndex, bool checkTransparency = false)
+        {
+            return _gifDecoder.IsFrameIndependent(frameIndex, checkTransparency);
         }
 
         /// <summary>

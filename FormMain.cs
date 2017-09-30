@@ -1052,7 +1052,7 @@ namespace GIF_Viewer
 
             if (settings.ShowDialog(this) == DialogResult.OK)
             {
-                _currentGif?.ApplyMemorySettings();
+                _currentGif?.ApplyUserSelectedMemorySettings();
             }
         }
 

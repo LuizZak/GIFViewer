@@ -46,14 +46,7 @@ namespace GIF_Viewer.GifComponents.Components
 		
 		#region declarations
 
-		private readonly int _blockSize;
-		private readonly DisposalMethod _disposalMethod;
-		private readonly bool _expectsUserInput;
-		private readonly bool _hasTransparentColour;
-		private readonly int _delayTime;
-		private readonly int _transparentColourIndex;
-
-		#endregion
+	    #endregion
 
 		#region constructor
 		/// <summary>
@@ -84,12 +77,12 @@ namespace GIF_Viewer.GifComponents.Components
 		                                int delayTime, 
 		                                int transparentColourIndex )
 		{
-			_blockSize = blockSize;
-			_disposalMethod = disposalMethod;
-			_expectsUserInput = expectsUserInput;
-			_hasTransparentColour = hasTransparentColour;
-			_delayTime = delayTime;
-			_transparentColourIndex = transparentColourIndex;
+			BlockSize = blockSize;
+			DisposalMethod = disposalMethod;
+			ExpectsUserInput = expectsUserInput;
+			HasTransparentColour = hasTransparentColour;
+			DelayTime = delayTime;
+			TransparentColourIndex = transparentColourIndex;
 		}
 		#endregion
 		
@@ -103,20 +96,20 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// </param>
 	    public GraphicControlExtension( Stream inputStream )
 		{
-			_blockSize = Read( inputStream ); // block size
+			BlockSize = Read( inputStream ); // block size
 			
 			PackedFields packed = new PackedFields( Read( inputStream ) );
-			_disposalMethod = (DisposalMethod) packed.GetBits( 3, 3 );
-			_expectsUserInput = packed.GetBit( 6 );
-			_hasTransparentColour = packed.GetBit( 7 );
+			DisposalMethod = (DisposalMethod) packed.GetBits( 3, 3 );
+			ExpectsUserInput = packed.GetBit( 6 );
+			HasTransparentColour = packed.GetBit( 7 );
 
-			if( _disposalMethod == 0 )
+			if( DisposalMethod == 0 )
 			{
-				_disposalMethod = DisposalMethod.DoNotDispose; // elect to keep old image if discretionary
+				DisposalMethod = DisposalMethod.DoNotDispose; // elect to keep old image if discretionary
 			}
 			
-			_delayTime = ReadShort( inputStream ); // delay in hundredths of a second
-			_transparentColourIndex = Read( inputStream ); // transparent color index
+			DelayTime = ReadShort( inputStream ); // delay in hundredths of a second
+			TransparentColourIndex = Read( inputStream ); // transparent color index
 			Read( inputStream ); // block terminator
 		}
 		#endregion
@@ -132,7 +125,7 @@ namespace GIF_Viewer.GifComponents.Components
 		[Description( "Number of bytes in the block, after the Block Size " + 
 		             "field and up to but not including the Block Terminator. " + 
 		             "This field contains the fixed value 4." )]
-		public int BlockSize => _blockSize;
+		public int BlockSize { get; }
 
 	    #endregion
 		
@@ -143,7 +136,7 @@ namespace GIF_Viewer.GifComponents.Components
 		/// </summary>
 		[Description( "Indicates the way in which the graphic is to be " + 
 		             "treated after being displayed." )]
-		public DisposalMethod DisposalMethod => _disposalMethod;
+		public DisposalMethod DisposalMethod { get; }
 
 	    #endregion
 		
@@ -173,7 +166,7 @@ namespace GIF_Viewer.GifComponents.Components
 		             "set, processing will continue when user input is " + 
 		             "received or when the delay time expires, whichever " + 
 		             "occurs first." )]
-		public bool ExpectsUserInput => _expectsUserInput;
+		public bool ExpectsUserInput { get; }
 
 	    #endregion
 		
@@ -184,7 +177,7 @@ namespace GIF_Viewer.GifComponents.Components
 		/// </summary>
 		[Description( "Indicates whether a transparency index is given in " + 
 		             "the Transparent Index field." )]
-		public bool HasTransparentColour => _hasTransparentColour;
+		public bool HasTransparentColour { get; }
 
 	    #endregion
 		
@@ -203,7 +196,7 @@ namespace GIF_Viewer.GifComponents.Components
 		             "is rendered. " + 
 		             "This field may be used in conjunction with the User " + 
 		             "Input Flag field." )]
-		public int DelayTime => _delayTime;
+		public int DelayTime { get; }
 
 	    #endregion
 		
@@ -220,7 +213,7 @@ namespace GIF_Viewer.GifComponents.Components
 		             "modified and processing goes on to the next pixel. " + 
 		             "The index is present if and only if the Transparency " + 
 		             "Flag is set to 1." )]
-		public int TransparentColourIndex => _transparentColourIndex;
+		public int TransparentColourIndex { get; }
 
 	    #endregion
 		

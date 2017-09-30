@@ -75,10 +75,6 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         private bool _requiresRedraw;
         /// <summary>
-        /// The offset of the stream for this frame
-        /// </summary>
-        private readonly long _streamOffset;
-        /// <summary>
         /// Field used by keyframes to signal that their drawing state is fully ready.
         /// When all previous frames before a keyframe are drawn, the keyframe is said to be 'ready' to be used as a proper keyframe.
         /// </summary>
@@ -126,11 +122,6 @@ namespace GIF_Viewer.GifComponents.Components
             ColourTable globalColourTable, GraphicControlExtension graphicControlExtension, GifFrame previousFrame,
             GifFrame previousFrameBut1, int index)
         {
-            if (logicalScreenDescriptor == null)
-            {
-                throw new ArgumentNullException(nameof(logicalScreenDescriptor));
-            }
-
             if (graphicControlExtension == null)
             {
                 SetStatus(ErrorState.NoGraphicControlExtension, "");
@@ -140,17 +131,21 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             Index = index;
-            _logicalScreenDescriptor = logicalScreenDescriptor;
+            _logicalScreenDescriptor = logicalScreenDescriptor ?? throw new ArgumentNullException(nameof(logicalScreenDescriptor));
             _globalColourTable = globalColourTable;
             _graphicControlExtension = graphicControlExtension;
             _isLoaded = false;
             _requiresRedraw = true;
-            _streamOffset = inputStream.Position;
+            StreamOffset = inputStream.Position;
             _inputStream = inputStream;
             _isImagePartial = true;
             _previousFrame = previousFrame;
             _previousFrameBut1 = previousFrameBut1;
 
+            // Read image descriptor and skip this frame
+            ImageDescriptor = new ImageDescriptor(_inputStream);
+            _inputStream.Position = StreamOffset;
+            
             Skip();
         }
 
@@ -291,6 +286,11 @@ namespace GIF_Viewer.GifComponents.Components
         /// The index of this frame on the animation
         /// </summary>
         public int Index { get; }
+        
+        /// <summary>
+        /// The offset of the stream for this frame
+        /// </summary>
+        public long StreamOffset { get; }
 
         #region TheImage property
         /// <summary>
@@ -374,7 +374,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// Recurses the drawing until a keyframe is hit
         /// </summary>
-        public bool RecurseToKeyframe(int maxDepth)
+        public bool DecodeRecursingToKeyframe(int maxDepth)
         {
             if (maxDepth <= 0)
                 return false;
@@ -385,16 +385,35 @@ namespace GIF_Viewer.GifComponents.Components
             bool redraw = false;
 
             if (_previousFrame != null)
-            {
-                redraw = _previousFrame.RecurseToKeyframe(maxDepth - 1);
-            }
+                redraw = _previousFrame.DecodeRecursingToKeyframe(maxDepth - 1);
 
             if (redraw)
-            {
                 Decode();
-            }
 
             return redraw;
+        }
+
+        /// <summary>
+        /// Propagates the graphics control extension through all the frames
+        /// </summary>
+        public void RecurseGraphicControlExtension()
+        {
+            if (_extension == null)
+                _previousFrame?.RecurseGraphicControlExtension();
+
+            if (_graphicControlExtension == null)
+            {
+                SetStatus(ErrorState.NoGraphicControlExtension, "");
+                // use a default GCE
+                _graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
+                    DisposalMethod.NotSpecified,
+                    false,
+                    false,
+                    100,
+                    0);
+            }
+
+            _extension = _graphicControlExtension;
         }
 
         /// <summary>
@@ -406,10 +425,8 @@ namespace GIF_Viewer.GifComponents.Components
                 return;
 
             TheImage.Dispose();
-            ImageDescriptor.Dispose();
 
             TheImage = null;
-            ImageDescriptor = null;
 
             _requiresRedraw = true;
             _isLoaded = false;
@@ -422,17 +439,17 @@ namespace GIF_Viewer.GifComponents.Components
         public void Decode(bool force = false)
         {
             // Image preparation and reutilization checks
-            if (_isLoaded && !_requiresRedraw && !force)
+            if (_isLoaded)
             {
-                return;
-            }
-            if (_isLoaded && (_requiresRedraw || force))
-            {
+                if (!_requiresRedraw && !force)
+                    return;
+                
+                // Unload before re-drawing
                 Unload();
             }
 
             // Prepare the stream
-            _inputStream.Position = _streamOffset;
+            _inputStream.Position = StreamOffset;
 
             _extension = _graphicControlExtension;
 
@@ -455,7 +472,7 @@ namespace GIF_Viewer.GifComponents.Components
                 {
                     // We have neither local nor global colour table, so we
                     // won't be able to decode this frame.
-                    Bitmap emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
+                    var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
                     TheImage = emptyBitmap;
                     _delay = _graphicControlExtension.DelayTime;
                     SetStatus(ErrorState.FrameHasNoColourTable, "");
@@ -515,7 +532,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         private void Skip()
         {
-            _inputStream.Position = _streamOffset;
+            _inputStream.Position = StreamOffset;
 
             if (_logicalScreenDescriptor == null)
             {
@@ -530,28 +547,6 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             TableBasedImageData.SkipOnStream(_inputStream);
-        }
-
-        /// <summary>
-        /// Propagates the graphics control extension through all the frames
-        /// </summary>
-        private void RecurseGraphicControlExtension()
-        {
-            _previousFrame?.RecurseGraphicControlExtension();
-
-            if (_graphicControlExtension == null)
-            {
-                SetStatus(ErrorState.NoGraphicControlExtension, "");
-                // use a default GCE
-                _graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
-                                                   DisposalMethod.NotSpecified,
-                                                   false,
-                                                   false,
-                                                   100,
-                                                   0);
-            }
-
-            _extension = _graphicControlExtension;
         }
 
         #region private static CreateBitmap( ) method

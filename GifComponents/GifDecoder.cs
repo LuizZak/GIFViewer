@@ -54,6 +54,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using GIF_Viewer.GifComponents.Components;
 using GIF_Viewer.GifComponents.Enums;
 
@@ -202,7 +203,11 @@ namespace GIF_Viewer.GifComponents
         /// 2. RestoreToBackground, with the restore area being the whole frame bounds;
         /// </summary>
         /// <param name="frameIndex">Index of frame to verify</param>
-        public bool IsFrameIndependent(int frameIndex)
+        /// <param name="checkTransparency">
+        /// Whether to load the indexed colors from the stream for the frame to validate if its overdraw
+        /// fully overlaps the previous frames with non-transparent pixels.
+        /// </param>
+        public bool IsFrameIndependent(int frameIndex, bool checkTransparency = false)
         {
             // First frame is always independent
             if (frameIndex == 0)
@@ -221,9 +226,44 @@ namespace GIF_Viewer.GifComponents
 
             if (previousDisposalMethod == DisposalMethod.DoNotDispose)
             {
-                var rect = previousFrame.ImageDescriptor.Region;
+                var frame = _frames[frameIndex];
 
-                return rect == new Rectangle(Point.Empty, LogicalScreenDescriptor.LogicalScreenSize);
+                var prevRect = previousFrame.ImageDescriptor.Region;
+
+                var targetRegion = new Rectangle(Point.Empty, LogicalScreenDescriptor.LogicalScreenSize);
+                if (prevRect != targetRegion)
+                {
+                    return false;
+                }
+
+                if (!frame.GraphicControlExtension.HasTransparentColour)
+                    return true;
+                
+                // Client asked for a fast check- be conservative and assume the frame could
+                // potentially be transparent at some point.
+                if (!checkTransparency)
+                    return false;
+
+                // Re-wind stream and read indexes
+                var oldPosition = _stream.Position;
+
+                _stream.Position = frame.StreamOffset;
+
+                // Skip irrelevant data
+                ImageDescriptor.SkipOnStream(_stream);
+
+                if (frame.ImageDescriptor.HasLocalColourTable)
+                    ColourTable.SkipOnStream(_stream, frame.ImageDescriptor.LocalColourTableSize);
+
+                var tbid = new TableBasedImageData(_stream,
+                    frame.ImageDescriptor.Size.Width * frame.ImageDescriptor.Size.Height);
+
+                _stream.Position = oldPosition; // Restore stream back
+
+                // Check if any of the pixels is transparent
+                var transpColor = frame.GraphicControlExtension.TransparentColourIndex;
+
+                return !tbid.PixelIndexes.Any(b => transpColor == b);
             }
 
             return false;
@@ -280,7 +320,18 @@ namespace GIF_Viewer.GifComponents
             // Mark keyframes
             _keyframeInterval = 10;
 
-            if ((_keyframeInterval) * memPerFrame > _maxMemoryForKeyframes)
+            foreach (var fr in _frames)
+            {
+                fr.Keyframe = false;
+            }
+
+            if (_maxMemoryForKeyframes == 0)
+            {
+                _keyframeInterval = 0;
+                return;
+            }
+
+            if (_keyframeInterval * memPerFrame > _maxMemoryForKeyframes)
             {
                 long totFrames = _maxMemoryForKeyframes / memPerFrame;
                 _keyframeInterval = (int)(_frames.Count / Math.Max(1, totFrames));
@@ -300,38 +351,6 @@ namespace GIF_Viewer.GifComponents
         /// Gets a frame from the GIF file.
         /// </summary>
         public GifFrame this[int index] => GetDecodedFrameAtIndex(index);
-
-        private GifFrame GetDecodedFrameAtIndex(int index)
-        {
-            var frame = _frames[index];
-
-            if (!_loadedFrames.Contains(frame))
-            {
-                // Unload a previous frame, is the queue is full
-                while (_loadedFrames.Count >= _maxFrameQueueSize)
-                {
-                    var oldFrame = _loadedFrames.Dequeue();
-
-                    if (oldFrame.Index == index - 1)
-                    {
-                        _loadedFrames.Enqueue(oldFrame);
-                        continue;
-                    }
-
-                    if (!oldFrame.Keyframe)
-                    {
-                        oldFrame.Unload();
-                    }
-                }
-
-                _loadedFrames.Enqueue(frame);
-            }
-
-            frame.RecurseToKeyframe(_maxKeyframeReach);
-            frame.Decode();
-
-            return frame;
-        }
 
         #region Memory/Performance related properties
 
@@ -478,8 +497,42 @@ namespace GIF_Viewer.GifComponents
         #endregion
 
         #region private methods
+        
+        private GifFrame GetDecodedFrameAtIndex(int index)
+        {
+            var frame = _frames[index];
 
-        #region private ReadContents method
+            if (_maxFrameQueueSize > 0 && !_loadedFrames.Contains(frame))
+            {
+                // Unload a previous frame, is the queue is full
+                while (_loadedFrames.Count >= _maxFrameQueueSize)
+                {
+                    var oldFrame = _loadedFrames.Dequeue();
+
+                    if (oldFrame.Index == index - 1)
+                    {
+                        _loadedFrames.Enqueue(oldFrame);
+                        // Avoid an infinite recursion here
+                        if (_loadedFrames.Count == 1)
+                            break;
+                        continue;
+                    }
+
+                    if (!oldFrame.Keyframe)
+                    {
+                        oldFrame.Unload();
+                    }
+                }
+
+                _loadedFrames.Enqueue(frame);
+            }
+
+            frame.DecodeRecursingToKeyframe(_maxKeyframeReach);
+            frame.Decode();
+
+            return frame;
+        }
+        
         /// <summary>
         /// Main file parser. Reads GIF content blocks.
         /// </summary>
@@ -582,11 +635,11 @@ namespace GIF_Viewer.GifComponents
                         break;
                 }
             }
+
+            // Recurse graphics control excention
+            _frames.Last()?.RecurseGraphicControlExtension();
         }
-        #endregion
-
-        #region private AddFrame method
-
+        
         /// <summary>
         /// Reads a frame from the input stream and adds it to the collection
         /// of frames.
@@ -618,8 +671,6 @@ namespace GIF_Viewer.GifComponents
 
             _frames.Add(frame);
         }
-
-        #endregion
         
         #endregion
     }
