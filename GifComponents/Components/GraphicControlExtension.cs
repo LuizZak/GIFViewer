@@ -225,28 +225,5 @@ namespace GIF_Viewer.GifComponents.Components
 	    #endregion
 		
 		#endregion
-
-		#region public WriteToStream method
-		/// <summary>
-		/// Writes this component to the supplied output stream.
-		/// </summary>
-		/// <param name="outputStream">
-		/// The output stream to write to.
-		/// </param>
-		public override void WriteToStream( Stream outputStream )
-		{
-			WriteByte( _blockSize, outputStream );
-			
-			PackedFields packed = new PackedFields();
-			packed.SetBits( 3, 3, (int) _disposalMethod );
-			packed.SetBit( 6, _expectsUserInput );
-			packed.SetBit( 7, _hasTransparentColour );
-			WriteByte( packed.Byte, outputStream );
-			
-			WriteShort( _delayTime , outputStream);
-			WriteByte( _transparentColourIndex, outputStream );
-			WriteByte( 0, outputStream ); // block terminator
-		}
-		#endregion
 	}
 }

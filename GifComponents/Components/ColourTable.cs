@@ -176,25 +176,7 @@ namespace GIF_Viewer.GifComponents.Components
         #endregion
 
         #region methods
-
-        #region public WriteToStream method
-
-        /// <summary>
-        /// Writes this component to the supplied output stream.
-        /// </summary>
-        /// <param name="outputStream">
-        /// The output stream to write to.
-        /// </param>
-        public override void WriteToStream(Stream outputStream)
-        {
-            foreach (int c in _intColours)
-            {
-                WriteByte(c, outputStream);
-            }
-        }
-
-        #endregion
-
+        
         #region private ValidateIndex method
 
         private void ValidateIndex(int index)

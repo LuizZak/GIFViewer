@@ -55,14 +55,12 @@ namespace GIF_Viewer.GifComponents.Components
     {
         #region declarations
 
-        private readonly int _index;
         private bool _keyframe;
         private int _delay;
         private bool _expectsUserInput;
         private Point _position;
         private ColourTable _localColourTable;
         private GraphicControlExtension _extension;
-        private ImageDescriptor _imageDescriptor;
         private Color _backgroundColour;
         private readonly Stream _inputStream;
         private readonly LogicalScreenDescriptor _logicalScreenDescriptor;
@@ -141,7 +139,7 @@ namespace GIF_Viewer.GifComponents.Components
                     DisposalMethod.NotSpecified, false, false, 100, 0);
             }
 
-            _index = index;
+            Index = index;
             _logicalScreenDescriptor = logicalScreenDescriptor;
             _globalColourTable = globalColourTable;
             _graphicControlExtension = graphicControlExtension;
@@ -254,16 +252,16 @@ namespace GIF_Viewer.GifComponents.Components
         {
             get
             {
-                if (_imageDescriptor == null)
+                if (ImageDescriptor == null)
                 {
                     return _position;
                 }
 
-                return _imageDescriptor.Position;
+                return ImageDescriptor.Position;
             }
             set
             {
-                if (_imageDescriptor == null)
+                if (ImageDescriptor == null)
                 {
                     _position = value;
                 }
@@ -292,7 +290,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// The index of this frame on the animation
         /// </summary>
-        public int Index => _index;
+        public int Index { get; }
 
         #region TheImage property
         /// <summary>
@@ -333,29 +331,12 @@ namespace GIF_Viewer.GifComponents.Components
                       "size and position of the image, and flags indicating " +
                       "whether the colour table is global or local, whether " +
                       "it is sorted, and whether the image is interlaced.")]
-        public ImageDescriptor ImageDescriptor => _imageDescriptor;
+        public ImageDescriptor ImageDescriptor { get; private set; }
 
         #endregion
 
         #endregion
 
-        #endregion
-
-        #region public override WriteToStream method
-        /// <summary>
-        /// Not implemented in this class because writing out of frames is performed
-        /// by the WriteFrame method of the AnimatedGifEncoder class
-        /// </summary>
-        /// <param name="outputStream">
-        /// The output stream to write to.
-        /// </param>
-        public override void WriteToStream(Stream outputStream)
-        {
-            string message
-                = "This method is not implemented because writing of GifFrames is "
-                + "performed by the WriteFrame method of the AnimatedGifEncoder class";
-            throw new NotImplementedException(message);
-        }
         #endregion
 
         #region public methods
@@ -366,7 +347,7 @@ namespace GIF_Viewer.GifComponents.Components
         public void CheckRequiresRedraw()
         {
             // Base case: This frame is the first, and has an image attached to it
-            if (_index == 0 && TheImage != null)
+            if (Index == 0 && TheImage != null)
             {
                 _requiresRedraw = false;
                 return;
@@ -425,10 +406,10 @@ namespace GIF_Viewer.GifComponents.Components
                 return;
 
             TheImage.Dispose();
-            _imageDescriptor.Dispose();
+            ImageDescriptor.Dispose();
 
             TheImage = null;
-            _imageDescriptor = null;
+            ImageDescriptor = null;
 
             _requiresRedraw = true;
             _isLoaded = false;
@@ -496,7 +477,7 @@ namespace GIF_Viewer.GifComponents.Components
             {
                 // TESTME: constructor - PixelIndexes.Length == 0
                 // TODO: probably not possible as TBID constructor rejects 0 pixels
-                Bitmap emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
+                var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
                 TheImage = emptyBitmap;
                 _delay = _graphicControlExtension.DelayTime;
                 SetStatus(ErrorState.FrameHasNoImageData, "");
@@ -511,7 +492,7 @@ namespace GIF_Viewer.GifComponents.Components
             {
                 _delay = _graphicControlExtension.DelayTime;
             }
-            _imageDescriptor = imageDescriptor;
+            ImageDescriptor = imageDescriptor;
             _backgroundColour = backgroundColour;
             TheImage = CreateBitmap(tbid, _logicalScreenDescriptor, imageDescriptor, activeColourTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
             
@@ -605,7 +586,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// </param>
         private unsafe Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
         {
-            Bitmap baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
+            var baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
 
             // copy each source line to the appropriate place in the destination
             int pass = 1;
@@ -800,16 +781,12 @@ namespace GIF_Viewer.GifComponents.Components
                     // Adjust transparency
                     backgroundColour &= 0x00FFFFFF;
 
-                    if (previousFrame?._imageDescriptor == null)
+                    if (previousFrame?.ImageDescriptor == null)
                         break;
 
                     using (var fastBaseImage = baseImage.FastLock())
                     {
-                        var rect = new Rectangle(previousFrame._imageDescriptor.Position.X,
-                            previousFrame._imageDescriptor.Position.Y, previousFrame._imageDescriptor.Size.Width,
-                            previousFrame._imageDescriptor.Size.Height);
-
-                        fastBaseImage.ClearRegion(rect, backgroundColour);
+                        fastBaseImage.ClearRegion(previousFrame.ImageDescriptor.Region, backgroundColour);
                     }
 
                     break;

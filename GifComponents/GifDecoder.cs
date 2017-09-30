@@ -73,26 +73,6 @@ namespace GIF_Viewer.GifComponents
     public class GifDecoder : GifComponent
     {
         /// <summary>
-        /// The header of the GIF file.
-        /// </summary>
-        private GifHeader _header;
-
-        /// <summary>
-        /// The Logical Screen Descriptor contains the parameters necessary to 
-        /// define the area of the display device within which the images will 
-        /// be rendered.
-        /// The coordinates in this block are given with respect to the 
-        /// top-left corner of the virtual screen; they do not necessarily 
-        /// refer to absolute coordinates on the display device.
-        /// This implies that they could refer to window coordinates in a 
-        /// window-based environment or printer coordinates when a printer is 
-        /// used. 
-        /// This block is REQUIRED; exactly one Logical Screen Descriptor must be
-        /// present per Data Stream.
-        /// </summary>
-        private LogicalScreenDescriptor _lsd;
-
-        /// <summary>
         /// A reference to the last frame that had a disposal mode of NoDisposal
         /// </summary>
         private GifFrame _lastNoDisposalFrame;
@@ -101,16 +81,6 @@ namespace GIF_Viewer.GifComponents
         /// The delay for each frame, in hundredths of a second
         /// </summary>
         private List<int> _frameDelays;
-
-        /// <summary>
-        /// The global colour table, if present.
-        /// </summary>
-        private ColourTable _gct;
-
-        /// <summary>
-        /// Netscape extension, if present
-        /// </summary>
-        private NetscapeExtension _netscapeExtension;
 
         /// <summary>
         /// Collection of the application extensions in the file.
@@ -223,6 +193,42 @@ namespace GIF_Viewer.GifComponents
             return _frameDelays[frameIndex];
         }
 
+        /// <summary>
+        /// Returns whether a frame at a given index can be rendered independently from any previous frame.
+        /// 
+        /// Frames are independent if they have one of the following render modes:
+        /// 
+        /// 1. Not Specified (e.g. every first frame);
+        /// 2. RestoreToBackground, with the restore area being the whole frame bounds;
+        /// </summary>
+        /// <param name="frameIndex">Index of frame to verify</param>
+        public bool IsFrameIndependent(int frameIndex)
+        {
+            // First frame is always independent
+            if (frameIndex == 0)
+                return true;
+
+            // Get directly- GetDecodedFrameAtIndex pre-renders the frame before returning.
+            var previousFrame = _frames[frameIndex - 1];
+
+            var previousDisposalMethod = previousFrame.GraphicControlExtension.DisposalMethod;
+
+            if (previousDisposalMethod == DisposalMethod.RestoreToPrevious && frameIndex < 2)
+                previousDisposalMethod = DisposalMethod.RestoreToBackgroundColour;
+
+            if (previousDisposalMethod == DisposalMethod.NotSpecified)
+                return true;
+
+            if (previousDisposalMethod == DisposalMethod.DoNotDispose)
+            {
+                var rect = previousFrame.ImageDescriptor.Region;
+
+                return rect == new Rectangle(Point.Empty, LogicalScreenDescriptor.LogicalScreenSize);
+            }
+
+            return false;
+        }
+
         #region Decode() method
 
         /// <summary>
@@ -234,23 +240,23 @@ namespace GIF_Viewer.GifComponents
             _loadedFrames = new Queue<GifFrame>();
             _frames = new Collection<GifFrame>();
             _applicationExtensions = new Collection<ApplicationExtension>();
-            _gct = null;
+            GlobalColourTable = null;
 
-            _header = new GifHeader(_stream);
-            if (_header.ErrorState != ErrorState.Ok)
+            Header = new GifHeader(_stream);
+            if (Header.ErrorState != ErrorState.Ok)
             {
                 return;
             }
 
-            _lsd = new LogicalScreenDescriptor(_stream);
+            LogicalScreenDescriptor = new LogicalScreenDescriptor(_stream);
             if (TestState(ErrorState.EndOfInputStream))
             {
                 return;
             }
 
-            if (_lsd.HasGlobalColourTable)
+            if (LogicalScreenDescriptor.HasGlobalColourTable)
             {
-                _gct = new ColourTable(_stream, _lsd.GlobalColourTableSize);
+                GlobalColourTable = new ColourTable(_stream, LogicalScreenDescriptor.GlobalColourTableSize);
             }
 
             if (ConsolidatedState == ErrorState.Ok)
@@ -266,7 +272,7 @@ namespace GIF_Viewer.GifComponents
         /// </summary>
         public void ApplyMemoryFields()
         {
-            long memPerFrame = _lsd.LogicalScreenSize.Width * _lsd.LogicalScreenSize.Height * 4;
+            long memPerFrame = LogicalScreenDescriptor.LogicalScreenSize.Width * LogicalScreenDescriptor.LogicalScreenSize.Height * 4;
 
             // Calculate an optional buffer size to enqueue frames on
             _maxFrameQueueSize = (int)(_maxMemoryForBuffer / memPerFrame);
@@ -293,39 +299,38 @@ namespace GIF_Viewer.GifComponents
         /// <summary>
         /// Gets a frame from the GIF file.
         /// </summary>
-        public GifFrame this[int index]
+        public GifFrame this[int index] => GetDecodedFrameAtIndex(index);
+
+        private GifFrame GetDecodedFrameAtIndex(int index)
         {
-            get
+            var frame = _frames[index];
+
+            if (!_loadedFrames.Contains(frame))
             {
-                GifFrame frame = _frames[index];
-
-                if (!_loadedFrames.Contains(frame))
+                // Unload a previous frame, is the queue is full
+                while (_loadedFrames.Count >= _maxFrameQueueSize)
                 {
-                    // Unload a previous frame, is the queue is full
-                    while (_loadedFrames.Count >= _maxFrameQueueSize)
+                    var oldFrame = _loadedFrames.Dequeue();
+
+                    if (oldFrame.Index == index - 1)
                     {
-                        GifFrame oldFrame = _loadedFrames.Dequeue();
-
-                        if (oldFrame.Index == index - 1)
-                        {
-                            _loadedFrames.Enqueue(oldFrame);
-                            continue;
-                        }
-
-                        if (!oldFrame.Keyframe)
-                        {
-                            oldFrame.Unload();
-                        }
+                        _loadedFrames.Enqueue(oldFrame);
+                        continue;
                     }
 
-                    _loadedFrames.Enqueue(frame);
+                    if (!oldFrame.Keyframe)
+                    {
+                        oldFrame.Unload();
+                    }
                 }
 
-                frame.RecurseToKeyframe(_maxKeyframeReach);
-                frame.Decode();
-
-                return frame;
+                _loadedFrames.Enqueue(frame);
             }
+
+            frame.RecurseToKeyframe(_maxKeyframeReach);
+            frame.Decode();
+
+            return frame;
         }
 
         #region Memory/Performance related properties
@@ -372,11 +377,12 @@ namespace GIF_Viewer.GifComponents
         #endregion
 
         #region Header property
+
         /// <summary>
         /// Gets the header of the GIF stream, containing the signature and
         /// version of the GIF standard used.
         /// </summary>
-        public GifHeader Header => _header;
+        public GifHeader Header { get; private set; }
 
         #endregion
 
@@ -405,7 +411,7 @@ namespace GIF_Viewer.GifComponents
                       "This implies that they could refer to window " +
                       "coordinates in a window-based environment or printer " +
                       "coordinates when a printer is used.")]
-        public LogicalScreenDescriptor LogicalScreenDescriptor => _lsd;
+        public LogicalScreenDescriptor LogicalScreenDescriptor { get; private set; }
 
         #endregion
 
@@ -417,7 +423,7 @@ namespace GIF_Viewer.GifComponents
                      "This is derived using the background colour index in the " +
                      "Logical Screen Descriptor and looking up the colour " +
                      "in the Global Colour Table.")]
-        public Color BackgroundColour => Color.FromArgb(_gct[_lsd.BackgroundColourIndex]);
+        public Color BackgroundColour => Color.FromArgb(GlobalColourTable[LogicalScreenDescriptor.BackgroundColourIndex]);
 
         #endregion
 
@@ -447,7 +453,7 @@ namespace GIF_Viewer.GifComponents
         /// </summary>
         [Description("Gets the Netscape 2.0 application extension, if " +
                       "present. This contains the animation's loop count.")]
-        public NetscapeExtension NetscapeExtension => _netscapeExtension;
+        public NetscapeExtension NetscapeExtension { get; private set; }
 
         #endregion
 
@@ -465,7 +471,7 @@ namespace GIF_Viewer.GifComponents
         /// Gets the global colour table for this GIF data stream, or null if the
         /// frames have local colour tables.
         /// </summary>
-        public ColourTable GlobalColourTable => _gct;
+        public ColourTable GlobalColourTable { get; private set; }
 
         #endregion
 
@@ -502,7 +508,7 @@ namespace GIF_Viewer.GifComponents
                         switch (code)
                         {
                             case CodePlaintextLabel:
-                                // TODO: handle plain text extension (need support in AnimatedGifEncoder first)
+                                // TODO: handle plain text extension
                                 // TESTME: plain text label extensions
                                 SkipBlocks(inputStream);
                                 break;
@@ -521,19 +527,17 @@ namespace GIF_Viewer.GifComponents
                                 if (ext.ApplicationIdentifier == "NETSCAPE"
                                     && ext.ApplicationAuthenticationCode == "2.0")
                                 {
-                                    _netscapeExtension = new NetscapeExtension(ext);
+                                    NetscapeExtension = new NetscapeExtension(ext);
                                 }
                                 else
                                 {
                                     // TESTME: ReadContents - non-Netscape application extension
-                                    // TODO: Add support to AnimatedGifEncoder for non Netscape application extensions
                                     _applicationExtensions.Add(ext);
                                 }
                                 break;
 
                             default: // uninteresting extension
                                 // TESTME: ReadContents - uninteresting extension
-                                // TODO: Add support to AnimatedGifEncoder for uninteresting extensions
                                 SkipBlocks(inputStream);
                                 break;
                         }
@@ -605,7 +609,7 @@ namespace GIF_Viewer.GifComponents
             // Setup the frame delay
             _frameDelays.Add(lastGce?.DelayTime ?? 0);
 
-            GifFrame frame = new GifFrame(inputStream, _lsd, _gct, lastGce, previousFrame, _lastNoDisposalFrame, _frames.Count);
+            GifFrame frame = new GifFrame(inputStream, LogicalScreenDescriptor, GlobalColourTable, lastGce, previousFrame, _lastNoDisposalFrame, _frames.Count);
             if (lastGce == null || lastGce.DisposalMethod == DisposalMethod.DoNotDispose ||
                 lastGce.DisposalMethod == DisposalMethod.NotSpecified)
             {
@@ -616,26 +620,7 @@ namespace GIF_Viewer.GifComponents
         }
 
         #endregion
-
-        #region private WriteToStream method
-
-        /// <summary>
-        /// Throws a NotSupportedException.
-        /// GifDecoders are only intended to read from, and decode streams, not 
-        /// to write to them.
-        /// </summary>
-        /// <param name="outputStream">
-        /// The output stream to write to.
-        /// </param>
-        public override void WriteToStream(Stream outputStream)
-        {
-            const string message =
-                "This method is not implemented because a GifDecoder should not be written to a stream. It is meant for reading streams!";
-            throw new NotSupportedException(message);
-        }
-
-        #endregion
-
+        
         #endregion
     }
 }

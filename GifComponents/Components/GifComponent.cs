@@ -33,12 +33,12 @@ using GIF_Viewer.GifComponents.Types;
 
 namespace GIF_Viewer.GifComponents.Components
 {
-	/// <summary>
-	/// The base class for a component of a Graphics Interchange File data 
-	/// stream.
-	/// </summary>
-	[TypeConverter( typeof( ExpandableObjectConverter ) )]
-	public abstract class GifComponent : IDisposable
+    /// <summary>
+    /// The base class for a component of a Graphics Interchange File data 
+    /// stream.
+    /// </summary>
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public abstract class GifComponent : IDisposable
 	{
 		#region declarations
 
@@ -409,104 +409,7 @@ namespace GIF_Viewer.GifComponents.Components
 		#endregion
 
 		#endregion
-
-		#region methods for writing the GIF stream
-		
-		#region protected static WriteString method
-
-	    /// <summary>
-	    /// Writes the supplied string to the supplied output stream
-	    /// </summary>
-	    /// <param name="textToWrite">
-	    /// The string to be written to the output stream
-	    /// </param>
-	    /// <param name="outputStream">
-	    /// The stream to write the string to.
-	    /// </param>
-	    protected static void WriteString(String textToWrite, Stream outputStream)
-	    {
-	        if (outputStream == null)
-	        {
-	            throw new ArgumentNullException(nameof(outputStream));
-	        }
-
-	        // if textToWrite is null then write nothing
-	        if (textToWrite == null)
-	        {
-	            return;
-	        }
-
-	        char[] chars = textToWrite.ToCharArray();
-	        for (int i = 0; i < chars.Length; i++)
-	        {
-	            outputStream.WriteByte((byte)chars[i]);
-	        }
-	    }
-
-	    #endregion
-
-		#region protected static WriteShort method
-		/// <summary>
-		/// Writes a 16-bit value to the supplied output stream, 
-		/// least-significant byte first.
-		/// The first two bytes in the supplied value are discarded.
-		/// </summary>
-		/// <param name="valueToWrite">
-		/// The value to write to the output stream.
-		/// </param>
-		/// <param name="outputStream">
-		/// The stream to write to.
-		/// </param>
-		protected static void WriteShort( int valueToWrite, Stream outputStream )
-		{
-			if( outputStream == null )
-			{
-				throw new ArgumentNullException( nameof(outputStream) );
-			}
-			
-			// Write least significant byte
-			outputStream.WriteByte( Convert.ToByte( valueToWrite & 0xff) );
-			// Write second-least significant byte
-			outputStream.WriteByte( Convert.ToByte( (valueToWrite >> 8) & 0xff ) );
-		}
-		#endregion
-		
-		#region public static WriteByte method
-		/// <summary>
-		/// Writes the least significant byte of the supplied value to the 
-		/// supplied stream.
-		/// The first 3 bytes of the supplied value are discarded.
-		/// </summary>
-		/// <param name="valueToWrite">
-		/// The value to write to the output stream.
-		/// </param>
-		/// <param name="outputStream">
-		/// The stream to write to.
-		/// </param>
-		public static void WriteByte( int valueToWrite, Stream outputStream )
-		{
-			if( outputStream == null )
-			{
-				throw new ArgumentNullException( nameof(outputStream) );
-			}
-			
-			outputStream.WriteByte( Convert.ToByte( valueToWrite & 0xFF ) );
-		}
-		#endregion
-	
-		#endregion
-
-		#region abstract WriteToStream method
-		/// <summary>
-		/// Appends the current GifComponent to the supplied output stream.
-		/// TESTME: WriteToStream (override it in the example class?)
-		/// </summary>
-		/// <param name="outputStream">
-		/// The stream to which the component is to be written.
-		/// </param>
-		public abstract void WriteToStream( Stream outputStream );
-		#endregion
-
+        
 		#endregion
 
 		#region IDisposable implementation

@@ -58,18 +58,6 @@ namespace GIF_Viewer.GifComponents.Components
         private const int NullCode = -1; // indicates no previous code has been read yet
 
         /// <summary>
-        /// An array of indices to colours in the active colour table,
-        /// representing the pixels of a frame in a GIF data stream.
-        /// </summary>
-        private readonly byte[] _pixelIndexes;
-
-        /// <summary>
-        /// Determines the initial number of bits used for LZW codes 
-        /// in the image data.
-        /// </summary>
-        private readonly int _lzwMinimumCodeSize;
-
-	    /// <summary>
 	    /// Constructor.
 	    /// </summary>
 	    /// <param name="inputStream">
@@ -104,7 +92,7 @@ namespace GIF_Viewer.GifComponents.Components
 
             #region declare / initialise local variables
 
-            _pixelIndexes = new byte[pixelCount];
+            PixelIndexes = new byte[pixelCount];
 	        int code;
             int datum = 0; // temporary storage for codes read from the input stream
             int meaningfulBitsInDatum = 0; // number of bits of useful information held in the datum variable
@@ -123,7 +111,7 @@ namespace GIF_Viewer.GifComponents.Components
             #endregion
 
             //  Initialize GIF data stream decoder.
-            _lzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
+            LzwMinimumCodeSize = Read(inputStream); // number of bits initially used for LZW codes in image data
             int clearCode = ClearCode;
 	        int endOfInformation = EndOfInformation;
             int nextAvailableCode = clearCode + 2;
@@ -136,7 +124,7 @@ namespace GIF_Viewer.GifComponents.Components
             if (clearCode >= MaxStackSize)
             {
                 string message
-                    = "LZW minimum code size: " + _lzwMinimumCodeSize
+                    = "LZW minimum code size: " + LzwMinimumCodeSize
                       + ". Clear code: " + clearCode
                       + ". Max stack size: " + MaxStackSize;
                 SetStatus(ErrorState.LzwMinimumCodeSizeTooLarge, message);
@@ -157,7 +145,7 @@ namespace GIF_Viewer.GifComponents.Components
             // stream.
             var bytes = new byte[0];
 
-            fixed (byte* pIndexes = _pixelIndexes)
+            fixed (byte* pIndexes = PixelIndexes)
 	        {
 	            for (pixelIndex = 0; pixelIndex < pixelCount;)
 	            {
@@ -393,16 +381,16 @@ namespace GIF_Viewer.GifComponents.Components
         /// Gets an array of indices to colours in the active colour table,
         /// representing the pixels of a frame in a GIF data stream.
         /// </summary>
-        public byte[] PixelIndexes => _pixelIndexes;
+        public byte[] PixelIndexes { get; }
 
-	    /// <summary>
+        /// <summary>
         /// Determines the initial number of bits used for LZW codes in the 
         /// image data.
         /// This is read from the first available byte in the input stream.
         /// </summary>
-        public int LzwMinimumCodeSize => _lzwMinimumCodeSize;
+        public int LzwMinimumCodeSize { get; }
 
-	    /// <summary>
+        /// <summary>
         /// A special Clear code is defined which resets all compression / 
         /// decompression parameters and tables to a start-up state. 
         /// The value of this code is 2 ^ code size. 
@@ -414,12 +402,12 @@ namespace GIF_Viewer.GifComponents.Components
         /// Encoders should output a Clear code as the first code of each image 
         /// data stream.
         /// </summary>
-        public int ClearCode => 1 << _lzwMinimumCodeSize;
+        public int ClearCode => 1 << LzwMinimumCodeSize;
 
 	    /// <summary>
         /// Gets the size in bits of the first code to add to the dictionary.
         /// </summary>
-        public int InitialCodeSize => _lzwMinimumCodeSize + 1;
+        public int InitialCodeSize => LzwMinimumCodeSize + 1;
 
 	    /// <summary>
         /// Gets the code which explicitly marks the end of the image data in
@@ -440,7 +428,7 @@ namespace GIF_Viewer.GifComponents.Components
             return (1 << currentCodeSize) - 1;
         }
 
-        private DataBlock ReadDataBlock(Stream inputStream)
+        private static DataBlock ReadDataBlock(Stream inputStream)
         {
             DataBlock block = new DataBlock(inputStream);
             return block;
@@ -474,17 +462,6 @@ namespace GIF_Viewer.GifComponents.Components
         public static void SkipOnStream(Stream inputStream)
         {
             inputStream.Position += GetDataSizeOnStream(inputStream);
-        }
-
-        /// <summary>
-        /// Writes this component to the supplied output stream.
-        /// </summary>
-        /// <param name="outputStream">
-        /// The output stream to write to.
-        /// </param>
-        public override void WriteToStream(Stream outputStream)
-        {
-            throw new NotImplementedException();
         }
     }
 }

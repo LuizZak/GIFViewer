@@ -136,19 +136,5 @@ namespace GIF_Viewer.GifComponents.Components
         public string Version => _gifVersion;
 
         #endregion
-
-        #region public WriteToStream method
-        /// <summary>
-        /// Writes this component to the supplied output stream.
-        /// </summary>
-        /// <param name="outputStream">
-        /// The output stream to write to.
-        /// </param>
-        public override void WriteToStream(Stream outputStream)
-        {
-            WriteString(_signature, outputStream);
-            WriteString(_gifVersion, outputStream);
-        }
-        #endregion
     }
 }

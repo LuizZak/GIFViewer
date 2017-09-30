@@ -235,24 +235,5 @@ namespace GIF_Viewer.GifComponents.Components
         [Category("Status")]
         [Description("Gets the combined error states of this component and all its child components.")]
         public override ErrorState ConsolidatedState => ErrorState;
-
-	    #region public WriteToStream method
-
-	    /// <summary>
-	    /// Writes this component to the supplied output stream.
-	    /// </summary>
-	    /// <param name="outputStream">
-	    /// The output stream to write to.
-	    /// </param>
-	    public override void WriteToStream(Stream outputStream)
-	    {
-	        WriteByte(_blockSize, outputStream);
-	        foreach (byte b in _data)
-	        {
-	            WriteByte(b, outputStream);
-	        }
-	    }
-
-	    #endregion
 	}
 }

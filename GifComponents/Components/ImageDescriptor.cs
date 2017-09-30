@@ -56,10 +56,8 @@ namespace GIF_Viewer.GifComponents.Components
 	public class ImageDescriptor : GifComponent
 	{
 		#region declarations
-		
-        private Point _position;
-		private Size _size;
-		private readonly bool _hasLocalColourTable;
+
+	    private readonly bool _hasLocalColourTable;
 		private readonly bool _isInterlaced;
 		private readonly bool _isSorted;
 		private readonly int _localColourTableSizeBits;
@@ -95,8 +93,8 @@ namespace GIF_Viewer.GifComponents.Components
 		                        bool isSorted,
 		                        int localColourTableSizeBits )
 		{
-			_position = position;
-			_size = size;
+			Position = position;
+			Size = size;
 			_hasLocalColourTable = hasLocalColourTable;
 			_isInterlaced = isInterlaced;
 			_isSorted = isSorted;
@@ -117,8 +115,8 @@ namespace GIF_Viewer.GifComponents.Components
 			int topPosition = ReadShort( inputStream );
 			int width = ReadShort( inputStream );
 			int height = ReadShort( inputStream );
-			_position = new Point( leftPosition, topPosition );
-			_size = new Size( width, height );
+			Position = new Point( leftPosition, topPosition );
+			Size = new Size( width, height );
 
 			PackedFields packed = new PackedFields( Read( inputStream ) );
 			_hasLocalColourTable = packed.GetBit( 0 );
@@ -136,7 +134,7 @@ namespace GIF_Viewer.GifComponents.Components
 		/// with respect to the top-left corner of the logical screen.
 		/// Top-left corner of the logical screen is 0,0.
 		/// </summary>
-		public Point Position => _position;
+		public Point Position { get; }
 
 	    #endregion
 
@@ -144,16 +142,25 @@ namespace GIF_Viewer.GifComponents.Components
 		/// <summary>
 		/// Gets the size of the image in pixels.
 		/// </summary>
-		public Size Size => _size;
+		public Size Size { get; }
 
 	    #endregion
-		
-		#region HasLocalColourTable property
-		/// <summary>
-		/// Gets a boolean value indicating the presence of a Local Color Table 
-		/// immediately following this Image Descriptor.
-		/// </summary>
-		public bool HasLocalColourTable => _hasLocalColourTable;
+
+        #region Region property
+
+	    /// <summary>
+	    /// Gets the position and size of the image in pixels.
+	    /// </summary>
+	    public Rectangle Region => new Rectangle(Position, Size);
+
+        #endregion
+
+        #region HasLocalColourTable property
+        /// <summary>
+        /// Gets a boolean value indicating the presence of a Local Color Table 
+        /// immediately following this Image Descriptor.
+        /// </summary>
+        public bool HasLocalColourTable => _hasLocalColourTable;
 
 	    #endregion
 		
@@ -202,31 +209,7 @@ namespace GIF_Viewer.GifComponents.Components
 	    #endregion
 		
 		#endregion
-
-		#region public WriteToStream method
-		/// <summary>
-		/// Writes this component to the supplied output stream.
-		/// </summary>
-		/// <param name="outputStream">
-		/// The output stream to write to.
-		/// </param>
-		public override void WriteToStream( Stream outputStream )
-		{
-			// Position and size of the image in this frame
-			WriteShort( _position.X, outputStream );
-			WriteShort( _position.Y, outputStream );
-			WriteShort( _size.Width, outputStream );
-			WriteShort( _size.Height, outputStream );
-			
-			PackedFields packed = new PackedFields();
-			packed.SetBit( 0, _hasLocalColourTable );
-			packed.SetBit( 1, _isInterlaced );
-			packed.SetBit( 2, _isSorted );
-			packed.SetBits( 5, 3, _localColourTableSizeBits );
-			WriteByte( packed.Byte, outputStream );
-		}
-		#endregion
-
+        
         /// <summary>
         /// Skips a whole image descriptor block on a given stream
         /// </summary>

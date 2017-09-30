@@ -46,7 +46,7 @@ namespace GIF_Viewer.GifComponents.Components
         private DataBlock _identificationBlock;
         private string _applicationIdentifier;
         private string _applicationAuthenticationCode;
-        private Collection<DataBlock> _applicationData;
+
         #endregion
 
         #region constructor( DataBlock, Collection<DataBlock> )
@@ -136,7 +136,7 @@ namespace GIF_Viewer.GifComponents.Components
             }
             _applicationAuthenticationCode = sb.ToString();
 
-            _applicationData = applicationData;
+            ApplicationData = applicationData;
         }
         #endregion
 
@@ -187,29 +187,10 @@ namespace GIF_Viewer.GifComponents.Components
         /// Data specific to the application declared by the 
         /// <see cref="ApplicationIdentifier"/>
         /// </summary>
-        public Collection<DataBlock> ApplicationData => _applicationData;
+        public Collection<DataBlock> ApplicationData { get; private set; }
 
         #endregion
 
-        #endregion
-
-        #region public WriteToStream method
-        /// <summary>
-        /// Writes this component to the supplied output stream.
-        /// </summary>
-        /// <param name="outputStream">
-        /// The output stream to write to.
-        /// </param>
-        public override void WriteToStream(Stream outputStream)
-        {
-            WriteByte(11, outputStream); // block size
-            WriteString(_applicationIdentifier, outputStream);
-            WriteString(_applicationAuthenticationCode, outputStream);
-            foreach (var b in _applicationData)
-            {
-                b.WriteToStream(outputStream);
-            }
-        }
         #endregion
     }
 }

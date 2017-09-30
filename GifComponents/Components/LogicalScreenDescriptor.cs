@@ -49,13 +49,6 @@ namespace GIF_Viewer.GifComponents.Components
     public class LogicalScreenDescriptor : GifComponent
     {
         #region declarations
-        private Size _screenSize;
-        private readonly bool _hasGlobalColourTable;
-        private readonly int _colourResolution;
-        private readonly bool _gctIsSorted;
-        private readonly int _gctSizeBits;
-        private readonly int _backgroundColourIndex;
-        private readonly int _pixelAspectRatio;
 
         private const int ByteMax = byte.MaxValue;
         private const int UShortMax = ushort.MaxValue;
@@ -176,13 +169,13 @@ namespace GIF_Viewer.GifComponents.Components
             }
             #endregion
 
-            _screenSize = logicalScreenSize;
-            _hasGlobalColourTable = hasGlobalColourTable;
-            _colourResolution = colourResolution;
-            _gctIsSorted = globalColourTableIsSorted;
-            _gctSizeBits = globalColourTableSizeBits;
-            _backgroundColourIndex = backgroundColourIndex;
-            _pixelAspectRatio = pixelAspectRatio;
+            LogicalScreenSize = logicalScreenSize;
+            HasGlobalColourTable = hasGlobalColourTable;
+            ColourResolution = colourResolution;
+            GlobalColourTableIsSorted = globalColourTableIsSorted;
+            GlobalColourTableSizeBits = globalColourTableSizeBits;
+            BackgroundColourIndex = backgroundColourIndex;
+            PixelAspectRatio = pixelAspectRatio;
         }
         #endregion
 
@@ -200,19 +193,19 @@ namespace GIF_Viewer.GifComponents.Components
             // logical screen size
             int width = ReadShort(inputStream);
             int height = ReadShort(inputStream);
-            _screenSize = new Size(width, height);
+            LogicalScreenSize = new Size(width, height);
 
             PackedFields packed = new PackedFields(Read(inputStream));
-            _hasGlobalColourTable = packed.GetBit(0);
-            _colourResolution = packed.GetBits(1, 3);
-            _gctIsSorted = packed.GetBit(4);
-            _gctSizeBits = packed.GetBits(5, 3);
+            HasGlobalColourTable = packed.GetBit(0);
+            ColourResolution = packed.GetBits(1, 3);
+            GlobalColourTableIsSorted = packed.GetBit(4);
+            GlobalColourTableSizeBits = packed.GetBits(5, 3);
 
-            _backgroundColourIndex = Read(inputStream);
-            _pixelAspectRatio = Read(inputStream);
+            BackgroundColourIndex = Read(inputStream);
+            PixelAspectRatio = Read(inputStream);
 
             if (width < 0 || height < 0 || packed.Byte < 0
-               || _backgroundColourIndex < 0 || _pixelAspectRatio < 0)
+               || BackgroundColourIndex < 0 || PixelAspectRatio < 0)
             {
                 SetStatus(ErrorState.EndOfInputStream, "");
             }
@@ -229,7 +222,7 @@ namespace GIF_Viewer.GifComponents.Components
         [Description("Width and height, in pixels, of the Logical Screen " +
                       "where the images will be rendered in the displaying " +
                       "device.")]
-        public Size LogicalScreenSize => _screenSize;
+        public Size LogicalScreenSize { get; }
 
         #endregion
 
@@ -250,7 +243,7 @@ namespace GIF_Viewer.GifComponents.Components
                       "of the Background Color Index field should be used as " +
                       "the table index of the background color. " +
                       "(This field is the most significant bit of the byte.)")]
-        public bool HasGlobalColourTable => _hasGlobalColourTable;
+        public bool HasGlobalColourTable { get; }
 
         #endregion
 
@@ -276,7 +269,7 @@ namespace GIF_Viewer.GifComponents.Components
                       "This value should be set to indicate the richness of the " +
                       "original palette, even if not every color from the whole " +
                       "palette is available on the source machine")]
-        public int ColourResolution => _colourResolution;
+        public int ColourResolution { get; }
 
         #endregion
 
@@ -299,7 +292,7 @@ namespace GIF_Viewer.GifComponents.Components
                      "in choosing the best subset of colors; the decoder may " +
                      "use an initial segment of the table to render the " +
                      "graphic.")]
-        public bool GlobalColourTableIsSorted => _gctIsSorted;
+        public bool GlobalColourTableIsSorted { get; }
 
         #endregion
 
@@ -326,7 +319,7 @@ namespace GIF_Viewer.GifComponents.Components
                      "this field according to the above formula so that " +
                      "decoders can choose the best graphics mode to display " +
                      "the stream in.")]
-        public int GlobalColourTableSizeBits => _gctSizeBits;
+        public int GlobalColourTableSizeBits { get; }
 
         #endregion
 
@@ -334,7 +327,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// Gets the number of colours in the global colour table.
         /// </summary>
-        public int GlobalColourTableSize => 2 << _gctSizeBits;
+        public int GlobalColourTableSize => 2 << GlobalColourTableSizeBits;
 
         #endregion
 
@@ -351,7 +344,7 @@ namespace GIF_Viewer.GifComponents.Components
                       "pixels on the screen that are not covered by an image. " +
                       "If the Global Color Table Flag is set to (zero), this " +
                       "field should be zero and should be ignored.")]
-        public int BackgroundColourIndex => _backgroundColourIndex;
+        public int BackgroundColourIndex { get; }
 
         #endregion
 
@@ -380,36 +373,10 @@ namespace GIF_Viewer.GifComponents.Components
                       "The value range in this field allows specification of " +
                       "the widest pixel of 4:1 to the tallest pixel of 1:4 " +
                       "in increments of 1/64th.")]
-        public int PixelAspectRatio => _pixelAspectRatio;
+        public int PixelAspectRatio { get; }
 
         #endregion
 
-        #endregion
-
-        #region public WriteToStream method
-        /// <summary>
-        /// Writes this component to the supplied output stream.
-        /// </summary>
-        /// <param name="outputStream">
-        /// The output stream to write to.
-        /// </param>
-        public override void WriteToStream(Stream outputStream)
-        {
-            // logical screen size
-            WriteShort(_screenSize.Width, outputStream);
-            WriteShort(_screenSize.Height, outputStream);
-
-            // Packed fields
-            PackedFields packed = new PackedFields();
-            packed.SetBit(0, _hasGlobalColourTable);
-            packed.SetBits(1, 3, _colourResolution);
-            packed.SetBit(4, _gctIsSorted);
-            packed.SetBits(5, 3, _gctSizeBits);
-            WriteByte(packed.Byte, outputStream);
-
-            WriteByte(_backgroundColourIndex, outputStream);
-            WriteByte(_pixelAspectRatio, outputStream);
-        }
         #endregion
     }
 }

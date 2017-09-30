@@ -24,6 +24,7 @@
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Text;
 
 namespace GIF_Viewer.GifComponents.Components
 {
@@ -88,7 +89,7 @@ namespace GIF_Viewer.GifComponents.Components
 
 	        #endregion
 
-	        foreach (DataBlock block in ApplicationData)
+	        foreach (var block in ApplicationData)
 	        {
 	            if (block.ActualBlockSize == 0)
 	            {
@@ -101,8 +102,8 @@ namespace GIF_Viewer.GifComponents.Components
 	            {
 	                // The loop count is held in the second and third bytes
 	                // of the data block, least significant byte first.
-	                int byte1 = (block[1]) & 0xff;
-	                int byte2 = (block[2]) & 0xff;
+	                int byte1 = block[1] & 0xff;
+	                int byte2 = block[2] & 0xff;
 
 	                // String the two bytes together to make an integer,
 	                // with byte 2 coming first.
@@ -125,12 +126,13 @@ namespace GIF_Viewer.GifComponents.Components
 		#region private static GetIdentificationBlock method
 		private static DataBlock GetIdentificationBlock()
 		{
-			MemoryStream s = new MemoryStream();
-			WriteString( "NETSCAPE2.0", s );
+			var s = new MemoryStream();
+		    var bytes = Encoding.ASCII.GetBytes("NETSCAPE2.0".ToCharArray());
+            s.Write(bytes, 0, bytes.Length);
 			s.Seek( 0, SeekOrigin.Begin );
 			byte[] identificationData = new byte[11];
 			s.Read( identificationData, 0, 11 );
-			DataBlock identificationBlock = new DataBlock( 11, identificationData );
+			var identificationBlock = new DataBlock( 11, identificationData );
 			return identificationBlock;
 		}
 		#endregion
@@ -138,19 +140,20 @@ namespace GIF_Viewer.GifComponents.Components
 		#region private static GetApplicationData method
 		private static Collection<DataBlock> GetApplicationData( int repeatCount )
 		{
-			MemoryStream s = new MemoryStream();
-			WriteByte( 1, s );
-			WriteShort( repeatCount, s );
-			s.Seek( 0, SeekOrigin.Begin );
-			byte[] repeatData = new byte[3];
-			s.Read( repeatData, 0, 3 );
-			DataBlock repeatBlock = new DataBlock( 3, repeatData );
-			
-			byte[] terminatorData = new byte[0];
-			DataBlock terminatorBlock = new DataBlock( 0, terminatorData );
+		    var s = new MemoryStream();
+            s.WriteByte(1);
+		    var repeatCountBytes = BitConverter.GetBytes((short)repeatCount);
+		    s.Write(repeatCountBytes, 0, BitConverter.GetBytes((short)repeatCount).Length);
+		    s.Seek(0, SeekOrigin.Begin);
+		    byte[] repeatData = new byte[3];
+		    s.Read(repeatData, 0, 3);
+		    var repeatBlock = new DataBlock(3, repeatData);
 
-		    Collection<DataBlock> appData = new Collection<DataBlock> { repeatBlock, terminatorBlock };
-		    return appData;
+		    byte[] terminatorData = new byte[0];
+		    var terminatorBlock = new DataBlock(0, terminatorData);
+
+		    var appData = new Collection<DataBlock> { repeatBlock, terminatorBlock };
+            return appData;
 		}
 		#endregion
 	}
