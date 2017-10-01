@@ -1099,6 +1099,6 @@ namespace GIF_Viewer
         /// <summary>
         /// Whether to query the user for a .gif file on startup
         /// </summary>
-        bool _openFile;
+        private bool _openFile;
     }
 }

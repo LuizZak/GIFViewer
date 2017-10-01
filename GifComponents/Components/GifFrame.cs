@@ -35,6 +35,7 @@ using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using GIF_Viewer.GifComponents.Enums;
 using GIF_Viewer.Utils;
 
@@ -51,10 +52,14 @@ namespace GIF_Viewer.GifComponents.Components
     {
         private bool _expectsUserInput;
         private Point _position;
-        private readonly Stream _inputStream;
         private readonly LogicalScreenDescriptor _logicalScreenDescriptor;
         private readonly ColorTable _globalColorTable;
         private GraphicControlExtension _graphicControlExtension;
+        /// <summary>
+        /// In case this frame is loaded, this value is set w/ the LZW-decoded table-based
+        /// image data.
+        /// </summary>
+        private TableBasedImageData _tableBasedImageData;
         /// <summary>
         /// Whether this GifFrame is loaded on memory
         /// </summary>
@@ -81,60 +86,16 @@ namespace GIF_Viewer.GifComponents.Components
         private byte[] _imageDataBytes;
 
         /// <summary>
-        /// Creates and returns a GifFrame by reading its data from the supplied
-        /// input stream.
+        /// Whether this frame is independent and can be decoded without requiring to
+        /// rely on a previous frame's state.
         /// </summary>
-        /// <param name="inputStream">
-        /// A stream containing the data which makes the GifStream, starting 
-        /// with the image descriptor for this frame.
-        /// </param>
-        /// <param name="logicalScreenDescriptor">
-        /// The logical screen descriptor for the GIF stream.
-        /// </param>
-        /// <param name="globalColorTable">
-        /// The global color table for the GIF stream.
-        /// </param>
-        /// <param name="graphicControlExtension">
-        /// The graphic control extension, if any, which precedes this image in
-        /// the input stream.
-        /// </param>
-        /// <param name="previousFrame">
-        /// The frame which precedes this one in the GIF stream, if present.
-        /// </param>
-        /// <param name="previousFrameBut1">
-        /// The frame which precedes the frame before this one in the GIF stream,
-        /// if present.
-        /// </param>
-        /// <param name="index">The index of this frame on the owning animation</param>
-        public GifFrame(Stream inputStream, LogicalScreenDescriptor logicalScreenDescriptor,
-            ColorTable globalColorTable, GraphicControlExtension graphicControlExtension, GifFrame previousFrame,
-            GifFrame previousFrameBut1, int index)
-        {
-            if (graphicControlExtension == null)
-            {
-                SetStatus(ErrorState.NoGraphicControlExtension, "");
-                // use a default GCE
-                graphicControlExtension = new GraphicControlExtension();
-            }
+        public bool IsIndependent { get; set; }
 
-            Index = index;
-            _logicalScreenDescriptor = logicalScreenDescriptor ?? throw new ArgumentNullException(nameof(logicalScreenDescriptor));
-            _globalColorTable = globalColorTable;
-            _graphicControlExtension = graphicControlExtension;
-            _isLoaded = false;
-            _requiresRedraw = true;
-            StreamOffset = inputStream.Position;
-            _inputStream = inputStream;
-            _isImagePartial = true;
-            _previousFrame = previousFrame;
-            _previousFrameBut1 = previousFrameBut1;
-
-            // Read image descriptor and skip this frame
-            ImageDescriptor = new ImageDescriptor(_inputStream);
-            _inputStream.Position = StreamOffset;
-            
-            Skip();
-        }
+        /// <summary>
+        /// Gets the stream offset where the data for this frame starts being
+        /// read from.
+        /// </summary>
+        public long StreamOffset { get; }
 
         /// <summary>
         /// Gets and sets the delay in hundredths of a second before showing 
@@ -225,11 +186,6 @@ namespace GIF_Viewer.GifComponents.Components
         public int Index { get; }
         
         /// <summary>
-        /// The offset of the stream for this frame
-        /// </summary>
-        public long StreamOffset { get; }
-
-        /// <summary>
         /// Gets the image held in this frame.
         /// </summary>
         [Description("The image held in this frame")]
@@ -261,6 +217,76 @@ namespace GIF_Viewer.GifComponents.Components
         public ImageDescriptor ImageDescriptor { get; private set; }
 
         /// <summary>
+        /// In case this frame is pre-loaded and its LZW data decoded, this value is set w/
+        /// the LZW-decoded table-based image data.
+        /// </summary>
+        public TableBasedImageData DecodedImageBytes
+        {
+            get
+            {
+                if (_tableBasedImageData == null)
+                    return null;
+                
+                var bytes = _tableBasedImageData.PixelIndexes.ToArray();
+
+                return new TableBasedImageData(bytes);
+            }
+        }
+
+        /// <summary>
+        /// Creates and returns a GifFrame by reading its data from the supplied
+        /// input stream.
+        /// </summary>
+        /// <param name="inputStream">
+        /// A stream containing the data which makes the GifStream, starting 
+        /// with the image descriptor for this frame.
+        /// </param>
+        /// <param name="logicalScreenDescriptor">
+        /// The logical screen descriptor for the GIF stream.
+        /// </param>
+        /// <param name="globalColorTable">
+        /// The global color table for the GIF stream.
+        /// </param>
+        /// <param name="graphicControlExtension">
+        /// The graphic control extension, if any, which precedes this image in
+        /// the input stream.
+        /// </param>
+        /// <param name="previousFrame">
+        /// The frame which precedes this one in the GIF stream, if present.
+        /// </param>
+        /// <param name="previousFrameBut1">
+        /// The frame which precedes the frame before this one in the GIF stream,
+        /// if present.
+        /// </param>
+        /// <param name="index">The index of this frame on the owning animation</param>
+        public GifFrame(Stream inputStream, LogicalScreenDescriptor logicalScreenDescriptor,
+            ColorTable globalColorTable, GraphicControlExtension graphicControlExtension, GifFrame previousFrame,
+            GifFrame previousFrameBut1, int index)
+        {
+            if (graphicControlExtension == null)
+            {
+                SetStatus(ErrorState.NoGraphicControlExtension, "");
+                // use a default GCE
+                graphicControlExtension = new GraphicControlExtension();
+            }
+
+            Index = index;
+            _logicalScreenDescriptor = logicalScreenDescriptor ?? throw new ArgumentNullException(nameof(logicalScreenDescriptor));
+            _globalColorTable = globalColorTable;
+            _graphicControlExtension = graphicControlExtension;
+            _isLoaded = false;
+            _requiresRedraw = true;
+            _isImagePartial = true;
+            _previousFrame = previousFrame;
+            _previousFrameBut1 = previousFrameBut1;
+
+            StreamOffset = inputStream.Position;
+
+            // Store image data and (not decoding it, yet) skip the stream past the end of the image data
+            StoreFrameStreamData(inputStream);
+        }
+
+        /// <summary>
         /// Recursively checks whether the current sequence of frames requires redrawing
         /// </summary>
         public void CheckRequiresRedraw()
@@ -275,13 +301,13 @@ namespace GIF_Viewer.GifComponents.Components
             // If the disposal mode is set to restore to the background, and the frame image is set, it is said to be valid
             if (_graphicControlExtension.DisposalMethod == DisposalMethod.RestoreToBackgroundColor)
             {
-
+                // TODO: Figure out what was once here, or what this was supposed to be, initially.
             }
 
             // Check if the previous frame requires redraw, if either this frame or the previous require redraw, mark this one as requiring a redraw
             if (_previousFrame != null)
             {
-                _requiresRedraw = TheImage == null || _previousFrame._requiresRedraw;
+                _requiresRedraw = TheImage == null || (_previousFrame._requiresRedraw && !IsIndependent);
             }
 
             if (Keyframe && !_keyframeReady)
@@ -303,11 +329,11 @@ namespace GIF_Viewer.GifComponents.Components
 
             bool redraw = false;
 
-            if (_previousFrame != null)
+            if (_previousFrame != null && !IsIndependent)
                 redraw = _previousFrame.DecodeRecursingToKeyframe(maxDepth - 1);
 
             if (redraw)
-                Decode();
+                DecodeAndRender();
 
             return redraw;
         }
@@ -333,10 +359,13 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// Unloads the data from this frame from memory and marks this frame as not loaded
         /// </summary>
-        public void Unload()
+        public void Unload(bool freePreloadedLzwEncoding = true)
         {
             if (!_isLoaded)
                 return;
+
+            if (freePreloadedLzwEncoding)
+                _tableBasedImageData = null;
 
             TheImage.Dispose();
 
@@ -345,12 +374,12 @@ namespace GIF_Viewer.GifComponents.Components
             _requiresRedraw = true;
             _isLoaded = false;
         }
-
+        
         /// <summary>
         /// Decodes the contents of the GifFrame from the binded stream
         /// </summary>
         /// <param name="force">Whether to force redraw, even if the frame is already drawn</param>
-        public void Decode(bool force = false)
+        public void DecodeAndRender(bool force = false)
         {
             // Image preparation and reutilization checks
             if (_isLoaded)
@@ -359,24 +388,19 @@ namespace GIF_Viewer.GifComponents.Components
                     return;
                 
                 // Unload before re-drawing
-                Unload();
+                Unload(false);
             }
 
             // Prepare the stream
-            _inputStream.Position = StreamOffset;
-
             GraphicControlExtension = _graphicControlExtension;
 
             int transparentColorIndex = _graphicControlExtension.TransparentColorIndex;
-
-            var imageDescriptor = new ImageDescriptor(_inputStream);
-
+            
             var backgroundColor = Color.FromArgb(0); // TODO: is this the right background color?
             // TODO: use backgroundColorIndex from the logical screen descriptor?
             ColorTable activeColorTable;
-            if (imageDescriptor.HasLocalColorTable)
+            if (ImageDescriptor.HasLocalColorTable)
             {
-                LocalColorTable = new ColorTable(_inputStream, imageDescriptor.LocalColorTableSize);
                 activeColorTable = LocalColorTable; // make local table active
             }
             else
@@ -400,9 +424,9 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             // decode pixel data
-            int pixelCount = imageDescriptor.Size.Width * imageDescriptor.Size.Height;
-            var tbid = new TableBasedImageData(_inputStream, pixelCount);
-            if (tbid.PixelIndexes.Length == 0)
+            DecodeLzw();
+
+            if (_tableBasedImageData.PixelIndexes.Length == 0)
             {
                 // TESTME: constructor - PixelIndexes.Length == 0
                 // TODO: probably not possible as TBID constructor rejects 0 pixels
@@ -412,18 +436,14 @@ namespace GIF_Viewer.GifComponents.Components
                 SetStatus(ErrorState.FrameHasNoImageData, "");
                 return;
             }
-
-            // Skip any remaining blocks up to the next block terminator (in
-            // case there is any surplus data before the next frame)
-            SkipBlocks(_inputStream);
-
+            
             if (_graphicControlExtension != null)
             {
                 Delay = _graphicControlExtension.DelayTime;
             }
-            ImageDescriptor = imageDescriptor;
+            
             BackgroundColor = backgroundColor;
-            TheImage = CreateBitmap(tbid, _logicalScreenDescriptor, imageDescriptor, activeColorTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
+            TheImage = CreateBitmap(_tableBasedImageData, _logicalScreenDescriptor, ImageDescriptor, activeColorTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
             
             CheckRequiresRedraw();
 
@@ -436,25 +456,49 @@ namespace GIF_Viewer.GifComponents.Components
         }
 
         /// <summary>
-        /// Skips the stream past the frame
+        /// Decodes the LZW buffer for this frame, if it's not been done yet.
         /// </summary>
-        private void Skip()
+        public void DecodeLzw()
         {
-            _inputStream.Position = StreamOffset;
+            if (_tableBasedImageData != null)
+                return;
 
+            var stream = new MemoryStream(_imageDataBytes, false);
+
+            int pixelCount = ImageDescriptor.Size.Width * ImageDescriptor.Size.Height;
+            _tableBasedImageData = new TableBasedImageData(stream, pixelCount);
+        }
+
+        /// <summary>
+        /// Reads the image descriptor and local color table for this frame, storing the remaining
+        /// data for the table-based image data into a local buffer storage for later decoding.
+        /// </summary>
+        /// <param name="inputStream">Stream to read the data from</param>
+        private void StoreFrameStreamData(Stream inputStream)
+        {
             if (_logicalScreenDescriptor == null)
             {
                 throw new Exception(@"Logical screen descriptor is null");
             }
+            
+            ImageDescriptor = new ImageDescriptor(inputStream);
 
-            var imageDescriptor = new ImageDescriptor(_inputStream);
-
-            if (imageDescriptor.HasLocalColorTable)
+            if (ImageDescriptor.HasLocalColorTable)
             {
-                ColorTable.SkipOnStream(_inputStream, imageDescriptor.LocalColorTableSize);
+                LocalColorTable = new ColorTable(inputStream, ImageDescriptor.LocalColorTableSize);
             }
 
-            TableBasedImageData.SkipOnStream(_inputStream);
+            var initPos = inputStream.Position;
+
+            TableBasedImageData.SkipOnStream(inputStream);
+
+            var len = inputStream.Position - initPos;
+
+            // Read now initPos + len bytes into the local _imageData buffer
+            _imageDataBytes = new byte[len];
+
+            inputStream.Position = initPos;
+            inputStream.Read(_imageDataBytes, 0, (int)len);
         }
 
         /// <summary>

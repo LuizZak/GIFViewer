@@ -378,6 +378,14 @@ namespace GIF_Viewer.GifComponents.Components
         }
 
         /// <summary>
+        /// Creates a pre-decoded table-based image data instance
+        /// </summary>
+        public TableBasedImageData(byte[] pixelIndexes)
+        {
+            PixelIndexes = pixelIndexes;
+        }
+
+        /// <summary>
         /// Gets an array of indices to colors in the active color table,
         /// representing the pixels of a frame in a GIF data stream.
         /// </summary>
@@ -388,7 +396,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// image data.
         /// This is read from the first available byte in the input stream.
         /// </summary>
-        public int LzwMinimumCodeSize { get; }
+        private int LzwMinimumCodeSize { get; }
 
         /// <summary>
         /// A special Clear code is defined which resets all compression / 
@@ -402,18 +410,18 @@ namespace GIF_Viewer.GifComponents.Components
         /// Encoders should output a Clear code as the first code of each image 
         /// data stream.
         /// </summary>
-        public int ClearCode => 1 << LzwMinimumCodeSize;
+        private int ClearCode => 1 << LzwMinimumCodeSize;
 
-	    /// <summary>
+        /// <summary>
         /// Gets the size in bits of the first code to add to the dictionary.
         /// </summary>
-        public int InitialCodeSize => LzwMinimumCodeSize + 1;
+        private int InitialCodeSize => LzwMinimumCodeSize + 1;
 
 	    /// <summary>
         /// Gets the code which explicitly marks the end of the image data in
         /// the stream.
         /// </summary>
-        public int EndOfInformation => ClearCode + 1;
+        private int EndOfInformation => ClearCode + 1;
 
 	    /// <summary>
         /// Gets the highest possible code for the supplied code size - when

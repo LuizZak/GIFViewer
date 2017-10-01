@@ -119,6 +119,7 @@
     <Compile Include="FormMain.Designer.cs">
       <DependentUpon>FormMain.cs</DependentUpon>
     </Compile>
+    <Compile Include="Utils\TaskUtils.cs" />
     <Compile Include="Views\FormatForm.cs">
       <SubType>Form</SubType>
     </Compile>

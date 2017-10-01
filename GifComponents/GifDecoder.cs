@@ -289,6 +289,18 @@ namespace GIF_Viewer.GifComponents
         }
 
         /// <summary>
+        /// Unloads all disposable data from frames from memory.
+        /// This doesn't dispose the CurrentFrameBitmap property.
+        /// </summary>
+        public void UnloadCachedData()
+        {
+            foreach (var frame in _frames)
+            {
+                frame.Unload(false);
+            }
+        }
+
+        /// <summary>
         /// Returns an integer that represents the delay for the given frame (in hundredths of a second)
         /// </summary>
         /// <param name="frameIndex">The index of the rame to get the delay from</param>
@@ -348,26 +360,12 @@ namespace GIF_Viewer.GifComponents
                 if (!checkTransparency)
                     return false;
 
-                // Re-wind stream and read indexes
-                var oldPosition = _stream.Position;
+                // Pre-decode the LZW, if it hasn't been, already
+                frame.DecodeLzw();
 
-                _stream.Position = frame.StreamOffset;
-
-                // Skip irrelevant data
-                ImageDescriptor.SkipOnStream(_stream);
-
-                if (frame.ImageDescriptor.HasLocalColorTable)
-                    ColorTable.SkipOnStream(_stream, frame.ImageDescriptor.LocalColorTableSize);
-
-                var tbid = new TableBasedImageData(_stream,
-                    frame.ImageDescriptor.Size.Width * frame.ImageDescriptor.Size.Height);
-
-                _stream.Position = oldPosition; // Restore stream back
-
-                // Check if any of the pixels is transparent
                 var transpColor = frame.GraphicControlExtension.TransparentColorIndex;
 
-                return !tbid.PixelIndexes.Any(b => transpColor == b);
+                return !frame.DecodedImageBytes.PixelIndexes.Any(b => transpColor == b);
             }
 
             return false;
@@ -478,9 +476,18 @@ namespace GIF_Viewer.GifComponents
             }
 
             frame.DecodeRecursingToKeyframe(_maxKeyframeReach);
-            frame.Decode();
+            frame.DecodeAndRender();
 
             return frame;
+        }
+
+        /// <summary>
+        /// Pre-decodes all independent data for a frame, to prepare it to be later decoded.
+        /// This call is blocking until the decoding is complete.
+        /// </summary>
+        public void PreDecodeFrameAtIndex(int index)
+        {
+            _frames[index].DecodeLzw();
         }
         
         /// <summary>
@@ -588,6 +595,11 @@ namespace GIF_Viewer.GifComponents
 
             // Recurse graphics control excention
             _frames.Last()?.RecurseGraphicControlExtension();
+
+            for (int i = 0; i < _frames.Count; i++)
+            {
+                _frames[i].IsIndependent = IsFrameIndependent(i);
+            }
         }
         
         /// <summary>
@@ -618,7 +630,7 @@ namespace GIF_Viewer.GifComponents
             {
                 _lastNoDisposalFrame = frame;
             }
-
+            
             _frames.Add(frame);
         }
     }

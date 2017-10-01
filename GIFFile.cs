@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using GIF_Viewer.GifComponents;
 using GIF_Viewer.GifComponents.Enums;
 using GIF_Viewer.Utils;
@@ -19,7 +22,7 @@ namespace GIF_Viewer
         /// <summary>
         /// Image object representing the current GIF frame.
         /// </summary>
-        public Bitmap CurrentFrameBitmap;
+        public Bitmap CurrentFrameBitmap { get; private set; }
 
         /// <summary>
         /// The decoder holding the information about the currently loaded .gif file
@@ -82,10 +85,19 @@ namespace GIF_Viewer
         /// </summary>
         public void Dispose()
         {
-            CurrentFrameBitmap.Dispose();
-            _gifDecoder.Dispose();
+            CurrentFrameBitmap?.Dispose();
+            _gifDecoder?.Dispose();
 
             _gifDecoder = null;
+        }
+
+        /// <summary>
+        /// Unloads all disposable data from frames from memory.
+        /// This doesn't dispose the CurrentFrameBitmap property.
+        /// </summary>
+        public void UnloadCachedData()
+        {
+            _gifDecoder.UnloadCachedData();
         }
 
         /// <summary>
@@ -117,7 +129,8 @@ namespace GIF_Viewer
         /// </summary>
         /// <param name="path">The gif to load the parameters from</param>
         /// <param name="preloadAllFrames">Whether to pre-load all frame images after loading</param>
-        public void LoadFromPath(string path, bool preloadAllFrames = false)
+        /// <param name="multiThreadedLzwDecoding">Whether to use multi-threading to pre-decode the LZW encoding of the frames</param>
+        public void LoadFromPath(string path, bool preloadAllFrames = false, bool multiThreadedLzwDecoding = false)
         {
             Loaded = false;
 
@@ -153,7 +166,24 @@ namespace GIF_Viewer
 
             // Get whether this GIF loops over:
             CanLoop = _gifDecoder.NetscapeExtension != null && _gifDecoder.NetscapeExtension.LoopCount == 0;
-            
+
+            // Pre-decode frames
+            if (multiThreadedLzwDecoding)
+            {
+                int threadCount = Environment.ProcessorCount * 2;
+
+                var tasks = new List<Task>();
+
+                for (int i = 0; i < FrameCount; i++)
+                {
+                    var frameIndex = i;
+                    var thread = new Task(() => { _gifDecoder.PreDecodeFrameAtIndex(frameIndex); });
+                    tasks.Add(thread);
+                }
+
+                TaskUtils.StartAndWaitAllThrottled(tasks, threadCount);
+            }
+
             if (preloadAllFrames)
             {
                 for (int i = 0; i < FrameCount; i++)
