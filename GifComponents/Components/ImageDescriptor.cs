@@ -53,40 +53,40 @@ namespace GIF_Viewer.GifComponents.Components
 	/// </remarks>
 	public class ImageDescriptor : GifComponent
 	{
-	    /// <summary>
-		/// Constructor.
-		/// </summary>
-		/// <param name="position">
-		/// Sets the <see cref="Position"/>.
-		/// </param>
-		/// <param name="size">
-		/// Sets the <see cref="Size"/>.
-		/// </param>
-		/// <param name="hasLocalColourTable">
-		/// Sets the <see cref="HasLocalColourTable"/> flag.
-		/// </param>
-		/// <param name="isInterlaced">
-		/// Sets the <see cref="IsInterlaced"/> flag.
-		/// </param>
-		/// <param name="isSorted">
-		/// Sets the <see cref="IsSorted"/> flag.
-		/// </param>
-		/// <param name="localColourTableSizeBits">
-		/// Sets the <see cref="LocalColourTableSizeBits"/>.
-		/// </param>
-		public ImageDescriptor( Point position,
-		                        Size size,
-		                        bool hasLocalColourTable,
-		                        bool isInterlaced,
-		                        bool isSorted,
-		                        int localColourTableSizeBits )
-		{
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="position">
+        /// Sets the <see cref="Position"/>.
+        /// </param>
+        /// <param name="size">
+        /// Sets the <see cref="Size"/>.
+        /// </param>
+        /// <param name="hasLocalColorTable">
+        /// Sets the <see cref="HasLocalColorTable"/> flag.
+        /// </param>
+        /// <param name="isInterlaced">
+        /// Sets the <see cref="IsInterlaced"/> flag.
+        /// </param>
+        /// <param name="isSorted">
+        /// Sets the <see cref="IsSorted"/> flag.
+        /// </param>
+        /// <param name="localColorTableSizeBits">
+        /// Sets the <see cref="LocalColorTableSizeBits"/>.
+        /// </param>
+        public ImageDescriptor(Point position,
+            Size size,
+            bool hasLocalColorTable,
+            bool isInterlaced,
+            bool isSorted,
+            int localColorTableSizeBits)
+        {
 			Position = position;
 			Size = size;
-			HasLocalColourTable = hasLocalColourTable;
+			HasLocalColorTable = hasLocalColorTable;
 			IsInterlaced = isInterlaced;
 			IsSorted = isSorted;
-			LocalColourTableSizeBits = localColourTableSizeBits;
+			LocalColorTableSizeBits = localColorTableSizeBits;
 		}
 
 	    /// <summary>
@@ -105,10 +105,10 @@ namespace GIF_Viewer.GifComponents.Components
 		    Size = new Size(width, height);
 
 		    var packed = new PackedFields(Read(inputStream));
-		    HasLocalColourTable = packed.GetBit(0);
+		    HasLocalColorTable = packed.GetBit(0);
 		    IsInterlaced = packed.GetBit(1);
 		    IsSorted = packed.GetBit(2);
-		    LocalColourTableSizeBits = packed.GetBits(5, 3);
+		    LocalColorTableSizeBits = packed.GetBits(5, 3);
         }
 
 	    /// <summary>
@@ -132,7 +132,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// Gets a boolean value indicating the presence of a Local Color Table 
         /// immediately following this Image Descriptor.
         /// </summary>
-        public bool HasLocalColourTable { get; }
+        public bool HasLocalColorTable { get; }
 
 	    /// <summary>
 		/// Gets a boolean value indicating whether the image is interlaced. An 
@@ -159,12 +159,12 @@ namespace GIF_Viewer.GifComponents.Components
 		/// raise 2 to the value of the field + 1. 
 		/// This value should be 0 if there is no Local Color Table specified.
 		/// </summary>
-		public int LocalColourTableSizeBits { get; }
+		public int LocalColorTableSizeBits { get; }
 
 	    /// <summary>
-		/// Gets the actual size of the local colour table.
+		/// Gets the actual size of the local color table.
 		/// </summary>
-		public int LocalColourTableSize => 2 << LocalColourTableSizeBits;
+		public int LocalColorTableSize => 2 << LocalColorTableSizeBits;
 
 	    /// <summary>
         /// Skips a whole image descriptor block on a given stream

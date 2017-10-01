@@ -56,7 +56,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// The width and height, in pixels, of the logical screen where
         /// the images will be rendered in the displaying device.
         /// </param>
-        /// <param name="hasGlobalColourTable">
+        /// <param name="hasGlobalColorTable">
         /// Indicates the presence of a Global Color Table; if the flag is set, 
         /// the Global Color Table will immediately follow the Logical Screen 
         /// Descriptor. 
@@ -64,7 +64,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// Index; if the flag is set, the value of the Background Color Index 
         /// field should be used as the table index of the background color.
         /// </param>
-        /// <param name="colourResolution">
+        /// <param name="colorResolution">
         /// The number of bits per primary color available to the original 
         /// image, minus 1. 
         /// This value represents the size of the entire palette from which the 
@@ -76,7 +76,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// the original palette, even if not every color from the whole
         /// palette is available on the source machine.
         /// </param>
-        /// <param name="globalColourTableIsSorted">
+        /// <param name="globalColorTableIsSorted">
         /// Indicates whether the Global Color Table is sorted.
         /// If the flag is set, the Global Color Table is sorted, in order of
         /// decreasing importance. Typically, the order would be decreasing
@@ -84,16 +84,16 @@ namespace GIF_Viewer.GifComponents.Components
         /// with fewer available colors, in choosing the best subset of colors;
         /// the decoder may use an initial segment of the table to render the
         /// </param>
-        /// <param name="globalColourTableSizeBits">
-        /// The number of bits required to hold the size of the global colour
+        /// <param name="globalColorTableSizeBits">
+        /// The number of bits required to hold the size of the global color
         /// table.
         /// To determine the actual size of the color table, raise 2 to 
         /// [the value of the field + 1]. 
-        /// E.g. if this parameter is 7 then the global colour table will be 
+        /// E.g. if this parameter is 7 then the global color table will be 
         /// 2^(7+1) = 256 bytes long.
-        /// See also <see cref="GlobalColourTableSize"/>
+        /// See also <see cref="GlobalColorTableSize"/>
         /// </param>
-        /// <param name="backgroundColourIndex">
+        /// <param name="backgroundColorIndex">
         /// Gets the index into the Global Color Table for the Background Color.
         /// The Background Color is the color used for those pixels on the 
         /// screen that are not covered by an image. 
@@ -106,12 +106,12 @@ namespace GIF_Viewer.GifComponents.Components
         /// </param>
         /// <returns></returns>
         public LogicalScreenDescriptor(Size logicalScreenSize,
-                                        bool hasGlobalColourTable,
-                                        int colourResolution,
-                                        bool globalColourTableIsSorted,
-                                        int globalColourTableSizeBits,
-                                        int backgroundColourIndex,
-                                        int pixelAspectRatio)
+            bool hasGlobalColorTable,
+            int colorResolution,
+            bool globalColorTableIsSorted,
+            int globalColorTableSizeBits,
+            byte backgroundColorIndex,
+            int pixelAspectRatio)
         {
             if (logicalScreenSize.Width > UShortMax)
             {
@@ -129,28 +129,28 @@ namespace GIF_Viewer.GifComponents.Components
                     + "Supplied value: " + logicalScreenSize.Height;
                 throw new ArgumentException(message, nameof(logicalScreenSize));
             }
-            if (colourResolution > 7)
+            if (colorResolution > 7)
             {
                 string message
-                    = "Colour resolution cannot be more than 7. "
-                    + "Supplied value: " + colourResolution;
-                throw new ArgumentException(message, nameof(colourResolution));
+                    = "Color resolution cannot be more than 7. "
+                    + "Supplied value: " + colorResolution;
+                throw new ArgumentException(message, nameof(colorResolution));
             }
-            if (globalColourTableSizeBits > 7)
+            if (globalColorTableSizeBits > 7)
             {
                 string message
-                    = "Global colour table size cannot be more than 7. "
-                    + "Supplied value: " + globalColourTableSizeBits;
+                    = "Global color table size cannot be more than 7. "
+                    + "Supplied value: " + globalColorTableSizeBits;
                 throw new ArgumentException(message,
-                                             nameof(globalColourTableSizeBits));
+                                             nameof(globalColorTableSizeBits));
             }
-            if (backgroundColourIndex > ByteMax)
+            if (backgroundColorIndex > ByteMax)
             {
                 string message
-                    = "Background colour index cannot be more than "
+                    = "Background color index cannot be more than "
                     + ByteMax + ". "
-                    + "Supplied value: " + backgroundColourIndex;
-                throw new ArgumentException(message, nameof(backgroundColourIndex));
+                    + "Supplied value: " + backgroundColorIndex;
+                throw new ArgumentException(message, nameof(backgroundColorIndex));
             }
             if (pixelAspectRatio > ByteMax)
             {
@@ -162,11 +162,11 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             LogicalScreenSize = logicalScreenSize;
-            HasGlobalColourTable = hasGlobalColourTable;
-            ColourResolution = colourResolution;
-            GlobalColourTableIsSorted = globalColourTableIsSorted;
-            GlobalColourTableSizeBits = globalColourTableSizeBits;
-            BackgroundColourIndex = backgroundColourIndex;
+            HasGlobalColorTable = hasGlobalColorTable;
+            ColorResolution = colorResolution;
+            GlobalColorTableIsSorted = globalColorTableIsSorted;
+            GlobalColorTableSizeBits = globalColorTableSizeBits;
+            BackgroundColorIndex = backgroundColorIndex;
             PixelAspectRatio = pixelAspectRatio;
         }
 
@@ -185,17 +185,16 @@ namespace GIF_Viewer.GifComponents.Components
             int height = ReadShort(inputStream);
             LogicalScreenSize = new Size(width, height);
 
-            PackedFields packed = new PackedFields(Read(inputStream));
-            HasGlobalColourTable = packed.GetBit(0);
-            ColourResolution = packed.GetBits(1, 3);
-            GlobalColourTableIsSorted = packed.GetBit(4);
-            GlobalColourTableSizeBits = packed.GetBits(5, 3);
+            var packed = new PackedFields(Read(inputStream));
+            HasGlobalColorTable = packed.GetBit(0);
+            ColorResolution = packed.GetBits(1, 3);
+            GlobalColorTableIsSorted = packed.GetBit(4);
+            GlobalColorTableSizeBits = packed.GetBits(5, 3);
 
-            BackgroundColourIndex = Read(inputStream);
+            BackgroundColorIndex = (byte)Read(inputStream);
             PixelAspectRatio = Read(inputStream);
 
-            if (width < 0 || height < 0 || packed.Byte < 0
-               || BackgroundColourIndex < 0 || PixelAspectRatio < 0)
+            if (width < 0 || height < 0 || PixelAspectRatio < 0)
             {
                 SetStatus(ErrorState.EndOfInputStream, "");
             }
@@ -206,8 +205,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// the images will be rendered in the displaying device.
         /// </summary>
         [Description("Width and height, in pixels, of the Logical Screen " +
-                      "where the images will be rendered in the displaying " +
-                      "device.")]
+                     "where the images will be rendered in the displaying " +
+                     "device.")]
         public Size LogicalScreenSize { get; }
 
         /// <summary>
@@ -219,14 +218,14 @@ namespace GIF_Viewer.GifComponents.Components
         /// the background color.
         /// </summary>
         [Description("Flag indicating the presence of a Global Color Table; " +
-                      "if the flag is set, the Global Color Table will " +
-                      "immediately follow the Logical Screen Descriptor. " +
-                      "This flag also selects the interpretation of the " +
-                      "Background Color Index; if the flag is set, the value " +
-                      "of the Background Color Index field should be used as " +
-                      "the table index of the background color. " +
-                      "(This field is the most significant bit of the byte.)")]
-        public bool HasGlobalColourTable { get; }
+                     "if the flag is set, the Global Color Table will " +
+                     "immediately follow the Logical Screen Descriptor. " +
+                     "This flag also selects the interpretation of the " +
+                     "Background Color Index; if the flag is set, the value " +
+                     "of the Background Color Index field should be used as " +
+                     "the table index of the background color. " +
+                     "(This field is the most significant bit of the byte.)")]
+        public bool HasGlobalColorTable { get; }
 
         /// <summary>
         /// Gets the number of bits per primary color available to the original 
@@ -240,16 +239,16 @@ namespace GIF_Viewer.GifComponents.Components
         /// palette is available on the source machine.
         /// </summary>
         [Description("Number of bits per primary color available to the " +
-                      "original image, minus 1. This value represents the size " +
-                      "of the entire palette from which the colors in the " +
-                      "graphic were selected, not the number of colors actually " +
-                      "used in the graphic. For example, if the value in this " +
-                      "field is 3, then the palette of the original image had " +
-                      "4 bits per primary color available to create the image. " +
-                      "This value should be set to indicate the richness of the " +
-                      "original palette, even if not every color from the whole " +
-                      "palette is available on the source machine")]
-        public int ColourResolution { get; }
+                     "original image, minus 1. This value represents the size " +
+                     "of the entire palette from which the colors in the " +
+                     "graphic were selected, not the number of colors actually " +
+                     "used in the graphic. For example, if the value in this " +
+                     "field is 3, then the palette of the original image had " +
+                     "4 bits per primary color available to create the image. " +
+                     "This value should be set to indicate the richness of the " +
+                     "original palette, even if not every color from the whole " +
+                     "palette is available on the source machine")]
+        public int ColorResolution { get; }
 
         /// <summary>
         /// Indicates whether the Global Color Table is sorted.
@@ -269,7 +268,7 @@ namespace GIF_Viewer.GifComponents.Components
                      "in choosing the best subset of colors; the decoder may " +
                      "use an initial segment of the table to render the " +
                      "graphic.")]
-        public bool GlobalColourTableIsSorted { get; }
+        public bool GlobalColorTableIsSorted { get; }
 
         /// <summary>
         /// If the Global Color Table Flag is set to 1, the value in this field 
@@ -281,7 +280,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// graphics mode to display the stream in.
         /// </summary>
         /// <remarks>
-        /// This is the value of the globalColourTableSizeBits parameter passed
+        /// This is the value of the globalColorTableSizeBits parameter passed
         /// to the constructor.
         /// </remarks>
         [Description("If the Global Color Table Flag is set to 1, the " +
@@ -293,12 +292,12 @@ namespace GIF_Viewer.GifComponents.Components
                      "this field according to the above formula so that " +
                      "decoders can choose the best graphics mode to display " +
                      "the stream in.")]
-        public int GlobalColourTableSizeBits { get; }
+        public int GlobalColorTableSizeBits { get; }
 
         /// <summary>
-        /// Gets the number of colours in the global colour table.
+        /// Gets the number of colors in the global color table.
         /// </summary>
-        public int GlobalColourTableSize => 2 << GlobalColourTableSizeBits;
+        public int GlobalColorTableSize => 2 << GlobalColorTableSizeBits;
 
         /// <summary>
         /// Gets the index into the Global Color Table for the Background Color.
@@ -308,11 +307,11 @@ namespace GIF_Viewer.GifComponents.Components
         /// be zero and should be ignored.
         /// </summary>
         [Description("Index into the Global Color Table for the Background " +
-                      "Color. The Background Color is the color used for those " +
-                      "pixels on the screen that are not covered by an image. " +
-                      "If the Global Color Table Flag is set to (zero), this " +
-                      "field should be zero and should be ignored.")]
-        public int BackgroundColourIndex { get; }
+                     "Color. The Background Color is the color used for those " +
+                     "pixels on the screen that are not covered by an image. " +
+                     "If the Global Color Table Flag is set to (zero), this " +
+                     "field should be zero and should be ignored.")]
+        public byte BackgroundColorIndex { get; }
 
         /// <summary>
         /// Gets the factor used to compute an approximation of the aspect ratio 
@@ -328,16 +327,16 @@ namespace GIF_Viewer.GifComponents.Components
         /// 1:4 in increments of 1/64th.
         /// </summary>
         [Description("Pixel Aspect Ratio - Factor used to compute an " +
-                      "approximation of the aspect ratio of the pixel in the " +
-                      "original image.  " +
-                      "If the value of the field is not 0, this approximation " +
-                      "of the aspect ratio is computed based on the formula: " +
-                      "Aspect Ratio = (Pixel Aspect Ratio + 15) / 64. " +
-                      "The Pixel Aspect Ratio is defined to be the quotient " +
-                      "of the pixel's width over its height.  " +
-                      "The value range in this field allows specification of " +
-                      "the widest pixel of 4:1 to the tallest pixel of 1:4 " +
-                      "in increments of 1/64th.")]
+                     "approximation of the aspect ratio of the pixel in the " +
+                     "original image.  " +
+                     "If the value of the field is not 0, this approximation " +
+                     "of the aspect ratio is computed based on the formula: " +
+                     "Aspect Ratio = (Pixel Aspect Ratio + 15) / 64. " +
+                     "The Pixel Aspect Ratio is defined to be the quotient " +
+                     "of the pixel's width over its height.  " +
+                     "The value range in this field allows specification of " +
+                     "the widest pixel of 4:1 to the tallest pixel of 1:4 " +
+                     "in increments of 1/64th.")]
         public int PixelAspectRatio { get; }
     }
 }

@@ -378,7 +378,7 @@ namespace GIF_Viewer.GifComponents.Components
         }
 
         /// <summary>
-        /// Gets an array of indices to colours in the active colour table,
+        /// Gets an array of indices to colors in the active color table,
         /// representing the pixels of a frame in a GIF data stream.
         /// </summary>
         public byte[] PixelIndexes { get; }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.IO;
 using GIF_Viewer.GifComponents;
 using GIF_Viewer.GifComponents.Enums;
 using GIF_Viewer.Utils;
@@ -121,10 +122,12 @@ namespace GIF_Viewer
 
             // Set the path
             GifPath = path;
+            var fileStream = new FileInfo(path).OpenRead();
 
             // Decode the gif file
             _gifDecoder?.Dispose();
-            _gifDecoder = new GifDecoder(path);
+
+            _gifDecoder = new GifDecoder(fileStream);
             _gifDecoder.Decode();
 
             if (_gifDecoder.ConsolidatedState != ErrorState.Ok)

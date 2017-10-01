@@ -49,14 +49,13 @@ namespace GIF_Viewer.GifComponents.Components
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public class GifFrame : GifComponent
     {
-        private bool _keyframe;
         private bool _expectsUserInput;
         private Point _position;
-        private ColourTable _localColourTable;
+        private ColorTable _localColorTable;
         private GraphicControlExtension _extension;
         private readonly Stream _inputStream;
         private readonly LogicalScreenDescriptor _logicalScreenDescriptor;
-        private readonly ColourTable _globalColourTable;
+        private readonly ColorTable _globalColorTable;
         private GraphicControlExtension _graphicControlExtension;
         /// <summary>
         /// Whether this GifFrame is loaded on memory
@@ -89,8 +88,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// <param name="logicalScreenDescriptor">
         /// The logical screen descriptor for the GIF stream.
         /// </param>
-        /// <param name="globalColourTable">
-        /// The global colour table for the GIF stream.
+        /// <param name="globalColorTable">
+        /// The global color table for the GIF stream.
         /// </param>
         /// <param name="graphicControlExtension">
         /// The graphic control extension, if any, which precedes this image in
@@ -105,20 +104,19 @@ namespace GIF_Viewer.GifComponents.Components
         /// </param>
         /// <param name="index">The index of this frame on the owning animation</param>
         public GifFrame(Stream inputStream, LogicalScreenDescriptor logicalScreenDescriptor,
-            ColourTable globalColourTable, GraphicControlExtension graphicControlExtension, GifFrame previousFrame,
+            ColorTable globalColorTable, GraphicControlExtension graphicControlExtension, GifFrame previousFrame,
             GifFrame previousFrameBut1, int index)
         {
             if (graphicControlExtension == null)
             {
                 SetStatus(ErrorState.NoGraphicControlExtension, "");
                 // use a default GCE
-                graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
-                    DisposalMethod.NotSpecified, false, false, 100, 0);
+                graphicControlExtension = new GraphicControlExtension();
             }
 
             Index = index;
             _logicalScreenDescriptor = logicalScreenDescriptor ?? throw new ArgumentNullException(nameof(logicalScreenDescriptor));
-            _globalColourTable = globalColourTable;
+            _globalColorTable = globalColorTable;
             _graphicControlExtension = graphicControlExtension;
             _isLoaded = false;
             _requiresRedraw = true;
@@ -144,10 +142,10 @@ namespace GIF_Viewer.GifComponents.Components
         public int Delay { get; set; }
 
         /// <summary>
-        /// Gets and sets the background colour of the current frame
+        /// Gets and sets the background color of the current frame
         /// </summary>
-        [Description("The background colour for this frame.")]
-        public Color BackgroundColour { get; set; }
+        [Description("The background color for this frame.")]
+        public Color BackgroundColor { get; set; }
 
         /// <summary>
         /// Gets a flag indicating whether the device displaying the animation
@@ -216,11 +214,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <summary>
         /// Gets or sets whether this frame is a keyword
         /// </summary>
-        public bool Keyframe
-        {
-            get => _keyframe;
-            set => _keyframe = value;
-        }
+        public bool Keyframe { get; set; }
 
         /// <summary>
         /// The index of this frame on the animation
@@ -240,11 +234,11 @@ namespace GIF_Viewer.GifComponents.Components
         public Bitmap TheImage { get; private set; }
 
         /// <summary>
-        /// Gets the local colour table for this frame.
+        /// Gets the local color table for this frame.
         /// </summary>
-        [Description("The local colour table for this frame")]
+        [Description("The local color table for this frame")]
         [Category("Set by decoder")]
-        public ColourTable LocalColourTable => _localColourTable;
+        public ColorTable LocalColorTable => _localColorTable;
 
         /// <summary>
         /// Gets the graphic control extension which precedes this image.
@@ -259,7 +253,7 @@ namespace GIF_Viewer.GifComponents.Components
         [Category("Set by decoder")]
         [Description("The image descriptor for this frame. This contains the " +
                       "size and position of the image, and flags indicating " +
-                      "whether the colour table is global or local, whether " +
+                      "whether the color table is global or local, whether " +
                       "it is sorted, and whether the image is interlaced.")]
         public ImageDescriptor ImageDescriptor { get; private set; }
 
@@ -276,7 +270,7 @@ namespace GIF_Viewer.GifComponents.Components
             }
 
             // If the disposal mode is set to restore to the background, and the frame image is set, it is said to be valid
-            if (_graphicControlExtension.DisposalMethod == DisposalMethod.RestoreToBackgroundColour)
+            if (_graphicControlExtension.DisposalMethod == DisposalMethod.RestoreToBackgroundColor)
             {
 
             }
@@ -287,7 +281,7 @@ namespace GIF_Viewer.GifComponents.Components
                 _requiresRedraw = TheImage == null || _previousFrame._requiresRedraw;
             }
 
-            if (_keyframe && !_keyframeReady)
+            if (Keyframe && !_keyframeReady)
             {
                 _keyframeReady = !_requiresRedraw;
             }
@@ -327,12 +321,7 @@ namespace GIF_Viewer.GifComponents.Components
             {
                 SetStatus(ErrorState.NoGraphicControlExtension, "");
                 // use a default GCE
-                _graphicControlExtension = new GraphicControlExtension(GraphicControlExtension.ExpectedBlockSize,
-                    DisposalMethod.NotSpecified,
-                    false,
-                    false,
-                    100,
-                    0);
+                _graphicControlExtension = new GraphicControlExtension();
             }
 
             _extension = _graphicControlExtension;
@@ -375,35 +364,35 @@ namespace GIF_Viewer.GifComponents.Components
 
             _extension = _graphicControlExtension;
 
-            int transparentColourIndex = _graphicControlExtension.TransparentColourIndex;
+            int transparentColorIndex = _graphicControlExtension.TransparentColorIndex;
 
             var imageDescriptor = new ImageDescriptor(_inputStream);
 
-            var backgroundColour = Color.FromArgb(0); // TODO: is this the right background colour?
-            // TODO: use backgroundColourIndex from the logical screen descriptor?
-            ColourTable activeColourTable;
-            if (imageDescriptor.HasLocalColourTable)
+            var backgroundColor = Color.FromArgb(0); // TODO: is this the right background color?
+            // TODO: use backgroundColorIndex from the logical screen descriptor?
+            ColorTable activeColorTable;
+            if (imageDescriptor.HasLocalColorTable)
             {
-                _localColourTable = new ColourTable(_inputStream, imageDescriptor.LocalColourTableSize);
-                activeColourTable = _localColourTable; // make local table active
+                _localColorTable = new ColorTable(_inputStream, imageDescriptor.LocalColorTableSize);
+                activeColorTable = _localColorTable; // make local table active
             }
             else
             {
-                if (_globalColourTable == null)
+                if (_globalColorTable == null)
                 {
-                    // We have neither local nor global colour table, so we
+                    // We have neither local nor global color table, so we
                     // won't be able to decode this frame.
                     var emptyBitmap = new Bitmap(_logicalScreenDescriptor.LogicalScreenSize.Width, _logicalScreenDescriptor.LogicalScreenSize.Height);
                     TheImage = emptyBitmap;
                     Delay = _graphicControlExtension.DelayTime;
-                    SetStatus(ErrorState.FrameHasNoColourTable, "");
+                    SetStatus(ErrorState.FrameHasNoColorTable, "");
                     return;
                 }
-                activeColourTable = _globalColourTable; // make global table active
-                if (_logicalScreenDescriptor.BackgroundColourIndex
-                    == transparentColourIndex)
+                activeColorTable = _globalColorTable; // make global table active
+                if (_logicalScreenDescriptor.BackgroundColorIndex
+                    == transparentColorIndex)
                 {
-                    backgroundColour = Color.FromArgb(0);
+                    backgroundColor = Color.FromArgb(0);
                 }
             }
 
@@ -430,8 +419,8 @@ namespace GIF_Viewer.GifComponents.Components
                 Delay = _graphicControlExtension.DelayTime;
             }
             ImageDescriptor = imageDescriptor;
-            BackgroundColour = backgroundColour;
-            TheImage = CreateBitmap(tbid, _logicalScreenDescriptor, imageDescriptor, activeColourTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
+            BackgroundColor = backgroundColor;
+            TheImage = CreateBitmap(tbid, _logicalScreenDescriptor, imageDescriptor, activeColorTable, _graphicControlExtension, _previousFrame, _previousFrameBut1);
             
             CheckRequiresRedraw();
 
@@ -455,11 +444,11 @@ namespace GIF_Viewer.GifComponents.Components
                 throw new Exception(@"Logical screen descriptor is null");
             }
 
-            ImageDescriptor imageDescriptor = new ImageDescriptor(_inputStream);
+            var imageDescriptor = new ImageDescriptor(_inputStream);
 
-            if (imageDescriptor.HasLocalColourTable)
+            if (imageDescriptor.HasLocalColorTable)
             {
-                ColourTable.SkipOnStream(_inputStream, imageDescriptor.LocalColourTableSize);
+                ColorTable.SkipOnStream(_inputStream, imageDescriptor.LocalColorTableSize);
             }
 
             TableBasedImageData.SkipOnStream(_inputStream);
@@ -470,7 +459,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         /// <param name="imageData">
         /// Table based image data containing the indices within the active
-        /// colour table of the colours of the pixels in this frame.
+        /// color table of the colors of the pixels in this frame.
         /// </param>
         /// <param name="lsd">
         /// The logical screen descriptor for the GIF stream.
@@ -478,9 +467,9 @@ namespace GIF_Viewer.GifComponents.Components
         /// <param name="id">
         /// The image descriptor for this frame.
         /// </param>
-        /// <param name="activeColourTable">
-        /// The colour table to use with this frame - either the global colour
-        /// table or a local colour table.
+        /// <param name="activeColorTable">
+        /// The color table to use with this frame - either the global color
+        /// table or a local color table.
         /// </param>
         /// <param name="gce">
         /// The graphic control extension, if any, which precedes this image in
@@ -493,17 +482,17 @@ namespace GIF_Viewer.GifComponents.Components
         /// The frame which precedes the frame before this one in the GIF stream,
         /// if present.
         /// </param>
-        private unsafe Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColourTable activeColourTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
+        private unsafe Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColorTable activeColorTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
         {
-            var baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColourTable);
+            var baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColorTable);
 
             // copy each source line to the appropriate place in the destination
             int pass = 1;
             int interlaceRowIncrement = 8;
             int interlaceRowNumber = 0; // the row of pixels we're currently 
             // setting in an interlaced image.
-            bool hasTransparent = gce.HasTransparentColour;
-            int transparentColor = gce.TransparentColourIndex;
+            bool hasTransparent = gce.HasTransparentColor;
+            int transparentColor = gce.TransparentColorIndex;
             int logicalWidth = lsd.LogicalScreenSize.Width;
             int logicalHeight = lsd.LogicalScreenSize.Height;
 
@@ -517,8 +506,8 @@ namespace GIF_Viewer.GifComponents.Components
             var fastImageBase = baseImage.FastLock();
             int* pointerImage = (int*)fastImageBase.Scan0;
 
-            int[] colorTableIndices = activeColourTable.IntColours;
-            int numColors = activeColourTable.Length;
+            int[] colorTableIndices = activeColorTable.IntColors;
+            int numColors = activeColorTable.Length;
 
             for (int i = 0; i < imageHeight; i++)
             {
@@ -547,7 +536,7 @@ namespace GIF_Viewer.GifComponents.Components
                     interlaceRowNumber += interlaceRowIncrement;
                 }
 
-                // Colour in the pixels for this row
+                // Color in the pixels for this row
                 pixelRowNumber += imageY;
                 if (pixelRowNumber >= logicalHeight)
                     continue;
@@ -564,20 +553,20 @@ namespace GIF_Viewer.GifComponents.Components
                 while (dx < dlim)
                 {
                     // map color and insert in destination
-                    int indexInColourTable = pixelIndices[sx++];
-                    // Set this pixel's colour if its index isn't the transparent colour index, or if this frame doesn't have a transparent colour.
-                    if (!hasTransparent || indexInColourTable != transparentColor)
+                    int indexInColorTable = pixelIndices[sx++];
+                    // Set this pixel's color if its index isn't the transparent color index, or if this frame doesn't have a transparent color.
+                    if (!hasTransparent || indexInColorTable != transparentColor)
                     {
-                        if (indexInColourTable < numColors)
+                        if (indexInColorTable < numColors)
                         {
-                            pointerImage[dx] = colorTableIndices[indexInColourTable];
+                            pointerImage[dx] = colorTableIndices[indexInColorTable];
                         }
                         else
                         {
-                            // TESTME: CreateBitmap - BadColourIndex 
+                            // TESTME: CreateBitmap - BadColorIndex 
                             pointerImage[dx] = 255 << 24;
-                            string message = "Colour index: " + indexInColourTable + ", colour table length: " + activeColourTable.Length + " (" + dx + "," + pixelRowNumber + ")";
-                            SetStatus(ErrorState.BadColourIndex, message);
+                            string message = "Color index: " + indexInColorTable + ", color table length: " + activeColorTable.Length + " (" + dx + "," + pixelRowNumber + ")";
+                            SetStatus(ErrorState.BadColorIndex, message);
                         }
                     }
 
@@ -609,10 +598,10 @@ namespace GIF_Viewer.GifComponents.Components
         /// The graphic control extension for this frame.
         /// </param>
         /// <param name="act">
-        /// The active colour table for this frame.
+        /// The active color table for this frame.
         /// </param>
         /// <returns></returns>
-        private Bitmap GetBaseImage(GifFrame previousFrame, GifFrame previousFrameBut1, LogicalScreenDescriptor lsd, GraphicControlExtension gce, ColourTable act)
+        private Bitmap GetBaseImage(GifFrame previousFrame, GifFrame previousFrameBut1, LogicalScreenDescriptor lsd, GraphicControlExtension gce, ColorTable act)
         {
             RecurseGraphicControlExtension();
 
@@ -627,16 +616,16 @@ namespace GIF_Viewer.GifComponents.Components
 
                 if (previousDisposalMethod == DisposalMethod.RestoreToPrevious && previousFrameBut1 == null)
                 {
-                    previousDisposalMethod = DisposalMethod.RestoreToBackgroundColour;
+                    previousDisposalMethod = DisposalMethod.RestoreToBackgroundColor;
                 }
             }
 
             Bitmap baseImage;
             int width = lsd.LogicalScreenSize.Width;
             int height = lsd.LogicalScreenSize.Height;
-            int backgroundColorIndex = previousFrame?._logicalScreenDescriptor.BackgroundColourIndex ?? lsd.BackgroundColourIndex;
-            int transparentColorIndex = previousFrame?._graphicControlExtension.TransparentColourIndex ?? gce.TransparentColourIndex;
-            act = previousFrame == null ? act : previousFrame._localColourTable ?? _globalColourTable;
+            int backgroundColorIndex = previousFrame?._logicalScreenDescriptor.BackgroundColorIndex ?? lsd.BackgroundColorIndex;
+            int transparentColorIndex = previousFrame?._graphicControlExtension.TransparentColorIndex ?? gce.TransparentColorIndex;
+            act = previousFrame == null ? act : previousFrame._localColorTable ?? _globalColorTable;
 
             if (previousDisposalMethod == DisposalMethod.RestoreToPrevious || previousFrame?.TheImage == null)
             {
@@ -654,36 +643,36 @@ namespace GIF_Viewer.GifComponents.Components
                     // pre-populate image with previous frame
                     break;
 
-                case DisposalMethod.RestoreToBackgroundColour:
-                    // pre-populate image with background colour
-                    int backgroundColour;
+                case DisposalMethod.RestoreToBackgroundColor:
+                    // pre-populate image with background color
+                    int backgroundColor;
                     if (backgroundColorIndex == transparentColorIndex)
                     {
-                        backgroundColour = 0;
+                        backgroundColor = 0;
                     }
                     else
                     {
                         if (backgroundColorIndex < act.Length)
                         {
-                            backgroundColour = act[backgroundColorIndex];
+                            backgroundColor = act[backgroundColorIndex];
                         }
                         else
                         {
-                            backgroundColour = 255 << 24;
-                            string message = "Background colour index: " + lsd.BackgroundColourIndex + ", colour table length: " + act.Length;
-                            SetStatus(ErrorState.BadColourIndex, message);
+                            backgroundColor = 255 << 24;
+                            string message = "Background color index: " + lsd.BackgroundColorIndex + ", color table length: " + act.Length;
+                            SetStatus(ErrorState.BadColorIndex, message);
                         }
                     }
 
                     // Adjust transparency
-                    backgroundColour &= 0x00FFFFFF;
+                    backgroundColor &= 0x00FFFFFF;
 
                     if (previousFrame?.ImageDescriptor == null)
                         break;
 
                     using (var fastBaseImage = baseImage.FastLock())
                     {
-                        fastBaseImage.ClearRegion(previousFrame.ImageDescriptor.Region, backgroundColour);
+                        fastBaseImage.ClearRegion(previousFrame.ImageDescriptor.Region, backgroundColor);
                     }
 
                     break;

@@ -63,18 +63,18 @@ namespace GIF_Viewer.GifComponents.Types
 	    /// Gets the byte which represents the data items held in the packed 
 	    /// fields.
 	    /// </summary>
-	    public int Byte
+	    public byte Byte
 	    {
 	        get
 	        {
-	            int returnValue = 0;
-	            int bitShift = 7;
+	            byte returnValue = 0;
+	            byte bitShift = 7;
 	            foreach (bool bit in _bits)
 	            {
-	                int bitValue;
+	                byte bitValue;
 	                if (bit)
 	                {
-	                    bitValue = 1 << bitShift;
+	                    bitValue = (byte)(1 << bitShift);
 	                }
 	                else
 	                {

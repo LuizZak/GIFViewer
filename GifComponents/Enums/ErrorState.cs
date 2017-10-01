@@ -57,14 +57,14 @@ namespace GIF_Viewer.GifComponents.Enums
 		DataBlockTooShort = 1 << 2,
 		
 		/// <summary>
-		/// A colour table was shorter than its declared length.
+		/// A color table was shorter than its declared length.
 		/// </summary>
-		ColourTableTooShort = 1 << 3,
+		ColorTableTooShort = 1 << 3,
 		
 		/// <summary>
-		/// One or more frames has no active colour table.
+		/// One or more frames has no active color table.
 		/// </summary>
-		FrameHasNoColourTable = 1 << 4,
+		FrameHasNoColorTable = 1 << 4,
 		
 		/// <summary>
 		/// A data block begins with an invalid byte.
@@ -140,9 +140,9 @@ namespace GIF_Viewer.GifComponents.Enums
 		
 		/// <summary>
 		/// The decoded image data contains an index which is outside the range
-		/// of the active colour table.
+		/// of the active color table.
 		/// </summary>
-		BadColourIndex = 1 << 17,
+		BadColorIndex = 1 << 17,
 		
 		/// <summary>
 		/// The frame does not have a graphic control extension.

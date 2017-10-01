@@ -42,40 +42,35 @@ namespace GIF_Viewer.GifComponents.Components
 		/// </summary>
 		public const int ExpectedBlockSize = 4;
 
-	    /// <summary>
-		/// Constructor.
-		/// </summary>
-		/// <param name="blockSize">
-		/// Sets the <see cref="BlockSize"/>.
-		/// </param>
-		/// <param name="disposalMethod">
-		/// Sets the <see cref="DisposalMethod"/>.
-		/// </param>
-		/// <param name="expectsUserInput">
-		/// Sets the <see cref="ExpectsUserInput"/> flag.
-		/// </param>
-		/// <param name="hasTransparentColour">
-		/// Sets the <see cref="HasTransparentColour"/> flag.
-		/// </param>
-		/// <param name="delayTime">
-		/// Sets the <see cref="DelayTime"/>.
-		/// </param>
-		/// <param name="transparentColourIndex">
-		/// Sets the <see cref="TransparentColourIndex"/>.
-		/// </param>
-		public GraphicControlExtension( int blockSize, 
-		                                DisposalMethod disposalMethod, 
-		                                bool expectsUserInput, 
-		                                bool hasTransparentColour, 
-		                                int delayTime, 
-		                                int transparentColourIndex )
-		{
-			BlockSize = blockSize;
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="disposalMethod">
+        /// Sets the <see cref="DisposalMethod"/>.
+        /// </param>
+        /// <param name="expectsUserInput">
+        /// Sets the <see cref="ExpectsUserInput"/> flag.
+        /// </param>
+        /// <param name="hasTransparentColor">
+        /// Sets the <see cref="HasTransparentColor"/> flag.
+        /// </param>
+        /// <param name="delayTime">
+        /// Sets the <see cref="DelayTime"/>.
+        /// </param>
+        /// <param name="transparentColorIndex">
+        /// Sets the <see cref="TransparentColorIndex"/>.
+        /// </param>
+        public GraphicControlExtension(DisposalMethod disposalMethod = DisposalMethod.NotSpecified,
+            bool expectsUserInput = false,
+            bool hasTransparentColor = false,
+            int delayTime = 100,
+            byte transparentColorIndex = 0)
+        {
 			DisposalMethod = disposalMethod;
 			ExpectsUserInput = expectsUserInput;
-			HasTransparentColour = hasTransparentColour;
+			HasTransparentColor = hasTransparentColor;
 			DelayTime = delayTime;
-			TransparentColourIndex = transparentColourIndex;
+			TransparentColorIndex = transparentColorIndex;
 		}
 
 	    /// <summary>
@@ -86,12 +81,12 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// </param>
 	    public GraphicControlExtension(Stream inputStream)
 	    {
-	        BlockSize = Read(inputStream); // block size
+	        Read(inputStream); // block size
 
 	        var packed = new PackedFields(Read(inputStream));
 	        DisposalMethod = (DisposalMethod)packed.GetBits(3, 3);
 	        ExpectsUserInput = packed.GetBit(6);
-	        HasTransparentColour = packed.GetBit(7);
+	        HasTransparentColor = packed.GetBit(7);
 
 	        if (DisposalMethod == 0)
 	        {
@@ -99,91 +94,81 @@ namespace GIF_Viewer.GifComponents.Components
 	        }
 
 	        DelayTime = ReadShort(inputStream); // delay in hundredths of a second
-	        TransparentColourIndex = Read(inputStream); // transparent color index
+	        TransparentColorIndex = (byte)Read(inputStream); // transparent color index
 	        Read(inputStream); // block terminator
 	    }
 
         /// <summary>
-        /// Number of bytes in the block, after the Block Size field and up to 
-        /// but not including the Block Terminator.
-        /// This field contains the fixed value 4.
-        /// </summary>
-        [Description( "Number of bytes in the block, after the Block Size " + 
-		             "field and up to but not including the Block Terminator. " + 
-		             "This field contains the fixed value 4." )]
-		public int BlockSize { get; }
+	    /// Indicates the way in which the graphic is to be treated after being 
+	    /// displayed.
+	    /// </summary>
+	    [Description("Indicates the way in which the graphic is to be " +
+	                 "treated after being displayed.")]
+	    public DisposalMethod DisposalMethod { get; }
 
 	    /// <summary>
-		/// Indicates the way in which the graphic is to be treated after being 
-		/// displayed.
-		/// </summary>
-		[Description( "Indicates the way in which the graphic is to be " + 
-		             "treated after being displayed." )]
-		public DisposalMethod DisposalMethod { get; }
+	    /// Indicates whether or not user input is expected before continuing. 
+	    /// If the flag is set, processing will continue when user input is 
+	    /// entered. 
+	    /// The nature of the User input is determined by the application 
+	    /// (Carriage Return, Mouse Button Click, etc.).
+	    /// 
+	    /// Values :    0 -   User input is not expected.
+	    ///             1 -   User input is expected.
+	    /// 
+	    /// When a Delay Time is used and the User Input Flag is set, 
+	    /// processing will continue when user input is received or when the
+	    /// delay time expires, whichever occurs first.
+	    /// </summary>
+	    [Description("Indicates whether or not user input is expected " +
+	                 "before continuing. If the flag is set, processing will " +
+	                 "continue when user input is entered. The nature of the " +
+	                 "User input is determined by the application (Carriage " +
+	                 "Return, Mouse Button Click, etc.). " +
+	                 "Values :    0 -   User input is not expected. " +
+	                 "1 -   User input is expected. " +
+	                 "When a Delay Time is used and the User Input Flag is " +
+	                 "set, processing will continue when user input is " +
+	                 "received or when the delay time expires, whichever " +
+	                 "occurs first.")]
+	    public bool ExpectsUserInput { get; }
 
 	    /// <summary>
-		/// Indicates whether or not user input is expected before continuing. 
-		/// If the flag is set, processing will continue when user input is 
-		/// entered. 
-		/// The nature of the User input is determined by the application 
-		/// (Carriage Return, Mouse Button Click, etc.).
-		/// 
-		/// Values :    0 -   User input is not expected.
-		///             1 -   User input is expected.
-		/// 
-		/// When a Delay Time is used and the User Input Flag is set, 
-		/// processing will continue when user input is received or when the
-		/// delay time expires, whichever occurs first.
-		/// </summary>
-		[Description( "Indicates whether or not user input is expected " + 
-		             "before continuing. If the flag is set, processing will " + 
-		             "continue when user input is entered. The nature of the " + 
-		             "User input is determined by the application (Carriage " + 
-		             "Return, Mouse Button Click, etc.). " + 
-		             "Values :    0 -   User input is not expected. " + 
-		             "1 -   User input is expected. " + 
-		             "When a Delay Time is used and the User Input Flag is " + 
-		             "set, processing will continue when user input is " + 
-		             "received or when the delay time expires, whichever " + 
-		             "occurs first." )]
-		public bool ExpectsUserInput { get; }
+	    /// Indicates whether a transparency index is given in the Transparent 
+	    /// Index field.
+	    /// </summary>
+	    [Description("Indicates whether a transparency index is given in " +
+	                 "the Transparent Index field.")]
+	    public bool HasTransparentColor { get; }
 
 	    /// <summary>
-		/// Indicates whether a transparency index is given in the Transparent 
-		/// Index field.
-		/// </summary>
-		[Description( "Indicates whether a transparency index is given in " + 
-		             "the Transparent Index field." )]
-		public bool HasTransparentColour { get; }
+	    /// If not 0, this field specifies the number of hundredths (1/100) 
+	    /// of a second to wait before continuing with the processing of the 
+	    /// Data Stream. 
+	    /// The clock starts ticking immediately after the graphic is rendered. 
+	    /// This field may be used in conjunction with the User Input Flag field.
+	    /// </summary>
+	    [Description("If not 0, this field specifies the number of " +
+	                 "hundredths (1/100) of a second to wait before " +
+	                 "continuing with the processing of the Data Stream. " +
+	                 "The clock starts ticking immediately after the graphic " +
+	                 "is rendered. " +
+	                 "This field may be used in conjunction with the User " +
+	                 "Input Flag field.")]
+	    public int DelayTime { get; }
 
 	    /// <summary>
-		/// If not 0, this field specifies the number of hundredths (1/100) 
-		/// of a second to wait before continuing with the processing of the 
-		/// Data Stream. 
-		/// The clock starts ticking immediately after the graphic is rendered. 
-		/// This field may be used in conjunction with the User Input Flag field.
-		/// </summary>
-		[Description( "If not 0, this field specifies the number of " + 
-		             "hundredths (1/100) of a second to wait before " + 
-		             "continuing with the processing of the Data Stream. " + 
-		             "The clock starts ticking immediately after the graphic " + 
-		             "is rendered. " + 
-		             "This field may be used in conjunction with the User " + 
-		             "Input Flag field." )]
-		public int DelayTime { get; }
-
-	    /// <summary>
-		/// The Transparency Index is such that when encountered, the 
-		/// corresponding pixel of the display device is not modified and 
-		/// processing goes on to the next pixel. 
-		/// The index is present if and only if the Transparency Flag is set 
-		/// to 1.
-		/// </summary>
-		[Description( "The Transparency Index is such that when encountered, " + 
-		             "the corresponding pixel of the display device is not " + 
-		             "modified and processing goes on to the next pixel. " + 
-		             "The index is present if and only if the Transparency " + 
-		             "Flag is set to 1." )]
-		public int TransparentColourIndex { get; }
-	}
+	    /// The Transparency Index is such that when encountered, the 
+	    /// corresponding pixel of the display device is not modified and 
+	    /// processing goes on to the next pixel. 
+	    /// The index is present if and only if the Transparency Flag is set 
+	    /// to 1.
+	    /// </summary>
+	    [Description("The Transparency Index is such that when encountered, " +
+	                 "the corresponding pixel of the display device is not " +
+	                 "modified and processing goes on to the next pixel. " +
+	                 "The index is present if and only if the Transparency " +
+	                 "Flag is set to 1.")]
+	    public byte TransparentColorIndex { get; }
+    }
 }

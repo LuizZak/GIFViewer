@@ -138,7 +138,7 @@
       <DependentUpon>FrameExtractorHelp.cs</DependentUpon>
     </Compile>
     <Compile Include="GifComponents\Components\ApplicationExtension.cs" />
-    <Compile Include="GifComponents\Components\ColourTable.cs" />
+    <Compile Include="GifComponents\Components\ColorTable.cs" />
     <Compile Include="GifComponents\Components\DataBlock.cs" />
     <Compile Include="GifComponents\Components\GifComponent.cs" />
     <Compile Include="GifComponents\Components\GifFrame.cs" />
@@ -148,7 +148,7 @@
     <Compile Include="GifComponents\Components\LogicalScreenDescriptor.cs" />
     <Compile Include="GifComponents\Components\NetscapeExtension.cs" />
     <Compile Include="GifComponents\Components\TableBasedImageData.cs" />
-    <Compile Include="GifComponents\Enums\ColourTableStrategy.cs" />
+    <Compile Include="GifComponents\Enums\ColorTableStrategy.cs" />
     <Compile Include="GifComponents\Enums\DisposalMethod.cs" />
     <Compile Include="GifComponents\Enums\ErrorState.cs" />
     <Compile Include="GifComponents\GifDecoder.cs" />

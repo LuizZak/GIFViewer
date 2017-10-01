@@ -45,7 +45,7 @@ namespace GIF_Viewer.GifComponents.Enums
 		/// 2 - Restore to background color. The area used by the graphic must 
 		/// be restored to the background color.
 		/// </summary>
-		RestoreToBackgroundColour = 2,
+		RestoreToBackgroundColor = 2,
 		
 		/// <summary>
 		/// 3 - Restore to previous. The decoder is required to restore the 

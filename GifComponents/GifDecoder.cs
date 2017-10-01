@@ -201,13 +201,13 @@ namespace GIF_Viewer.GifComponents
         public LogicalScreenDescriptor LogicalScreenDescriptor { get; private set; }
 
         /// <summary>
-        /// Gets the background colour.
+        /// Gets the background color.
         /// </summary>
-        [Description("The default background colour for this GIF file." +
-                     "This is derived using the background colour index in the " +
-                     "Logical Screen Descriptor and looking up the colour " +
-                     "in the Global Colour Table.")]
-        public Color BackgroundColour => Color.FromArgb(GlobalColourTable[LogicalScreenDescriptor.BackgroundColourIndex]);
+        [Description("The default background color for this GIF file." +
+                     "This is derived using the background color index in the " +
+                     "Logical Screen Descriptor and looking up the color " +
+                     "in the Global Color Table.")]
+        public Color BackgroundColor => Color.FromArgb(GlobalColorTable[LogicalScreenDescriptor.BackgroundColorIndex]);
 
         /// <summary>
         /// Gets the application extensions contained within the GIF stream.
@@ -240,24 +240,11 @@ namespace GIF_Viewer.GifComponents
         public int FrameCount => _frames.Count;
 
         /// <summary>
-        /// Gets the global colour table for this GIF data stream, or null if the
-        /// frames have local colour tables.
+        /// Gets the global color table for this GIF data stream, or null if the
+        /// frames have local color tables.
         /// </summary>
-        public ColourTable GlobalColourTable { get; private set; }
-
-        /// <summary>
-        /// Reads a GIF file from specified file/URL source  
-        /// (URL assumed if name contains ":/" or "file:")
-        /// </summary>
-        /// <param name="fileName">
-        /// Path or URL of image file.
-        /// </param>
-        /// <exception cref="ArgumentNullException">
-        /// The supplied filename is null.
-        /// </exception>
-        public GifDecoder(string fileName)
-            : this(new FileInfo(fileName).OpenRead()) { }
-
+        public ColorTable GlobalColorTable { get; private set; }
+        
         /// <summary>
         /// Reads a GIF file from the specified stream.
         /// </summary>
@@ -336,7 +323,7 @@ namespace GIF_Viewer.GifComponents
             var previousDisposalMethod = previousFrame.GraphicControlExtension.DisposalMethod;
 
             if (previousDisposalMethod == DisposalMethod.RestoreToPrevious && frameIndex < 2)
-                previousDisposalMethod = DisposalMethod.RestoreToBackgroundColour;
+                previousDisposalMethod = DisposalMethod.RestoreToBackgroundColor;
 
             if (previousDisposalMethod == DisposalMethod.NotSpecified)
                 return true;
@@ -353,7 +340,7 @@ namespace GIF_Viewer.GifComponents
                     return false;
                 }
 
-                if (!frame.GraphicControlExtension.HasTransparentColour)
+                if (!frame.GraphicControlExtension.HasTransparentColor)
                     return true;
                 
                 // Client asked for a fast check- be conservative and assume the frame could
@@ -369,8 +356,8 @@ namespace GIF_Viewer.GifComponents
                 // Skip irrelevant data
                 ImageDescriptor.SkipOnStream(_stream);
 
-                if (frame.ImageDescriptor.HasLocalColourTable)
-                    ColourTable.SkipOnStream(_stream, frame.ImageDescriptor.LocalColourTableSize);
+                if (frame.ImageDescriptor.HasLocalColorTable)
+                    ColorTable.SkipOnStream(_stream, frame.ImageDescriptor.LocalColorTableSize);
 
                 var tbid = new TableBasedImageData(_stream,
                     frame.ImageDescriptor.Size.Width * frame.ImageDescriptor.Size.Height);
@@ -378,14 +365,14 @@ namespace GIF_Viewer.GifComponents
                 _stream.Position = oldPosition; // Restore stream back
 
                 // Check if any of the pixels is transparent
-                var transpColor = frame.GraphicControlExtension.TransparentColourIndex;
+                var transpColor = frame.GraphicControlExtension.TransparentColorIndex;
 
                 return !tbid.PixelIndexes.Any(b => transpColor == b);
             }
 
             return false;
         }
-
+        
         /// <summary>
         /// Decodes the supplied GIF stream.
         /// </summary>
@@ -395,7 +382,7 @@ namespace GIF_Viewer.GifComponents
             _loadedFrames = new Queue<GifFrame>();
             _frames = new Collection<GifFrame>();
             _applicationExtensions = new Collection<ApplicationExtension>();
-            GlobalColourTable = null;
+            GlobalColorTable = null;
 
             Header = new GifHeader(_stream);
             if (Header.ErrorState != ErrorState.Ok)
@@ -409,9 +396,9 @@ namespace GIF_Viewer.GifComponents
                 return;
             }
 
-            if (LogicalScreenDescriptor.HasGlobalColourTable)
+            if (LogicalScreenDescriptor.HasGlobalColorTable)
             {
-                GlobalColourTable = new ColourTable(_stream, LogicalScreenDescriptor.GlobalColourTableSize);
+                GlobalColorTable = new ColorTable(_stream, LogicalScreenDescriptor.GlobalColorTableSize);
             }
 
             if (ConsolidatedState == ErrorState.Ok)
@@ -504,7 +491,7 @@ namespace GIF_Viewer.GifComponents
             // read GIF file content blocks
             bool done = false;
             GraphicControlExtension lastGce = null;
-            while (!done/* && ConsolidatedState == ErrorState.Ok */)
+            while (!done && inputStream.Position < inputStream.Length /* && ConsolidatedState == ErrorState.Ok */)
             {
                 int code = Read(inputStream);
 
@@ -622,7 +609,7 @@ namespace GIF_Viewer.GifComponents
             // Setup the frame delay
             _frameDelays.Add(lastGce?.DelayTime ?? 0);
 
-            GifFrame frame = new GifFrame(inputStream, LogicalScreenDescriptor, GlobalColourTable, lastGce, previousFrame, _lastNoDisposalFrame, _frames.Count);
+            var frame = new GifFrame(inputStream, LogicalScreenDescriptor, GlobalColorTable, lastGce, previousFrame, _lastNoDisposalFrame, _frames.Count);
             if (lastGce == null || lastGce.DisposalMethod == DisposalMethod.DoNotDispose ||
                 lastGce.DisposalMethod == DisposalMethod.NotSpecified)
             {

@@ -23,71 +23,76 @@
 
 using System;
 using System.IO;
-using System.Linq;
 
 namespace GIF_Viewer.GifComponents.Components
 {
     /// <summary>
-    /// A global or local colour table which forms part of a GIF data stream.
+    /// A global or local color table which forms part of a GIF data stream.
     /// </summary>
-    public class ColourTable : GifComponent
+    public class ColorTable : GifComponent
     {
         /// <summary>
-        /// The colours in the colour table in INT form
+        /// The colors in the color table in INT form
         /// </summary>
-        private readonly int[] _intColours;
-        
+        public int[] IntColors { get; }
+
         /// <summary>
-        /// Reads and returns a colour table from the supplied input stream.
+        /// Creates an empty color table
+        /// </summary>
+        public ColorTable(int colorCount)
+        {
+            IntColors = new int[colorCount];
+        }
+
+        /// <summary>
+        /// Reads and returns a color table from the supplied input stream.
         /// </summary>
         /// <param name="inputStream">
         /// The input stream to read.
         /// </param>
-        /// <param name="numberOfColours">
-        /// The number of colours the colour table is expected to contain.
+        /// <param name="numberOfColors">
+        /// The number of colors the color table is expected to contain.
         /// </param>
-        public unsafe ColourTable(Stream inputStream, int numberOfColours)
+        public unsafe ColorTable(Stream inputStream, int numberOfColors)
         {
-            if (numberOfColours < 0 || numberOfColours > 256)
+            if (numberOfColors < 0 || numberOfColors > 256)
             {
                 string message
-                    = "The number of colours must be between 0 and 256. "
-                      + "Number supplied: " + numberOfColours;
+                    = "The number of colors must be between 0 and 256. "
+                      + "Number supplied: " + numberOfColors;
 
-                throw new ArgumentOutOfRangeException(nameof(numberOfColours),
+                throw new ArgumentOutOfRangeException(nameof(numberOfColors),
                                                        message);
             }
 
-            int bytesExpected = numberOfColours * 3; // expected length of Colour table
+            int bytesExpected = numberOfColors * 3; // expected length of Color table
             byte[] buffer = new byte[bytesExpected];
             int bytesRead = inputStream.Read(buffer, 0, buffer.Length);
-            int coloursRead = bytesRead / 3;
+            int colorsRead = bytesRead / 3;
             
             int j = 0;
-            _intColours = new int[coloursRead];
+            IntColors = new int[colorsRead];
 
             fixed (byte* pBuffer = buffer)
-            fixed (int* pIntColours = _intColours)
+            fixed (int* pIntColors = IntColors)
             {
-                for (int i = 0; i < coloursRead; i++)
+                for (int i = 0; i < colorsRead; i++)
                 {
                     byte r = pBuffer[j++];
                     byte g = pBuffer[j++];
                     byte b = pBuffer[j++];
-                    pIntColours[i] = (255 << 24) | (r << 16) | (g << 8) | b;
+                    pIntColors[i] = (255 << 24) | (r << 16) | (g << 8) | b;
                 }
             }
         }
-        
-        public int[] IntColours => _intColours.ToArray();
-        
+
         /// <summary>
-        /// Gets the number of colours in the colour table.
+        /// Gets the number of colors in the color table.
         /// </summary>
-        public int Length => _intColours.Length;
-        
+        public int Length => IntColors.Length;
+
         /// <summary>
-        /// Gets the number of bits required to hold the length of the colour
+        /// Gets the number of bits required to hold the length of the color
         /// table, minus 1.
         /// </summary>
         public int SizeBits
@@ -118,14 +123,14 @@ namespace GIF_Viewer.GifComponents.Components
                         return 1;
 
                     default:
-                        const string message = "The colour table size is not an exact power of 2. Did you forget to call the Pad() method?";
+                        const string message = "The color table size is not an exact power of 2. Did you forget to call the Pad() method?";
                         throw new InvalidOperationException(message);
                 }
             }
         }
-        
+
         /// <summary>
-        /// Gets or sets the colour at the specified index in the colour table.
+        /// Gets or sets the color at the specified index in the color table.
         /// </summary>
         /// <exception cref="ArgumentOutOfRangeException">
         /// The supplied index is outside the bounds of the array.
@@ -135,21 +140,21 @@ namespace GIF_Viewer.GifComponents.Components
             get
             {
                 ValidateIndex(index);
-                return _intColours[index];
+                return IntColors[index];
             }
             set
             {
                 ValidateIndex(index);
-                _intColours[index] = value;
+                IntColors[index] = value;
             }
         }
         
         private void ValidateIndex(int index)
         {
-            if (index >= _intColours.Length || index < 0)
+            if (index >= IntColors.Length || index < 0)
             {
                 string message
-                    = "Colour table size: " + _intColours.Length
+                    = "Color table size: " + IntColors.Length
                     + ". Index: " + index;
                 throw new ArgumentOutOfRangeException(nameof(index), message);
             }
@@ -162,7 +167,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <param name="colorCount">The number of colors to skip</param>
         public static void SkipOnStream(Stream inputStream, int colorCount)
         {
-            int bytesExpected = colorCount * 3; // expected length of Colour table
+            int bytesExpected = colorCount * 3; // expected length of Color table
             inputStream.Position += bytesExpected;
         }
     }

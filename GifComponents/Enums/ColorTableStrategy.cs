@@ -24,18 +24,18 @@
 namespace GIF_Viewer.GifComponents.Enums
 {
 	/// <summary>
-	/// Enumeration of strategies for including colour tables when encoding 
+	/// Enumeration of strategies for including color tables when encoding 
 	/// a GIF file.
 	/// </summary>
-	public enum ColourTableStrategy
+	public enum ColorTableStrategy
 	{
 		/// <summary>
-		/// Add a local colour table to every frame. No global colour table.
+		/// Add a local color table to every frame. No global color table.
 		/// </summary>
 		UseLocal,
 		
 		/// <summary>
-		/// Use a global colour table for all frames.
+		/// Use a global color table for all frames.
 		/// </summary>
 		UseGlobal
 	}
