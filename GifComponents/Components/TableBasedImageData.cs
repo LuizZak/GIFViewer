@@ -430,29 +430,8 @@ namespace GIF_Viewer.GifComponents.Components
 
         private static DataBlock ReadDataBlock(Stream inputStream)
         {
-            DataBlock block = new DataBlock(inputStream);
+            var block = new DataBlock(inputStream);
             return block;
-        }
-
-        /// <summary>
-        /// Returns the size of a table-based image data section on the given stream.
-        /// This method keeps the current position of the stream unmodified after it finishes
-        /// </summary>
-        /// <param name="inputStream">The input stream</param>
-        /// <returns>The length of the table-based image data on the stream, in bytes</returns>
-        public static long GetDataSizeOnStream(Stream inputStream)
-        {
-            long startStreamPosition = inputStream.Position;
-
-            //  Initialize GIF data stream decoder.
-            Read(inputStream);
-            //ReadDataBlockStatic(inputStream);
-            SkipBlocksStatic(inputStream);
-
-            var endStreamPosition = inputStream.Position;
-            inputStream.Position = startStreamPosition;
-
-            return endStreamPosition - startStreamPosition;
         }
 
         /// <summary>
@@ -461,7 +440,8 @@ namespace GIF_Viewer.GifComponents.Components
         /// <param name="inputStream">The input stream</param>
         public static void SkipOnStream(Stream inputStream)
         {
-            inputStream.Position += GetDataSizeOnStream(inputStream);
+            Read(inputStream);          // LZW minimum code size
+            SkipBlocks(inputStream);    // Data blocks
         }
     }
 }

@@ -326,7 +326,7 @@ namespace GIF_Viewer.GifComponents.Components
 
             return returnValue;
         }
-
+        
         /// <summary>
         /// Skips variable length blocks up to and including next zero length 
         /// block (block terminator).
@@ -334,18 +334,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// <param name="inputStream">
         /// The input stream to read.
         /// </param>
-        protected void SkipBlocks(Stream inputStream)
-        {
-            while (DataBlock.SkipStream(inputStream) > 0) { }
-        }
-        /// <summary>
-        /// Skips variable length blocks up to and including next zero length 
-        /// block (block terminator).
-        /// </summary>
-        /// <param name="inputStream">
-        /// The input stream to read.
-        /// </param>
-        protected static void SkipBlocksStatic(Stream inputStream)
+        protected static void SkipBlocks(Stream inputStream)
         {
             while (DataBlock.SkipStream(inputStream) > 0) { }
         }

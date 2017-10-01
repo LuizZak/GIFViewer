@@ -51,8 +51,6 @@ namespace GIF_Viewer.GifComponents.Components
     {
         private bool _expectsUserInput;
         private Point _position;
-        private ColorTable _localColorTable;
-        private GraphicControlExtension _extension;
         private readonly Stream _inputStream;
         private readonly LogicalScreenDescriptor _logicalScreenDescriptor;
         private readonly ColorTable _globalColorTable;
@@ -76,6 +74,11 @@ namespace GIF_Viewer.GifComponents.Components
         private bool _isImagePartial;
         private readonly GifFrame _previousFrame;
         private readonly GifFrame _previousFrameBut1;
+
+        /// <summary>
+        /// LZW-compressed image data bytes from stream
+        /// </summary>
+        private byte[] _imageDataBytes;
 
         /// <summary>
         /// Creates and returns a GifFrame by reading its data from the supplied
@@ -164,10 +167,10 @@ namespace GIF_Viewer.GifComponents.Components
                       "click or key press) before displaying the next frame.")]
         public bool ExpectsUserInput
         {
-            get => _extension?.ExpectsUserInput ?? _expectsUserInput;
+            get => GraphicControlExtension?.ExpectsUserInput ?? _expectsUserInput;
             set
             {
-                if (_extension == null)
+                if (GraphicControlExtension == null)
                 {
                     _expectsUserInput = value;
                 }
@@ -238,14 +241,14 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         [Description("The local color table for this frame")]
         [Category("Set by decoder")]
-        public ColorTable LocalColorTable => _localColorTable;
+        public ColorTable LocalColorTable { get; private set; }
 
         /// <summary>
         /// Gets the graphic control extension which precedes this image.
         /// </summary>
         [Description("The graphic control extension which precedes this image.")]
         [Category("Set by decoder")]
-        public GraphicControlExtension GraphicControlExtension => _extension;
+        public GraphicControlExtension GraphicControlExtension { get; private set; }
 
         /// <summary>
         /// Gets the image descriptor for this frame.
@@ -314,7 +317,7 @@ namespace GIF_Viewer.GifComponents.Components
         /// </summary>
         public void RecurseGraphicControlExtension()
         {
-            if (_extension == null)
+            if (GraphicControlExtension == null)
                 _previousFrame?.RecurseGraphicControlExtension();
 
             if (_graphicControlExtension == null)
@@ -324,7 +327,7 @@ namespace GIF_Viewer.GifComponents.Components
                 _graphicControlExtension = new GraphicControlExtension();
             }
 
-            _extension = _graphicControlExtension;
+            GraphicControlExtension = _graphicControlExtension;
         }
 
         /// <summary>
@@ -362,7 +365,7 @@ namespace GIF_Viewer.GifComponents.Components
             // Prepare the stream
             _inputStream.Position = StreamOffset;
 
-            _extension = _graphicControlExtension;
+            GraphicControlExtension = _graphicControlExtension;
 
             int transparentColorIndex = _graphicControlExtension.TransparentColorIndex;
 
@@ -373,8 +376,8 @@ namespace GIF_Viewer.GifComponents.Components
             ColorTable activeColorTable;
             if (imageDescriptor.HasLocalColorTable)
             {
-                _localColorTable = new ColorTable(_inputStream, imageDescriptor.LocalColorTableSize);
-                activeColorTable = _localColorTable; // make local table active
+                LocalColorTable = new ColorTable(_inputStream, imageDescriptor.LocalColorTableSize);
+                activeColorTable = LocalColorTable; // make local table active
             }
             else
             {
@@ -625,7 +628,7 @@ namespace GIF_Viewer.GifComponents.Components
             int height = lsd.LogicalScreenSize.Height;
             int backgroundColorIndex = previousFrame?._logicalScreenDescriptor.BackgroundColorIndex ?? lsd.BackgroundColorIndex;
             int transparentColorIndex = previousFrame?._graphicControlExtension.TransparentColorIndex ?? gce.TransparentColorIndex;
-            act = previousFrame == null ? act : previousFrame._localColorTable ?? _globalColorTable;
+            act = previousFrame == null ? act : previousFrame.LocalColorTable ?? _globalColorTable;
 
             if (previousDisposalMethod == DisposalMethod.RestoreToPrevious || previousFrame?.TheImage == null)
             {

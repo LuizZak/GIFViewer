@@ -116,7 +116,8 @@ namespace GIF_Viewer
         /// Loads this GIF file's parameters from the given GIF file
         /// </summary>
         /// <param name="path">The gif to load the parameters from</param>
-        public void LoadFromPath(string path)
+        /// <param name="preloadAllFrames">Whether to pre-load all frame images after loading</param>
+        public void LoadFromPath(string path, bool preloadAllFrames = false)
         {
             Loaded = false;
 
@@ -152,6 +153,14 @@ namespace GIF_Viewer
 
             // Get whether this GIF loops over:
             CanLoop = _gifDecoder.NetscapeExtension != null && _gifDecoder.NetscapeExtension.LoopCount == 0;
+            
+            if (preloadAllFrames)
+            {
+                for (int i = 0; i < FrameCount; i++)
+                {
+                    _gifDecoder.GetDecodedFrameAtIndex(i);
+                }
+            }
 
             // Force load of the first frame
             var img = _gifDecoder[0].TheImage;

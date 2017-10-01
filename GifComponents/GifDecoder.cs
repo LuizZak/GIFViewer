@@ -445,7 +445,10 @@ namespace GIF_Viewer.GifComponents
             }
         }
 
-        private GifFrame GetDecodedFrameAtIndex(int index)
+        /// <summary>
+        /// Gets a frame (decoding itself and all previous dependent frames, if needed) at a given index.
+        /// </summary>
+        public GifFrame GetDecodedFrameAtIndex(int index)
         {
             var frame = _frames[index];
 
