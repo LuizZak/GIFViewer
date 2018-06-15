@@ -38,7 +38,7 @@ namespace GIF_Viewer.Utils
         /// <summary>
         /// Specifies the number of bytes available per pixel of the bitmap object being manipulated
         /// </summary>
-        private const int BytesPerPixel = 4;
+        public const int BytesPerPixel = 4;
 
         /// <summary>
         /// The Bitmap object encapsulated on this FastBitmap
