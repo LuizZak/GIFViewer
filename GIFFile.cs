@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using GIF_Viewer.GifComponents;
 using GIF_Viewer.GifComponents.Enums;
@@ -130,7 +130,7 @@ namespace GIF_Viewer
         /// <param name="path">The gif to load the parameters from</param>
         /// <param name="preloadAllFrames">Whether to pre-load all frame images after loading</param>
         /// <param name="multiThreadedLzwDecoding">Whether to use multi-threading to pre-decode the LZW encoding of the frames</param>
-        public void LoadFromPath(string path, bool preloadAllFrames = false, bool multiThreadedLzwDecoding = false)
+        public async Task LoadFromPath(string path, bool preloadAllFrames = false, bool multiThreadedLzwDecoding = true)
         {
             Loaded = false;
 
@@ -176,12 +176,16 @@ namespace GIF_Viewer
 
                 for (int i = 0; i < FrameCount; i++)
                 {
-                    var frameIndex = i;
-                    var thread = new Task(() => { _gifDecoder.PreDecodeFrameAtIndex(frameIndex); });
+                    int frameIndex = i;
+
+                    var thread = new Task(() =>
+                    {
+                        _gifDecoder.PreDecodeFrameAtIndex(frameIndex);
+                    });
                     tasks.Add(thread);
                 }
 
-                TaskUtils.StartAndWaitAllThrottled(tasks, threadCount);
+                await TaskUtils.StartThrottled(tasks, threadCount, -1, CancellationToken.None);
             }
 
             if (preloadAllFrames)

@@ -529,7 +529,9 @@ namespace GIF_Viewer.GifComponents.Components
         /// The frame which precedes the frame before this one in the GIF stream,
         /// if present.
         /// </param>
-        private unsafe Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd, ImageDescriptor id, ColorTable activeColorTable, GraphicControlExtension gce, GifFrame previousFrame, GifFrame previousFrameBut1)
+        private unsafe Bitmap CreateBitmap(TableBasedImageData imageData, LogicalScreenDescriptor lsd,
+            ImageDescriptor id, ColorTable activeColorTable, GraphicControlExtension gce, GifFrame previousFrame,
+            GifFrame previousFrameBut1)
         {
             var baseImage = GetBaseImage(previousFrame, previousFrameBut1, lsd, gce, activeColorTable);
 
@@ -550,78 +552,87 @@ namespace GIF_Viewer.GifComponents.Components
 
             byte[] pixelIndices = imageData.PixelIndexes;
 
-            var fastImageBase = baseImage.FastLock();
-            int* pointerImage = (int*)fastImageBase.Scan0;
-
-            int[] colorTableIndices = activeColorTable.IntColors;
-            int numColors = activeColorTable.Length;
-
-            for (int i = 0; i < imageHeight; i++)
+            using (var fastImageBase = baseImage.FastLock())
             {
-                int pixelRowNumber = i;
-                if (id.IsInterlaced)
-                {
-                    if (interlaceRowNumber >= imageHeight)
-                    {
-                        pass++;
-                        switch (pass)
-                        {
-                            case 2:
-                                interlaceRowNumber = 4;
-                                break;
-                            case 3:
-                                interlaceRowNumber = 2;
-                                interlaceRowIncrement = 4;
-                                break;
-                            case 4:
-                                interlaceRowNumber = 1;
-                                interlaceRowIncrement = 2;
-                                break;
-                        }
-                    }
-                    pixelRowNumber = interlaceRowNumber;
-                    interlaceRowNumber += interlaceRowIncrement;
-                }
+                int* pointerImage = (int*) fastImageBase.Scan0;
+                if (pointerImage == null)
+                    return baseImage;
 
-                // Color in the pixels for this row
-                pixelRowNumber += imageY;
-                if (pixelRowNumber >= logicalHeight)
-                    continue;
+                int[] colorTableIndices = activeColorTable.IntColors;
+                int numColors = activeColorTable.Length;
 
-                int k = pixelRowNumber * logicalWidth;
-                int dx = k + imageX; // start of line in dest
-                int dlim = dx + imageWidth; // end of dest line
-                if (k + logicalWidth < dlim)
+                for (int i = 0; i < imageHeight; i++)
                 {
-                    // TESTME: CreateBitmap - past dest edge
-                    dlim = k + logicalWidth; // past dest edge
-                }
-                int sx = i * imageWidth; // start of line in source
-                while (dx < dlim)
-                {
-                    // map color and insert in destination
-                    int indexInColorTable = pixelIndices[sx++];
-                    // Set this pixel's color if its index isn't the transparent color index, or if this frame doesn't have a transparent color.
-                    if (!hasTransparent || indexInColorTable != transparentColor)
+                    int pixelRowNumber = i;
+                    if (id.IsInterlaced)
                     {
-                        if (indexInColorTable < numColors)
+                        if (interlaceRowNumber >= imageHeight)
                         {
-                            pointerImage[dx] = colorTableIndices[indexInColorTable];
+                            pass++;
+                            switch (pass)
+                            {
+                                case 2:
+                                    interlaceRowNumber = 4;
+                                    break;
+                                case 3:
+                                    interlaceRowNumber = 2;
+                                    interlaceRowIncrement = 4;
+                                    break;
+                                case 4:
+                                    interlaceRowNumber = 1;
+                                    interlaceRowIncrement = 2;
+                                    break;
+                            }
                         }
-                        else
-                        {
-                            // TESTME: CreateBitmap - BadColorIndex 
-                            pointerImage[dx] = 255 << 24;
-                            string message = "Color index: " + indexInColorTable + ", color table length: " + activeColorTable.Length + " (" + dx + "," + pixelRowNumber + ")";
-                            SetStatus(ErrorState.BadColorIndex, message);
-                        }
+
+                        pixelRowNumber = interlaceRowNumber;
+                        interlaceRowNumber += interlaceRowIncrement;
                     }
 
-                    dx++;
+                    // Color in the pixels for this row
+                    pixelRowNumber += imageY;
+                    if (pixelRowNumber >= logicalHeight)
+                        continue;
+
+                    int k = pixelRowNumber * logicalWidth;
+                    int dx = k + imageX; // start of line in dest
+                    int dlim = dx + imageWidth; // end of dest line
+                    if (k + logicalWidth < dlim)
+                    {
+                        // TESTME: CreateBitmap - past dest edge
+                        dlim = k + logicalWidth; // past dest edge
+                    }
+
+                    int sx = i * imageWidth; // start of line in source
+                    while (dx < dlim)
+                    {
+                        // map color and insert in destination
+                        int indexInColorTable = pixelIndices[sx++];
+                        // Set this pixel's color if its index isn't the transparent color index, or if this frame doesn't have a transparent color.
+                        if (!hasTransparent || indexInColorTable != transparentColor)
+                        {
+                            if (indexInColorTable < numColors)
+                            {
+                                pointerImage[dx] = colorTableIndices[indexInColorTable];
+                            }
+                            else
+                            {
+                                // TESTME: CreateBitmap - BadColorIndex 
+                                pointerImage[dx] = 255 << 24;
+                                string message = "Color index: " + indexInColorTable + ", color table length: " +
+                                                 activeColorTable.Length + " (" + dx + "," + pixelRowNumber + ")";
+                                SetStatus(ErrorState.BadColorIndex, message);
+                            }
+                        } 
+                        //else if (indexInColorTable == transparentColor)
+                        //{
+                        //    pointerImage[dx] = colorTableIndices[indexInColorTable] & 0xFFFFFF;
+                        //}
+
+                        dx++;
+                    }
                 }
             }
-
-            fastImageBase.Unlock();
 
             return baseImage;
         }

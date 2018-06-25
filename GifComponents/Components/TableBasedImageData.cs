@@ -138,6 +138,8 @@ namespace GIF_Viewer.GifComponents.Components
                 suffix[code] = (byte)code;
             }
 
+	        var block = new MutableDataBlock();
+
             #region decode LZW image data
 
             // Initialise block to an empty data block. This will be overwritten
@@ -171,7 +173,7 @@ namespace GIF_Viewer.GifComponents.Components
 
 	                            #region	read the next data block from the stream
 
-	                            var block = ReadDataBlock(inputStream);
+	                            ReadDataBlockOwned(block, inputStream);
 	                            bytesToExtract = block.ActualBlockSize;
 
 	                            // Point to the first byte in the new data block
@@ -436,10 +438,9 @@ namespace GIF_Viewer.GifComponents.Components
             return (1 << currentCodeSize) - 1;
         }
 
-        private static DataBlock ReadDataBlock(Stream inputStream)
+        private static void ReadDataBlockOwned(MutableDataBlock block, Stream inputStream)
         {
-            var block = new DataBlock(inputStream);
-            return block;
+            block.ReadFrom(inputStream);
         }
 
         /// <summary>

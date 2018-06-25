@@ -216,15 +216,7 @@ namespace GIF_Viewer.GifComponents
         /// </summary>
         [SuppressMessage("Microsoft.Performance",
             "CA1819:PropertiesShouldNotReturnArrays")]
-        public ApplicationExtension[] ApplicationExtensions
-        {
-            get
-            {
-                ApplicationExtension[] appExts = new ApplicationExtension[_applicationExtensions.Count];
-                _applicationExtensions.CopyTo(appExts, 0);
-                return appExts;
-            }
-        }
+        public IReadOnlyList<ApplicationExtension> ApplicationExtensions => _applicationExtensions;
 
         /// <summary>
         /// Gets the Netscape 2.0 application extension, if present.
@@ -370,7 +362,7 @@ namespace GIF_Viewer.GifComponents
 
             return false;
         }
-        
+
         /// <summary>
         /// Decodes the supplied GIF stream.
         /// </summary>

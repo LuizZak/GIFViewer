@@ -88,10 +88,13 @@ namespace GIF_Viewer.GifComponents.Components
 	    /// </param>
 	    public DataBlock(Stream inputStream)
 	    {
+	        InitializeWithStream(inputStream);
+	    }
+
+	    protected void InitializeWithStream(Stream inputStream)
+	    {
 	        if (inputStream == null)
-	        {
 	            throw new ArgumentNullException(nameof(inputStream));
-	        }
 
 	        int blockSize = Read(inputStream);
 
@@ -117,6 +120,7 @@ namespace GIF_Viewer.GifComponents.Components
 	                    // then we've reached the end of the file
 	                    break;
 	                }
+
 	                bytesRead += count;
 	            }
 	        }
@@ -129,7 +133,7 @@ namespace GIF_Viewer.GifComponents.Components
 	            SetStatus(ErrorState.DataBlockTooShort, message);
 	        }
 	    }
-        
+
 	    private void SaveData(int blockSize, byte[] data)
 	    {
 	        if (data == null)
@@ -202,4 +206,21 @@ namespace GIF_Viewer.GifComponents.Components
         [Description("Gets the combined error states of this component and all its child components.")]
         public override ErrorState ConsolidatedState => ErrorState;
 	}
+
+    public class MutableDataBlock : DataBlock
+    {
+        public MutableDataBlock() : this(0, new byte[0])
+        {
+
+        }
+
+        public MutableDataBlock(int blockSize, byte[] data) : base(blockSize, data)
+        {
+        }
+
+        public void ReadFrom(Stream inputStream)
+        {
+            InitializeWithStream(inputStream);
+        }
+    }
 }
