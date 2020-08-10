@@ -39,7 +39,7 @@ namespace GIF_Viewer
         /// </summary>
         public bool Playing = false;
         /// <summary>
-        /// Gets the ammount of frames on this gif
+        /// Gets the amount of frames on this gif
         /// </summary>
         public int FrameCount { get; private set; }
 

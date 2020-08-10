@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using GIF_Viewer.Controls;
 
@@ -188,33 +189,34 @@ namespace GIF_Viewer.Views
             }
 
             // Get the intervals:
-            CurrentGif.LoadFromPath(fileName);
-
-            // Set the caption
-            Text = @"Extract Frames from [" + fileName + @"] " + CurrentGif.Width + @"x" + CurrentGif.Height;
-
-            // Refresh the pictureBox with the new animation
-            cpb_preview.BackgroundImage = CurrentGif.CurrentFrameBitmap;
-
-            // Change the window size and location only if windowed
-            if (WindowState == FormWindowState.Normal)
+            CurrentGif.LoadFromPath(fileName).ContinueWith(task =>
             {
-                // Set the client size
-                ClientSize = new Size(Math.Max(CurrentGif.Width, MinimumSize.Width), CurrentGif.Height + panel1.Height + 6);
+                // Set the caption
+                Text = @"Extract Frames from [" + fileName + @"] " + CurrentGif.Width + @"x" + CurrentGif.Height;
 
-                // And position
-                int px = Screen.PrimaryScreen.Bounds.Width / 2 - Width / 2;
-                int py = Screen.PrimaryScreen.Bounds.Height / 2 - Height / 2;
+                // Refresh the pictureBox with the new animation
+                cpb_preview.BackgroundImage = CurrentGif.CurrentFrameBitmap;
 
-                Location = new Point(px, py);
-            }
+                // Change the window size and location only if windowed
+                if (WindowState == FormWindowState.Normal)
+                {
+                    // Set the client size
+                    ClientSize = new Size(Math.Max(CurrentGif.Width, MinimumSize.Width), CurrentGif.Height + panel1.Height + 6);
 
-            // Starts a new animation thread
-            if (CurrentGif.FrameCount > 1)
-            {
-                AnimationTimer.Interval = UseMinFrameInterval ? Math.Max(CurrentGif.GetIntervalForCurrentFrame(), MinFrameInterval) : CurrentGif.GetIntervalForCurrentFrame();
-                AnimationTimer.Start();
-            }
+                    // And position
+                    int px = Screen.PrimaryScreen.Bounds.Width / 2 - Width / 2;
+                    int py = Screen.PrimaryScreen.Bounds.Height / 2 - Height / 2;
+
+                    Location = new Point(px, py);
+                }
+
+                // Starts a new animation thread
+                if (CurrentGif.FrameCount > 1)
+                {
+                    AnimationTimer.Interval = UseMinFrameInterval ? Math.Max(CurrentGif.GetIntervalForCurrentFrame(), MinFrameInterval) : CurrentGif.GetIntervalForCurrentFrame();
+                    AnimationTimer.Start();
+                }
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         /// <summary>
@@ -256,7 +258,7 @@ namespace GIF_Viewer.Views
         }
 
         /// <summary>
-        /// Event fired everytime the user presses a keyboard key while the window is focused
+        /// Event fired every time the user presses a keyboard key while the window is focused
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="e">The arguments for this event</param>
@@ -283,7 +285,7 @@ namespace GIF_Viewer.Views
         }
 
         /// <summary>
-        /// Event fired everytime the user clicks 'Extract Frames...' button
+        /// Event fired every time the user clicks 'Extract Frames...' button
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="e">The arguments for this event</param>
@@ -306,7 +308,7 @@ namespace GIF_Viewer.Views
         }
 
         /// <summary>
-        /// Event fired everytime the user has changed the range of the timeline displaying timelineControl1 control
+        /// Event fired every time the user has changed the range of the timeline displaying timelineControl1 control
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="newRange">The new range of the timeline control</param>
@@ -324,7 +326,7 @@ namespace GIF_Viewer.Views
         }
 
         /// <summary>
-        /// Event fired everytime the user clicks the GIF displaying cPictureBox1 control
+        /// Event fired every time the user clicks the GIF displaying cPictureBox1 control
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="e">The arguments for this event</param>
@@ -357,7 +359,7 @@ namespace GIF_Viewer.Views
         }
 
         /// <summary>
-        /// Event fired everytime the user clicks the GIF displaying cPictureBox1 control
+        /// Event fired every time the user clicks the GIF displaying cPictureBox1 control
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="e">The arguments for this event</param>
@@ -388,7 +390,7 @@ namespace GIF_Viewer.Views
         }
 
         /// <summary>
-        /// Event fired everytime the user clicks the little help button at the bottom-right corner of the window
+        /// Event fired every time the user clicks the little help button at the bottom-right corner of the window
         /// </summary>
         /// <param name="sender">Object that fired this event</param>
         /// <param name="e">The arguments for this event</param>

@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using GIF_Viewer.Utils;
 using GIF_Viewer.Views;
@@ -28,7 +29,9 @@ namespace GIF_Viewer
                     AttachConsole(-1);
 
                     var handler = new ExtractCommandLineHandler(args);
-                    return handler.Execute();
+                    var task = handler.Execute();
+                    task.Wait();
+                    return task.Result;
                 }
                 if (args[0] == "--help")
                 {
@@ -103,7 +106,7 @@ namespace GIF_Viewer
             _args = args;
         }
 
-        public int Execute()
+        public async Task<int> Execute()
         {
             if (_args[0] != "--extract")
             {
@@ -121,7 +124,7 @@ namespace GIF_Viewer
                 {
                     if (i == _args.Length - 1)
                     {
-                        Console.WriteLine(@"--extraxct: Expected file path of gif file to extract.");
+                        Console.WriteLine(@"--extract: Expected file path of gif file to extract.");
                         return -1;
                     }
 
@@ -217,7 +220,7 @@ namespace GIF_Viewer
             // Pre-load GIF file
             var gif = new GifFile();
             
-            gif.LoadFromPath(extractPath);
+            await gif.LoadFromPath(extractPath);
             var frameCount = gif.FrameCount;
 
             gif.Dispose();
@@ -343,40 +346,41 @@ namespace GIF_Viewer
 
             // Load the GIF file:
             var gif = new GifFile();
-            gif.LoadFromPath(gifPath);
-
-            var sourceName = Path.GetFileNameWithoutExtension(gifPath);
-
-            // Get the frame dimension to advance the frames:
-            var extension = GetExtensionForFormat(format);
-
-            try
+            gif.LoadFromPath(gifPath).ContinueWith(task =>
             {
-                for (int frame = startFrame; frame < startFrame + 1 + endFrame; frame++)
+                var sourceName = Path.GetFileNameWithoutExtension(gifPath);
+
+                // Get the frame dimension to advance the frames:
+                var extension = GetExtensionForFormat(format);
+
+                try
                 {
-                    string name = ReplaceFileName(fileName, t, sourceName, frame);
-
-                    // Create the bitmap and the graphics:
-                    gif.SetCurrentFrame(frame);
-                    var b = gif.CurrentFrameBitmap;
-                    
-                    var finalPath = targetDirectory + "\\" + name + extension;
-                    if (!allowOverwrite && File.Exists(finalPath))
+                    for (int frame = startFrame; frame < startFrame + 1 + endFrame; frame++)
                     {
-                        throw new Exception($"File already exists at \"{finalPath}\"");
+                        string name = ReplaceFileName(fileName, t, sourceName, frame);
+
+                        // Create the bitmap and the graphics:
+                        gif.SetCurrentFrame(frame);
+                        var b = gif.CurrentFrameBitmap;
+
+                        var finalPath = targetDirectory + "\\" + name + extension;
+                        if (!allowOverwrite && File.Exists(finalPath))
+                        {
+                            throw new Exception($"File already exists at \"{finalPath}\"");
+                        }
+
+                        // Save the image down to the path with the given format:
+                        b.Save(finalPath, format);
                     }
-
-                    // Save the image down to the path with the given format:
-                    b.Save(finalPath, format);
                 }
-            }
-            catch (Exception e)
-            {
-                ErrorBox.Show("Error exporting frames: " + e.Message, "Error", e.StackTrace);
-            }
+                catch (Exception e)
+                {
+                    ErrorBox.Show("Error exporting frames: " + e.Message, "Error", e.StackTrace);
+                }
 
-            // Dispose the GIF:
-            gif.Dispose();
+                // Dispose the GIF:
+                gif.Dispose();
+            }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         private static string ReplaceFileName(string fileName, DateTime t, string sourceName, int frameIndex)
