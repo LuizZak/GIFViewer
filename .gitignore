@@ -188,3 +188,6 @@ UpgradeLog*.htm
 # Microsoft Fakes
 FakesAssemblies/
 
+/.vs/GIF Viewer/CopilotIndices/
+/.vs/GIF Viewer/FileContentIndex
+/.vs/GIF Viewer/v17

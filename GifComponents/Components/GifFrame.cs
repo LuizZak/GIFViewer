@@ -779,7 +779,7 @@ namespace GIF_Viewer.GifComponents.Components
                 case DisposalMethod.RestoreToBackgroundColour:
                     // pre-populate image with background colour
                     int backgroundColour;
-                    if (backgroundColorIndex == transparentColorIndex)
+                    if (backgroundColorIndex == transparentColorIndex || act == null) // 01/08/2025 Check if act is null
                     {
                         backgroundColour = 0;
                     }
